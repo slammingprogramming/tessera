@@ -1,0 +1,5 @@
+# Paths that exist ONLY on the `private` branch (Keybase). One per line.
+# A trailing "/" means "everything under this directory". Lines starting with # are comments.
+# The public branch (`main`, GitHub) is generated from `private` with these paths removed.
+AGENTS.md
+.private/

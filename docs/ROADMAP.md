@@ -1,0 +1,21 @@
+# Roadmap
+
+Sequencing principle: build the smallest vertical slice that installs and boots on a stock CC:T computer, then widen.
+Each milestone must run on CraftOS-PC headless tests and be smoke-tested in-game before being called done.
+
+| M | Name | Deliverables | Exit criteria |
+|---|---|---|---|
+| M0 | Foundation (done in this session) | Research, architecture, parity matrix, integrations, package format, AGENTS.md, repo skeleton | Docs reviewed by user |
+| M1 | Toolchain & repo setup | Working CraftOS-PC test runner (headless not yet working locally), Node tooling: minifier/hasher, registry generator, size-budget check, offline-bundle chunker; `git init`, `main`/`private` branch split + `private-paths.txt` + pre-push hook; AGPL `LICENSE` + SPDX convention; in-game measurement of paste / `file_transfer` limits; CI | `tools/test` passes on a hello-world package; a push of `AGENTS.md` to the GitHub remote is refused |
+| M2 | Core slice | `/startup.lua` stub, boot, kernel scheduler, VFS, config, log, CraftOS compat shim, recovery path | Boots to shell on basic + advanced computers; CraftOS programs run |
+| M3 | Package manager + bootstrap installer (text) | `pkg` CLI, registry v0 on GitHub Pages, `wget run` + Pastebin bootstrap, transactional install, lazy stubs, LAN mirror stub, **offline import (paste/file-drop) + offline bundle builder page** | Fresh computer → installed core in <1 MB via web, via Pastebin, and via pure paste with no HTTP |
+| M4 | Detection + recommender | Hardware probe, rules, wizard with reasons, profile selection, resumable install | Correct recommendations on a matrix of test rigs (basic/advanced/turtle/pocket/monitor/modem/speaker/drive) |
+| M5 | Client + Server profiles | TUI toolkit, shell polish, auth, networking (discovery, secure RPC, remote shell/FS), service manager, pkg mirror | Two computers: server mirror + client install without HTTP on client |
+| M6 | Optional GUI | Compositor/WM, toolkit, desktop, launcher, file manager, settings, app store; installable later & removable | Install GUI post-hoc on an existing client; uninstall cleanly |
+| M7 | Turtle + Pocket profiles | Position persistence, fuel, jobs, pathfinding, remote control; mobile launcher | Turtle survives unload mid-job and resumes; pocket controls turtle |
+| M8 | Integration packs v1 | hal-core, generic peripherals, Mekanism, Advanced Peripherals, CC:C Bridge, Tom's GPU, AE2/RS, redstone fallback | Demo automation per mod; rules engine drives both mod + redstone backends |
+| M9 | App parity wave | Editor, files, help, storage system, GPS, cron, audio/media, games (port/depend), turtle stock jobs | Parity matrix P1 rows all `done` |
+| M10 | TV + expansion | Smart-TV shell, media pipeline, mirroring, kiosk; next ideas | — |
+
+Cross-cutting from M2 onward: docs per module, tests per module, size budget checks, security review of anything that
+executes downloaded code.

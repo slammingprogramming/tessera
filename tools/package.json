@@ -1,0 +1,13 @@
+{
+  "name": "tessera-tools",
+  "private": true,
+  "type": "module",
+  "description": "Build, test and repo-split tooling for Tessera (zero dependencies; Node >= 18)",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "test": "node test/run.mjs",
+    "build": "node build/build.mjs",
+    "sync-public": "node split/sync-public.mjs",
+    "check-split": "node split/sync-public.mjs --check"
+  }
+}

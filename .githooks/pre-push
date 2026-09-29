@@ -1,0 +1,9 @@
+#!/bin/sh
+# Guard: never let private paths reach the public (GitHub) remote. See docs/DECISIONS.md "Branch split workflow".
+if ! command -v node >/dev/null 2>&1; then
+  case "$1$2" in
+    *github*) echo "tessera: node is required to verify pushes to public remotes"; exit 1 ;;
+  esac
+  exit 0
+fi
+exec node "$(git rev-parse --show-toplevel)/tools/split/pre-push-check.mjs" "$@"
