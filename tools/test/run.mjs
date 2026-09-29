@@ -7,6 +7,8 @@
 //               package overlays installed.
 //   --e2e       boot test: the computer boots Tessera for real (/startup.lua) with tests/e2e/*.lua installed as init.d
 //               daemons; those scripts drive the system and write the results.
+//   --bootstrap installer test: builds the site, makes offline bundles, and runs tests/e2e/bootstrap_e2e.lua on a
+//               computer with nothing installed (mounts: /site = dist/site, /bundles = dist/bundles).
 //   --minified  install the minified build output (dist/overlay, produced by tools/build) instead of raw sources.
 //
 // A fresh emulated computer is built under .scratch/cpc; results come back through a mounted directory
@@ -24,6 +26,7 @@ async function main() {
   const exe = findCraftOS();
   if (!exe) { console.error('CraftOS-PC not found (set TSR_CRAFTOS to the console executable)'); process.exit(2); }
   const e2e = flag('--e2e');
+  const bootstrap = flag('--bootstrap');
 
   const work = join(root, '.scratch', 'cpc');
   const out = join(root, '.scratch', 'out');
@@ -33,7 +36,12 @@ async function main() {
   mkdirSync(computer, { recursive: true });
   mkdirSync(out, { recursive: true });
 
-  if (flag('--minified')) {
+  if (bootstrap) {
+    for (const cmd of [['build/build.mjs'], ['build/bundle.mjs', 'core', 'pkg', '--name', 'boot']]) {
+      const r = spawnSync(process.execPath, [join(root, 'tools', ...cmd[0].split('/')), ...cmd.slice(1)], { encoding: 'utf8' });
+      if (r.status !== 0) { console.error(r.stdout + r.stderr); process.exit(1); }
+    }
+  } else if (flag('--minified')) {
     const r = spawnSync(process.execPath, [join(root, 'tools', 'build', 'build.mjs')], { encoding: 'utf8' });
     if (r.status !== 0) { console.error(r.stdout + r.stderr); process.exit(1); }
     cpSync(join(root, 'dist', 'overlay'), computer, { recursive: true });
@@ -45,14 +53,17 @@ async function main() {
     const dir = join(computer, 'etc', 'tsr', 'init.d');
     mkdirSync(dir, { recursive: true });
     for (const f of readdirSync(join(root, 'tests', 'e2e'))) {
-      if (f.endsWith('.lua')) cpSync(join(root, 'tests', 'e2e', f), join(dir, f));
+      if (f.endsWith('.lua') && !f.startsWith('bootstrap')) cpSync(join(root, 'tests', 'e2e', f), join(dir, f));
     }
   }
   writeFileSync(join(out, 'config.json'), JSON.stringify({ filter: opt('--filter', null) }));
 
   const timeout = Number(opt('--timeout', 120)) * 1000;
   const cliArgs = ['--headless', '-d', work, '--id', '0', '--mount-rw', `out=${out}`];
-  if (!e2e) cliArgs.push('--script', join(root, 'tests', 'harness.lua'));
+  if (bootstrap) {
+    cliArgs.push('--mount-ro', `site=${join(root, 'dist', 'site')}`, '--mount-ro', `bundles=${join(root, 'dist', 'bundles')}`,
+      '--script', join(root, 'tests', 'e2e', 'bootstrap_e2e.lua'));
+  } else if (!e2e) cliArgs.push('--script', join(root, 'tests', 'harness.lua'));
   const child = spawn(exe, cliArgs, { stdio: 'ignore', windowsHide: true });
 
   const timedOut = await new Promise((resolve) => {

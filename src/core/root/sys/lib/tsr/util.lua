@@ -66,6 +66,12 @@ function M.fmtBytes(n)
   return string.format("%.2f MB", n / 1024 / 1024)
 end
 
+--- Free bytes on the root filesystem as a number (mounts that report "unlimited" give math.huge).
+function M.freeSpace(path)
+  local f = fs.getFreeSpace(path or "/")
+  return type(f) == "number" and f or math.huge
+end
+
 --- Timestamp used in logs, e.g. "2026-09-29 12:34:56".
 function M.timestamp()
   local ok, s = pcall(os.date, "%Y-%m-%d %H:%M:%S")

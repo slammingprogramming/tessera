@@ -26,6 +26,13 @@ for _, dir in ipairs({ "/etc", "/var", "/sys", "/usr" }) do
 end
 if repaired > 0 then blog.warn("recovered %d interrupted file write(s)", repaired) end
 
+-- 2b. Finish or roll back an interrupted package transaction (only when the package manager is installed)
+if fs.exists("/sys/lib/tsr/pkg/init.lua") then
+  local ok, res = pcall(function() return require("tsr.pkg").recover() end)
+  if not ok then blog.warn("package recovery failed: %s", tostring(res))
+  elseif res then blog.warn("package transaction %s", res) end
+end
+
 -- 3. File system: mounts, RAM disk ---------------------------------------------------------------------------------
 vfs.install()
 local tmpSize = config.get("fs.tmp_size", 0)

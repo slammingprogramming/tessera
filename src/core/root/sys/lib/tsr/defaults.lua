@@ -14,4 +14,12 @@ return {
   fs = {
     tmp_size = 65536,        -- bytes of RAM disk mounted at /tmp (0 = no /tmp)
   },
+  pkg = {
+    -- Package sources in priority order (see tsr.pkg.source). The OWNER/REPO placeholders are replaced at build time.
+    sources = {
+      { name = "official", type = "http", bases = { "https://OWNER.github.io/REPO" } },
+    },
+    free_margin = 8192,      -- bytes that must stay free after an install
+    keep_cache = false,      -- keep the offline import store after installing
+  },
 }

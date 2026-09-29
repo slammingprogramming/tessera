@@ -33,6 +33,49 @@ const walk = (dir) => readdirSync(dir).flatMap((n) => {
   return statSync(p).isDirectory() ? walk(p) : [p];
 });
 
+const PLACEHOLDERS = [
+  ['https://OWNER.github.io/REPO', config.pagesBase],
+  ['https://github.com/OWNER/REPO', config.repo],
+  ['@PASTEBIN_SNAPSHOT@', config.pastebinSnapshot ?? ''],
+];
+/** Replace release placeholders in a text payload. */
+function substitute(text) {
+  let out = text;
+  for (const [from, to] of PLACEHOLDERS) if (to && from !== to) out = out.split(from).join(to);
+  return out;
+}
+
+/** Find src/<pkg>/root/sys/lib/<module path>.lua for a module name like "tsr.hash". */
+function moduleSource(name) {
+  const rel = ['root', 'sys', 'lib', ...name.split('.')];
+  const last = rel.pop() + '.lua';
+  for (const pkg of packageNames()) {
+    const p = join(root, 'src', pkg, ...rel, last);
+    if (existsSync(p)) return readFileSync(p, 'utf8');
+  }
+  throw new Error(`cannot inline unknown module ${name}`);
+}
+
+/** Expand a `--@inline tsr.a tsr.b` line into a tiny module table + require shim holding those modules. */
+function inlineModules(src) {
+  return src.replace(/^--@inline (.+)$/m, (_, list) => {
+    const NL = '\n';
+    const names = list.trim().split(/\s+/);
+    // `require` is declared BEFORE the module bodies so their own require() calls resolve to the shim below
+    let out = 'local __inline, __loaded = {}, {}' + NL + 'local __outerRequire = require' + NL + 'local require' + NL;
+    for (const n of names) {
+      out += `__inline[${JSON.stringify(n)}] = function(...)` + NL + minifyLua(moduleSource(n)) + NL + 'end' + NL;
+    }
+    out += ['require = function(n)',
+      '  if __loaded[n] ~= nil then return __loaded[n] end',
+      '  local f = __inline[n]',
+      '  if f then local v = f(n) if v == nil then v = true end __loaded[n] = v return v end',
+      '  return __outerRequire(n)',
+      'end'].join(NL);
+    return out;
+  });
+}
+
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(join(dist, 'site', 'blobs'), { recursive: true });
 mkdirSync(join(dist, 'site', 'registry', 'packages'), { recursive: true });
@@ -57,9 +100,11 @@ for (const name of packageNames()) {
     for (const file of walk(overlayDir).sort()) {
       const rel = '/' + relative(overlayDir, file).split(sep).join('/');
       let data = readFileSync(file);
-      if (rel.endsWith('.lua') && !noMinify) {
-        try { data = Buffer.from(minifyLua(data.toString('utf8')), 'utf8'); }
-        catch (e) { errors.push(`${name}: ${rel}: ${e.message}`); continue; }
+      if (rel.endsWith('.lua')) {
+        try {
+          const text = substitute(data.toString('utf8'));
+          data = Buffer.from(noMinify ? text : minifyLua(text), 'utf8');
+        } catch (e) { errors.push(`${name}: ${rel}: ${e.message}`); continue; }
       }
       const hash = sha256(data);
       writeFileSync(join(dist, 'site', 'blobs', hash), data);
@@ -94,7 +139,7 @@ for (const name of packageNames()) {
   };
   writeFileSync(join(dist, 'site', 'registry', 'packages', `${name}.json`),
     JSON.stringify({ name, latest: meta.version, versions: { [meta.version]: manifest } }));
-  index.packages[name] = { version: meta.version, type: meta.type, description: meta.description, size: installed };
+  index.packages[name] = { version: meta.version, type: meta.type, description: meta.description, size: installed, provides: meta.provides ?? [] };
   console.log(`${name.padEnd(24)} ${meta.version.padEnd(8)} ${String(files.length).padStart(3)} files  ${String(installed).padStart(7)} B installed  ${String(download).padStart(7)} B deflated`);
 }
 
@@ -103,7 +148,7 @@ const mirrorsPath = join(root, 'tools', 'build', 'mirrors.json');
 writeFileSync(join(dist, 'site', 'mirrors.json'), existsSync(mirrorsPath) ? readFileSync(mirrorsPath) : '{"pastebin":{}}');
 const installer = join(root, 'src', 'installer', 'site', 'install.lua');
 if (existsSync(installer)) {
-  const src = readFileSync(installer, 'utf8');
+  const src = substitute(inlineModules(readFileSync(installer, 'utf8')));
   writeFileSync(join(dist, 'site', 'install.lua'), noMinify ? src : minifyLua(src));
 }
 const siteAssets = join(root, 'site');

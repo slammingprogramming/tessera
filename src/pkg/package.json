@@ -1,0 +1,10 @@
+{
+  "name": "pkg",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Package manager: registry sources, dependency resolution, transactional installs, offline import, `pkg` command",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "core": ">=0.1.0" },
+  "provides": ["tsr:pkg"],
+  "budget": 90000
+}

@@ -1,5 +1,6 @@
 {
   "repo": "https://github.com/OWNER/REPO",
   "pagesBase": "https://OWNER.github.io/REPO",
-  "note": "OWNER/REPO are placeholders until the user provides the public GitHub repo (see AGENTS.md open questions)."
+  "pastebinSnapshot": "",
+  "note": "OWNER/REPO are placeholders until the user provides the public GitHub repo (see AGENTS.md open questions). pastebinSnapshot is filled by release tooling once a snapshot paste exists."
 }
