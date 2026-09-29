@@ -12,14 +12,14 @@ Format: ID — decision — status (**decided** = user; **delegated** = user han
 | D-05 | Language | Lua (CC:T-compatible). TypeScript→Lua not default. | default |
 | D-06 | GUI toolkit | **Build our own from scratch** (no Basalt dependency): better optimisation and features tailored to Tessera. Basalt/GuiH-made apps may still be installable as optional third-party packages. | decided (2026-09-29) |
 | D-07 | Package registry | Own JSON registry (CCPM-like) + adapters for unicornpkg/CCPM/Pinestore. | default |
-| D-08 | License | **AGPL-3.0** for Tessera's own code (`AGPL-3.0-or-later` unless the user says otherwise — confirm SPDX form). See "Licensing consequences" below. | decided (2026-09-29) |
-| D-09 | Repo split | **Two parallel branches with identical shared content**: a public-safe branch for GitHub (no private files) and a private branch for Keybase (same content **plus** private-only files such as `AGENTS.md`). See "Branch split workflow" below. Keybase repo path not yet given. | decided (2026-09-29); implementation is M1 |
+| D-08 | License | **AGPL-3.0-or-later** for Tessera's own code (user confirmed the SPDX form). SPDX headers on every source file. See "Licensing consequences" below. | decided (2026-09-29) |
+| D-09 | Repo split | **Two parallel branches with identical shared content**: a public-safe branch for GitHub (no private files) and a private branch for Keybase (same content **plus** private-only files such as `AGENTS.md`). See "Branch split workflow" below. Keybase/GitHub URLs not yet given. | decided (2026-09-29); implemented in M1 (tools/split) |
 | D-10 | Version targets | Test on 1.20.1, 1.21.1, latest 26.x. | default |
 | D-11 | Telemetry | None by default; opt-in only. | default |
 | D-12 | Security | Best-effort model (ARCHITECTURE §13); package hashes mandatory, signatures for official registry. | default |
 | D-13 | Registry hosting cost/ownership | GitHub Pages is free; pastebin mirrors free. A self-hosted gateway/VPS is optional and undecided. | default |
 | D-14 | Offline install | Must be possible with zero in-game internet by pasting/dropping data into the terminal on prompt (registry → then app payloads as needed). See below. | decided (2026-09-29) |
-| D-15 | Test environment | User has **both CraftOS-PC and a Minecraft test world**. CraftOS-PC 2.8 is at `C:\Program Files\CraftOS-PC` (user data `%APPDATA%\CraftOS-PC`). Node 24, Python 3.13, Git available; no standalone Lua. Headless invocation not yet working (M1 task). | decided / verified 2026-09-29 |
+| D-15 | Test environment | User has **both CraftOS-PC and a Minecraft test world**. CraftOS-PC 2.8 is at `C:\Program Files\CraftOS-PC` (user data `%APPDATA%\CraftOS-PC`). Node 24, Python 3.13, Git available; no standalone Lua. Headless works when results are written to a mounted directory (see AGENTS.md §4); CraftOS-PC 2.8.3 emulates ComputerCraft 1.112.0 on Lua 5.2. | decided / verified 2026-09-29 |
 | D-16 | Contribution terms | DCO sign-off (default) rather than a CLA, so AGPL stays simple. | default |
 
 ## Distribution tiers (D-04, D-14)
@@ -61,20 +61,23 @@ Installer/registry client tries, in order (each probed with `http.checkURL`/a re
 
 ## Branch split workflow (D-09)
 
-- Branch **`main`** = public-safe content. Pushed to the **GitHub** remote only. Contains no private files.
-- Branch **`private`** = `main` + private-only files (currently just `AGENTS.md`; list kept in
-  `tools/split/private-paths.txt` once created). Pushed to the **Keybase** remote (as its `main`, or as `private` — decide
-  when the remote path is given).
-- Rules: (1) all shared work is committed to `main`, then `git checkout private && git merge main`. (2) Private-only
-  files are edited only on `private`. (3) **Never merge `private` into `main`** and never push `private` to GitHub.
-  (4) A pre-push hook + CI check on the GitHub side rejects any push that touches a path in `private-paths.txt`.
-  (5) Configure remotes so `github` only pushes `main` and `keybase` pushes `private` (explicit refspecs).
-- Consequence: shared docs like `docs/*` live on `main` (public). Anything sensitive to keep private must go under a
-  private-only path, never in `docs/`.
-- Not yet initialised: the folder is not a git repo. Do not init/commit/push without the user asking (they haven't yet).
+User requirement: GitHub gets a branch without the private stuff; Keybase gets an identical branch that also has the
+private stuff. Implemented (M1) as:
+
+- Work happens on branch **`private`** (the superset; contains `AGENTS.md`). Commit messages must be public-safe.
+- Branch **`main`** (public-safe) is *generated*: `node tools/split/sync-public.mjs` replays each `private` commit onto
+  `main` with every path in `tools/split/private-paths.txt` removed. Commits that only touch private paths are skipped
+  (their messages never reach `main`). `refs/split/synced` records how far it has replayed. `--check` verifies that
+  neither the tip nor the history of `main` contains a private path.
+- Remotes (`node tools/split/setup-remotes.mjs --github <url> --keybase <url>`): `github` receives only
+  `main:main`; `keybase` receives `private:main` (the full tree, so a Keybase clone's default branch has everything)
+  and `main:public` (public mirror).
+- `.githooks/pre-push` (`core.hooksPath`) refuses to push the `private` branch or any private path to the public
+  remote (name `github` or a github.com URL).
+- Anything private goes under a path listed in `private-paths.txt` (today: `AGENTS.md`, `.private/`); `docs/` is public.
+- Nothing has been pushed; no remotes are configured yet.
 
 ## Still open
-- Keybase repo path/name; GitHub repo name & final Pages URL.
-- SPDX form: `AGPL-3.0-only` vs `-or-later`.
+- Keybase repo path/name; GitHub repo name & final Pages URL (build placeholders OWNER/REPO wait for these).
 - Basic name clearance for "Tessera".
 - Which mods/MC versions get first-class priority beyond the defaults.

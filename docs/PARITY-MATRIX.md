@@ -7,16 +7,16 @@ Exemplar details come from docs/RESEARCH.md (sources there); keep this file upda
 
 | # | Area | Exemplars | Our module | Pri | Status |
 |---|---|---|---|---|---|
-| 1 | Multitasking / process mgmt | Opus tabs, Phoenix kernel, PotatOS Polychoron, multishell | `core` scheduler | P0 | design |
-| 2 | CraftOS compatibility | Recrafted, MBS | `core/compat` | P0 | design |
+| 1 | Multitasking / process mgmt | Opus tabs, Phoenix kernel, PotatOS Polychoron, multishell | `core` scheduler | P0 | wip |
+| 2 | CraftOS compatibility | Recrafted, MBS | `core/compat` | P0 | wip |
 | 3 | Shell (history, completion, pipes, scripting) | cash (Bourne-like), MBS | `ui/shell` | P0 | design |
-| 4 | Virtual FS, mounts, quotas, permissions | Phoenix, PotatOS virtual FS | `core/vfs` | P0 | design |
-| 5 | Boot/init/service mgr | Phoenix pxboot/startmgr | `core/boot`, `services/manager` | P0 | design |
-| 6 | Settings/registry, declarative config | PotatOS registry, cOS | `core/config` | P0 | design |
-| 7 | Logging, crash handling, recovery | — | `core/log`, `installer/repair` | P0 | design |
-| 8 | Package manager (deps, versions, sources) | unicornpkg, CCPM, ccpkg, Opus store | `pkg` | P0 | design |
+| 4 | Virtual FS, mounts, quotas, permissions | Phoenix, PotatOS virtual FS | `core/vfs` | P0 | wip |
+| 5 | Boot/init/service mgr | Phoenix pxboot/startmgr | `core/boot`, `services/manager` | P0 | wip |
+| 6 | Settings/registry, declarative config | PotatOS registry, cOS | `core/config` | P0 | wip |
+| 7 | Logging, crash handling, recovery | — | `core/log`, `installer/repair` | P0 | wip |
+| 8 | Package manager (deps, versions, sources) | unicornpkg, CCPM, ccpkg, Opus store | `pkg` | P0 | wip |
 | 9 | App store UI | Opus, OneOS store, PineStore | `ui/gui` + `pkg` | P1 | todo |
-| 10 | Installer wizard + hw detect/recommend | (none comparable) | `installer` | P0 | design |
+| 10 | Installer wizard + hw detect/recommend | (none comparable) | `installer` | P0 | wip |
 | 11 | Users, login, lock screen | Redworks, PotatOS | `core/auth` | P1 | todo |
 | 12 | Windowing GUI / desktop | OneOS, LevelOS, Opus, Phoenix WM | `ui/gui` (optional) | P1 | todo |
 | 13 | UI toolkit | Basalt, GuiH, Tamper | `ui/toolkit` | P1 | todo |
@@ -32,7 +32,7 @@ Exemplar details come from docs/RESEARCH.md (sources there); keep this file upda
 | 23 | Remote FS / file sync | Opus remote FS, Netmount | `net/fs` | P1 | todo |
 | 24 | Package mirror over rednet (HTTP-less clients) | — | `services/pkgmirror` | P1 | todo |
 | 25 | Browser/outside access, web gateway | Cloud Catcher, Ultron Control | `services/gateway` + external | P2 | todo |
-| 26 | Encryption (hash, HMAC, ChaCha, ECC, FS encryption, signing) | Anavrins libs, ecc, FSEncrypt, VeriCode | `lib/crypto` | P1 | todo |
+| 26 | Encryption (hash, HMAC, ChaCha, ECC, FS encryption, signing) | Anavrins libs, ecc, FSEncrypt, VeriCode | `lib/crypto` | P1 | wip |
 | 27 | Scheduler / cron / alarms | — | `services/cron` | P1 | todo |
 | 28 | Telemetry / metrics dashboards | Telem | `services/metrics` | P2 | todo |
 | 29 | GPS host/client, waypoints, maps | stock gps | `services/gps`, `apps/maps` | P1 | todo |
@@ -57,6 +57,10 @@ Exemplar details come from docs/RESEARCH.md (sources there); keep this file upda
 | 48 | Multi-computer scripting | Opus | `net/exec` | P2 | todo |
 | 49 | Virtualization/emulators | OrangeBox, lunatic86, LuaGB | packages | P3 | todo |
 | 50 | Kiosk / digital signage | — | `profiles/tv` | P3 | todo |
+
+Status notes (2026-09-29): rows 1, 2, 4-8 and 10 are `wip` = a working first version exists and is tested in CraftOS-PC, but the
+row's end-to-end criterion is not met yet (no per-process sandbox/permissions, no service manager, no in-game test).
+Row 26: hashing (SHA-256, CRC-32, base64, DEFLATE inflate) is done; ciphers, signatures and ECC are not started.
 
 Rule: an area is only "done" when a user can accomplish the task end-to-end on a stock CC:T server without extra mods
 (except where the area is mod-specific).

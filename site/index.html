@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tessera</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --dim:#5b6470; --card:#f3f5f8; --accent:#2457c5; --code:#0f1720; --codefg:#dbe7ff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12151a; --fg:#e8ecf1; --dim:#9aa5b1; --card:#1b2028; --accent:#7fa6ff; --code:#0b0e12; --codefg:#cfe0ff; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
+  main { max-width:46rem; margin:0 auto; padding:2rem 16px 4rem; }
+  h1 { margin:.2rem 0 0; font-size:2.2rem; }
+  .tag { color:var(--dim); margin:0 0 2rem; }
+  h2 { margin-top:2.2rem; font-size:1.2rem; }
+  pre { background:var(--code); color:var(--codefg); padding:.8rem 1rem; border-radius:8px; overflow-x:auto; }
+  .card { background:var(--card); padding:1rem 1.2rem; border-radius:10px; }
+  a { color:var(--accent); }
+  small { color:var(--dim); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tessera</h1>
+  <p class="tag">A modular operating system for CC: Tweaked computers. Small core, everything else on demand.</p>
+
+  <h2>Install</h2>
+  <p>On a computer with HTTP enabled, run:</p>
+  <pre>wget run https://OWNER.github.io/REPO/install.lua</pre>
+  <p>The installer sets up the core and the package manager, then offers the setup wizard, which detects your
+  hardware and recommends modules.</p>
+
+  <h2>No HTTP on your server?</h2>
+  <div class="card">
+    <p><strong>Pastebin backup:</strong> the installer is also published as a paste (see the project README for the id):
+    <code>pastebin run &lt;id&gt;</code></p>
+    <p><strong>Completely offline:</strong> download <a href="install.lua">install.lua</a> and a bundle below. Drag
+    <code>install.lua</code> onto the game window (or copy it in with a disk) and run it. When it asks for data, drag
+    the <code>.tsrbundle</code> file onto the window &mdash; or paste the numbered <code>TSR1</code> lines one at a time.
+    Everything is checksummed; a bad line is rejected and can simply be pasted again.</p>
+    <p><a href="bundles/full.tsrbundle">full.tsrbundle</a> (drag-and-drop) &middot;
+    <a href="bundles/full.txt">full.txt</a> (paste lines)</p>
+  </div>
+
+  <h2>Packages</h2>
+  <p>After installing: <code>pkg search</code>, <code>pkg install &lt;name&gt;</code>. The registry is a plain static site:
+  <a href="registry/index.json">registry/index.json</a>.</p>
+
+  <h2>Source and license</h2>
+  <p>Tessera is free software under the GNU AGPL v3 or later. Source: <a href="https://github.com/OWNER/REPO">https://github.com/OWNER/REPO</a>.
+  Every package manifest links to the exact source it was built from.</p>
+  <p><small>Not affiliated with CC: Tweaked, Mojang or Microsoft.</small></p>
+</main>
+</body>
+</html>

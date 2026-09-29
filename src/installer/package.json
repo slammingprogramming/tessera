@@ -1,0 +1,9 @@
+{
+  "name": "installer",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Setup wizard: detects hardware, recommends a profile and modules, installs them, and can re-run later to add or remove features",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "core": ">=0.1.0", "pkg": ">=0.1.0", "ui-tui": ">=0.1.0" },
+  "budget": 60000
+}

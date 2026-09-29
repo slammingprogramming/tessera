@@ -1,0 +1,10 @@
+{
+  "name": "ui-tui",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Text-mode UI toolkit: menus, checklists, prompts and progress bars that work on basic and advanced computers, turtles and pocket computers",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "core": ">=0.1.0" },
+  "provides": ["tsr:tui"],
+  "budget": 40000
+}

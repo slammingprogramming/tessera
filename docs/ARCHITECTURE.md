@@ -2,6 +2,9 @@
 
 Name: **Tessera** (prefix `tsr`; DECISIONS D-01). License: AGPL-3.0 (D-08). Status: design only, no code yet.
 
+> **Implementation status:** see docs/ROADMAP.md ("Status"). Sections 2-4, 8, 9 and the TUI part of 10 are implemented (M1-M4);
+> the rest is design. Where this document and the code differ, the code wins and this file should be fixed.
+
 ## 1. Principles
 
 1. **Small core, everything else a package.** The core must fit comfortably in well under 1 MB (stock disk limit) and

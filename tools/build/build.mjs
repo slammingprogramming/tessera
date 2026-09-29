@@ -26,6 +26,12 @@ const args = process.argv.slice(2);
 const noMinify = args.includes('--no-minify');
 const dist = join(root, 'dist');
 const config = JSON.parse(readFileSync(join(root, 'tools', 'build', 'config.json'), 'utf8'));
+// In GitHub Actions the real repository is known: derive the URLs so a fork/rename needs no config edits.
+if (process.env.GITHUB_REPOSITORY) {
+  const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+  config.repo = `https://github.com/${owner}/${repo}`;
+  config.pagesBase = `https://${owner.toLowerCase()}.github.io/${repo}`;
+}
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 const walk = (dir) => readdirSync(dir).flatMap((n) => {
@@ -152,7 +158,15 @@ if (existsSync(installer)) {
   writeFileSync(join(dist, 'site', 'install.lua'), noMinify ? src : minifyLua(src));
 }
 const siteAssets = join(root, 'site');
-if (existsSync(siteAssets)) cpSync(siteAssets, join(dist, 'site'), { recursive: true });
+if (existsSync(siteAssets)) {
+  cpSync(siteAssets, join(dist, 'site'), { recursive: true });
+  for (const f of readdirSync(siteAssets)) {
+    if (/\.(html|txt|md|json)$/.test(f)) {
+      const p = join(dist, 'site', f);
+      writeFileSync(p, substitute(readFileSync(p, 'utf8')));
+    }
+  }
+}
 
 console.log(`\ntotal installed size (all packages, minified): ${totalInstalled} B`);
 if (errors.length) {

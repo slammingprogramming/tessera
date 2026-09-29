@@ -59,6 +59,12 @@ local function makeEnv()
   local cases = {}
   env.loader = loader
   if loader then env.require = loader.require end
+  -- helpers loaded from tests run in the test environment, so they see `require`, test/eq/ok...
+  env.dofile = function(path, ...)
+    local chunk, err = loadfile(path, nil, env)
+    if not chunk then error(err, 2) end
+    return chunk(...)
+  end
   env.test = function(name, fn) cases[#cases + 1] = { name = name, fn = fn } end
   env.eq = function(a, b, msg)
     if not deepEq(a, b) then

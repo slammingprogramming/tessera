@@ -81,12 +81,16 @@ getEquipped*; tools = diamond pickaxe/axe/shovel/hoe/sword, wireless/ender modem
 ---
 
 ### 2.6 Local dev environment (verified 2026-09-29 on the user's machine)
-CraftOS-PC 2.8 at `C:\Program Files\CraftOS-PC` (`CraftOS-PC.exe`, `CraftOS-PC_console.exe`, `rom/`, `bios.lua`,
-`lua52.dll`); user data at `%APPDATA%\CraftOS-PC\{computer,config}`. CLI flags include `--headless`, `--cli`, `--raw`,
-`--script`, `--exec`, `--mount[-ro|-rw] <path>=<dir>`, `-d <dir>`, `--rom`, `--id`, plus CCEmuX-compat flags.
-The bundled Lua 5.2 DLL suggests a different VM than CC:T's Cobalt **[unverified]** → never trust emulator-only results
-for VM-sensitive behaviour. Headless runs produced no output in first attempts (see AGENTS.md §5). Node 24.18,
-Python 3.13.2, Git 2.49 available; no standalone Lua.
+CraftOS-PC **2.8.3** at `C:Program FilesCraftOS-PC` (`CraftOS-PC.exe`, `CraftOS-PC_console.exe`, `rom/`, `bios.lua`,
+`lua52.dll`); user data at `%APPDATA%CraftOS-PC{computer,config}`. It reports `_HOST` "ComputerCraft 1.112.0
+(CraftOS-PC v2.8.3)", `_VERSION` = Lua 5.2, supports `goto`, exposes `debug.sethook`. **Headless mode prints terminal frames
+to stdout and exits 0 - read results from a mounted directory** (`--mount-rw out=<dir>`; the script writes a file, then
+`os.shutdown()`). Monitors cannot be created headless (`periphemu.create` errors); speaker/drive/modem can. In this
+emulator `fs.getFreeSpace("/")` returns ~10^12 (host disk), unlike a real 1 MB computer. CLI flags: `--headless`, `--cli`,
+`--raw`, `--script`, `--exec`, `--mount[-ro|-rw] <path>=<dir>`, `-d <dir>`, `--id`. Because the VM is Lua 5.2 (not Cobalt),
+never trust emulator-only results for VM-sensitive behaviour. Known Cobalt difference, learned via a failing run:
+`string.format("%d", n)` raises "not a number in proper range" for |n| >= 2^31 (use `%.0f`). Node 24.18, Python 3.13.2,
+Git 2.49 available; no standalone Lua.
 
 ## 3. Existing operating systems ("parity targets")
 

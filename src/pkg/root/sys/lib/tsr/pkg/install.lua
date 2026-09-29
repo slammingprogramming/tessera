@@ -199,7 +199,7 @@ function M.apply(plan, opts)
   local need = M.spaceNeeded(plan)
   local free = require("tsr.util").freeSpace()
   if not opts.lazy and need + margin > free then
-    return nil, ("not enough disk space: need %d bytes (+%d margin), %.0f free"):format(need, margin, free)
+    return nil, ("not enough disk space: need %.0f bytes (+%.0f margin), %.0f free"):format(need, margin, free)
   end
 
   -- 1. stage payloads ------------------------------------------------------------------------------------------------

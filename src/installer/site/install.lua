@@ -17,7 +17,7 @@ local SNAPSHOT = "@PASTEBIN_SNAPSHOT@"
 local SET = { "core", "pkg" }
 
 local args = { ... }
-local opts = { yes = false, reboot = true }
+local opts = { yes = false, reboot = true, wizard = true }
 local dirArg, bundleFile
 do
   local i = 1
@@ -25,6 +25,7 @@ do
     local a = args[i]
     if a == "--yes" or a == "-y" then opts.yes = true
     elseif a == "--no-reboot" then opts.reboot = false
+    elseif a == "--no-wizard" then opts.wizard = false
     elseif a == "--bundle" then i = i + 1 bundleFile = args[i]
     else dirArg = a end
     i = i + 1
@@ -212,8 +213,9 @@ if not ok then
   die(tostring(err))
 end
 
+local loader
 local ok2, err2 = pcall(function()
-  local loader = dofile("/sys/lib/tsr/loader.lua")
+  loader = dofile("/sys/lib/tsr/loader.lua")
   local db = loader.require("tsr.pkg.db")
   for _, m in ipairs(manifests) do
     local files = {}
@@ -230,7 +232,29 @@ if not ok2 then
 end
 
 say(colors.lime, "Installed Tessera core and the package manager.")
-print("Next: reboot, then run `pkg install <name>` (try `pkg search`).")
+
+-- Continue straight into the setup wizard (detects hardware, recommends modules) unless told not to.
+if opts.wizard and not opts.yes then
+  color(colors.yellow)
+  write("Run the setup wizard now? (recommended) [Y/n] ")
+  color(colors.white)
+  local a = read()
+  if not a or a == "" or a:lower():sub(1, 1) == "y" then
+    local wok, werr = pcall(function()
+      _G.tsr = _G.tsr or { require = loader.require }
+      local config = loader.require("tsr.config")
+      config.setDefaults(loader.require("tsr.defaults"))
+      if dirArg then config.set("pkg.sources", { { name = "mirror", type = "dir", path = dirArg } }, "user") end
+      local pkg = loader.require("tsr.pkg")
+      local iok, ierr = pkg.installPackages({ "installer" }, { keepCache = true })
+      if not iok then error(ierr, 0) end
+      os.run(setmetatable({ shell = shell, multishell = multishell }, { __index = _G }), "/sys/bin/tsr-setup.lua")
+    end)
+    if wok then return end
+    say(colors.red, "Could not start the wizard: " .. tostring(werr))
+  end
+end
+print("Next: reboot, then run `pkg install <name>` or `tsr-setup` (try `pkg search`).")
 if opts.reboot and not opts.yes then
   color(colors.yellow)
   write("Reboot now? [Y/n] ")

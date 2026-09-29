@@ -17,5 +17,16 @@ Each milestone must run on CraftOS-PC headless tests and be smoke-tested in-game
 | M9 | App parity wave | Editor, files, help, storage system, GPS, cron, audio/media, games (port/depend), turtle stock jobs | Parity matrix P1 rows all `done` |
 | M10 | TV + expansion | Smart-TV shell, media pipeline, mirroring, kiosk; next ideas | — |
 
+## Status (2026-09-29)
+
+| M | Status | Notes |
+|---|---|---|
+| M0 | done | docs |
+| M1 | done | headless test runner works via a mounted results directory; branch split implemented; in-game paste/file-drop limits **not yet measured** |
+| M2 | done | 12 kernel + VFS/config/log tests, boot e2e; crash-loop guard and recovery key exist but have no e2e scenario yet |
+| M3 | done | offline paths tested (directory mirror, bundle file, pasted chunks); **HTTP and Pastebin channels are untested against real servers** (no public repo yet); browser bundle-builder page still to do |
+| M4 | done | recommender + wizard tested with scripted UI and unattended e2e; mod signatures other than Advanced Peripherals are unverified guesses |
+| M5–M10 | not started | |
+
 Cross-cutting from M2 onward: docs per module, tests per module, size budget checks, security review of anything that
 executes downloaded code.
