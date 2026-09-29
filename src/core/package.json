@@ -1,0 +1,10 @@
+{
+  "name": "core",
+  "version": "0.1.0",
+  "type": "meta",
+  "description": "Tessera core: boot, kernel/scheduler, VFS, config, logging, CraftOS compatibility",
+  "license": "AGPL-3.0-or-later",
+  "requires": {},
+  "provides": ["tsr:core"],
+  "budget": 150000
+}
