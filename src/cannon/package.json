@@ -1,0 +1,13 @@
+{
+  "name": "cannon",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Redstone TNT-cannon controller: charge and fire sequences with timing, arming code, auto-disarm and a dry-run mode (successor of the planned TNT Cannon Controller)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "redstone": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 10000
+}

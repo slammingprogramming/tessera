@@ -1,0 +1,13 @@
+{
+  "name": "access-control",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Door security: keycard doors (floppy disks signed with HMAC, levels, revocation, log) and keypad doors (salted code, lockout); pulse or toggle outputs, piston doors supported",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "redstone": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 20000
+}

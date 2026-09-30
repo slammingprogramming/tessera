@@ -1,0 +1,12 @@
+{
+  "name": "redstone",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Redstone control: rs (read, set, pulse, toggle, watch any side, bundled colour or relay) and redseq (timed redstone sequences from small script files)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 20000
+}

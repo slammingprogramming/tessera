@@ -1,0 +1,13 @@
+{
+  "name": "chunkctl",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Chunk-loader controller: switch a redstone-powered chunk loader on always, on a daily schedule, or only while players are near (Advanced Peripherals player detector)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "redstone": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 10000
+}

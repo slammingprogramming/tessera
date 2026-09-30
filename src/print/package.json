@@ -1,0 +1,12 @@
+{
+  "name": "print",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Printing tool: word-wrapped multi-page printouts from files or typed text, titles, page numbers, copies and paper/ink checks (successor of the old printer script)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 10000
+}
