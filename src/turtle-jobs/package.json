@@ -1,0 +1,21 @@
+{
+  "name": "turtle-jobs",
+  "version": "0.1.0",
+  "type": "meta",
+  "description": "Everything for turtles in one go: bore, carve, stripmine, quarry, build, treefarm, cropfarm, cobblegen, guard and the wireless remote",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "bore": ">=0.1.0",
+    "carve": ">=0.1.0",
+    "stripmine": ">=0.1.0",
+    "quarry": ">=0.1.0",
+    "build": ">=0.1.0",
+    "treefarm": ">=0.1.0",
+    "cropfarm": ">=0.1.0",
+    "cobblegen": ">=0.1.0",
+    "guard": ">=0.1.0",
+    "turtle-remote": ">=0.1.0"
+  },
+  "budget": 16000
+}

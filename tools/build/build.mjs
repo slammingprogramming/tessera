@@ -149,6 +149,27 @@ for (const name of packageNames()) {
   console.log(`${name.padEnd(24)} ${meta.version.padEnd(8)} ${String(files.length).padStart(3)} files  ${String(installed).padStart(7)} B installed  ${String(download).padStart(7)} B deflated`);
 }
 
+// Every dependency must be a real package (or a name some package provides), and there must be no dependency cycle.
+{
+  const provided = new Set(Object.keys(index.packages));
+  for (const e of Object.values(index.packages)) for (const p of e.provides ?? []) provided.add(p);
+  const requires = {};
+  for (const name of Object.keys(index.packages)) {
+    const m = JSON.parse(readFileSync(join(dist, 'site', 'registry', 'packages', `${name}.json`), 'utf8')).versions[index.packages[name].version];
+    requires[name] = Object.keys(m.requires ?? {});
+    for (const dep of requires[name]) if (!provided.has(dep)) errors.push(`${name}: requires unknown package "${dep}"`);
+  }
+  const state = {};
+  const visit = (n, trail) => {
+    if (state[n] === 2 || !requires[n]) return;
+    if (state[n] === 1) { errors.push(`dependency cycle: ${[...trail, n].join(' -> ')}`); return; }
+    state[n] = 1;
+    for (const d of requires[n]) visit(d, [...trail, n]);
+    state[n] = 2;
+  };
+  for (const n of Object.keys(requires)) visit(n, []);
+}
+
 writeFileSync(join(dist, 'site', 'registry', 'index.json'), JSON.stringify(index));
 const mirrorsPath = join(root, 'tools', 'build', 'mirrors.json');
 writeFileSync(join(dist, 'site', 'mirrors.json'), existsSync(mirrorsPath) ? readFileSync(mirrorsPath) : '{"pastebin":{}}');

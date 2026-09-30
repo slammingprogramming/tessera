@@ -1,0 +1,10 @@
+{
+  "name": "treefarm",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Automatic tree farm turtle: waits for the tree, fells it, replants the sapling, fuels itself from logs and empties into a chest (ported and rebuilt from the old treefarm script)",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "turtle-core": ">=0.1.0", "app-kit": ">=0.1.0" },
+  "platforms": { "profiles": ["turtle"] },
+  "budget": 12000
+}

@@ -60,6 +60,13 @@ function C.io()
     if s == nil or s == "" then return default end
     return s
   end
+  --- Ask for a secret; what is typed is shown as *.
+  function io.secret(text)
+    write(text .. ": ")
+    local s = read("*")
+    if s == nil or s == "" then return nil end
+    return s
+  end
   function io.ask(text, default)
     write(text .. (default == false and " [y/N] " or " [Y/n] "))
     local s = read()

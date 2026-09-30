@@ -1,0 +1,10 @@
+{
+  "name": "build",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Building assistant for turtles: floors, walls, hollow boxes and layered blueprint files, with material checks and resume",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "turtle-core": ">=0.1.0", "app-kit": ">=0.1.0" },
+  "platforms": { "profiles": ["turtle"] },
+  "budget": 14000
+}

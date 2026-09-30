@@ -104,6 +104,13 @@ function Sim:chestCount(x, y, z, name)
   return n
 end
 
+--- A block that instantly regrows after being dug (cobblestone generator).
+function Sim:regenerate(x, y, z, name)
+  self.regen = self.regen or {}
+  self.regen[key(x, y, z)] = name
+  self:set(x, y, z, name)
+end
+
 function Sim:addMob(x, y, z, n) self.mobs[key(x, y, z)] = (self.mobs[key(x, y, z)] or 0) + (n or 1) end
 
 function Sim:record(what) self.log[#self.log + 1] = what end
@@ -179,6 +186,8 @@ function Sim:makeApi()
     if UNBREAKABLE[b.name] then return false, "Unbreakable block detected" end
     sim.blocks[key(x, y, z)] = nil
     sim:record("dig " .. b.name)
+    local regen = sim.regen and sim.regen[key(x, y, z)]
+    if regen then sim.blocks[key(x, y, z)] = { name = regen, state = {} } end
     local drop = DROPS[b.name]
     if drop == nil then drop = b.name end
     if drop then sim:pickUp(drop, 1) end
@@ -202,7 +211,7 @@ function Sim:makeApi()
     if name == "minecraft:wheat_seeds" then
       if sim:get(x, y - 1, z) ~= "minecraft:farmland" then return false, "Cannot place item here" end
       placed, state = "minecraft:wheat", { age = 0 }
-    elseif name == "minecraft:sapling" then
+    elseif name:find("sapling$") then
       local below = sim:get(x, y - 1, z)
       if below ~= "minecraft:dirt" and below ~= "minecraft:grass_block" then return false, "Cannot place item here" end
     end
