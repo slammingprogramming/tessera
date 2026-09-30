@@ -4,7 +4,20 @@
   "type": "app",
   "description": "Automatic crop farm turtle: harvests only ripe wheat, carrots, potatoes, beetroot or nether wart in a rectangle and replants them",
   "license": "AGPL-3.0-or-later",
-  "requires": { "turtle-core": ">=0.1.0", "app-kit": ">=0.1.0", "excavate": ">=0.1.0" },
-  "platforms": { "profiles": ["turtle"] },
-  "budget": 12000
+  "requires": {
+    "turtle-core": ">=0.1.0",
+    "app-kit": ">=0.1.0",
+    "excavate": ">=0.1.0"
+  },
+  "platforms": {
+    "profiles": [
+      "turtle"
+    ]
+  },
+  "budget": 12000,
+  "tags": [
+    "turtle",
+    "farming",
+    "crops"
+  ]
 }

@@ -4,6 +4,11 @@
   "type": "lib",
   "description": "Small shared helpers for Tessera command-line apps: option parsing, prompts, colour output",
   "license": "AGPL-3.0-or-later",
-  "requires": { "core": ">=0.1.0" },
-  "budget": 8000
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 8000,
+  "tags": [
+    "library"
+  ]
 }

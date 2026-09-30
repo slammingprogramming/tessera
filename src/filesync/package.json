@@ -1,0 +1,17 @@
+{
+  "name": "filesync",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "File sync between computers over rednet: serve a folder, pull or push changes; HMAC-authenticated and path-confined",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 16000,
+  "tags": [
+    "network",
+    "files",
+    "sync"
+  ]
+}

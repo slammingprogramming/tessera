@@ -1,0 +1,16 @@
+{
+  "name": "game-mork",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Mork: a small text adventure in the tradition of the classic dungeon crawls",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 24000,
+  "tags": [
+    "game",
+    "adventure"
+  ]
+}

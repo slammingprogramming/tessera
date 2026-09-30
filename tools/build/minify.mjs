@@ -31,6 +31,12 @@ export function minifyLua(src) {
   if (src.startsWith('#!')) {
     while (i < n && src[i] !== '\n') i++;
   }
+  // keep the SPDX licence line (one short line per file): provenance survives minification, line numbers stay intact
+  const spdx = src.match(/^-- SPDX-License-Identifier: [^\r\n]*/);
+  if (spdx) {
+    out.push(spdx[0]);
+    i = spdx[0].length;
+  }
 
   while (i < n) {
     const c = src[i];

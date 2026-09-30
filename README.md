@@ -15,7 +15,8 @@ Goals
 - Optional GUI (built from scratch) you can add later.
 - Control modded machines through native CC integrations, with redstone as the fallback.
 
-See [docs/](docs/) for research, architecture, roadmap and decisions.
+See [docs/](docs/) for research, architecture, roadmap and decisions, and [docs/APPS.md](docs/APPS.md) for the optional apps
+(turtle mining/farming/building jobs, redstone tools, door security, jukebox, storage sorting, file sync, a text adventure and more).
 
 ## Try it (development)
 

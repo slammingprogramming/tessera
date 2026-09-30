@@ -9,5 +9,10 @@
     "redstone": ">=0.1.0",
     "app-kit": ">=0.1.0"
   },
-  "budget": 20000
+  "budget": 20000,
+  "tags": [
+    "security",
+    "doors",
+    "redstone"
+  ]
 }

@@ -9,5 +9,10 @@
     "redstone": ">=0.1.0",
     "app-kit": ">=0.1.0"
   },
-  "budget": 10000
+  "budget": 10000,
+  "tags": [
+    "redstone",
+    "game",
+    "tnt"
+  ]
 }

@@ -4,6 +4,14 @@
   "type": "app",
   "description": "Wireless turtle remote control: `tlisten` on the turtle, `tcontrol` on a computer or pocket computer; authenticated (HMAC) and replay-protected",
   "license": "AGPL-3.0-or-later",
-  "requires": { "turtle-core": ">=0.1.0", "app-kit": ">=0.1.0" },
-  "budget": 16000
+  "requires": {
+    "turtle-core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 16000,
+  "tags": [
+    "turtle",
+    "wireless",
+    "remote"
+  ]
 }

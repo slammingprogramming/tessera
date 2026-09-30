@@ -1,0 +1,16 @@
+{
+  "name": "gps",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "GPS tools: host a GPS beacon from saved coordinates (also at boot), show your position, save waypoints and get distance and bearing to them",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 10000,
+  "tags": [
+    "navigation",
+    "waypoints"
+  ]
+}

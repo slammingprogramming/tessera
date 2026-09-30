@@ -145,7 +145,7 @@ for (const name of packageNames()) {
   };
   writeFileSync(join(dist, 'site', 'registry', 'packages', `${name}.json`),
     JSON.stringify({ name, latest: meta.version, versions: { [meta.version]: manifest } }));
-  index.packages[name] = { version: meta.version, type: meta.type, description: meta.description, size: installed, provides: meta.provides ?? [] };
+  index.packages[name] = { version: meta.version, type: meta.type, description: meta.description, size: installed, provides: meta.provides ?? [], tags: meta.tags ?? [] };
   console.log(`${name.padEnd(24)} ${meta.version.padEnd(8)} ${String(files.length).padStart(3)} files  ${String(installed).padStart(7)} B installed  ${String(download).padStart(7)} B deflated`);
 }
 

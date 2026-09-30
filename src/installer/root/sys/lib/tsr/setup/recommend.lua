@@ -129,7 +129,13 @@ function M.packages(probe, profile)
     if c.speakers > 0 or profile == "tv" then add("media", "optional", "video and image player for monitors") end
   end
   if c.printers > 0 then add("print", "optional", "printing tools for the attached printer") end
-  if c.drives > 0 then add("disk-tools", "optional", "disk drive attached: installer disks, backups and copying") end
+  if c.drives > 0 then
+    add("disk-tools", "optional", "disk drive attached: installer disks, backups and copying")
+    add("access-control", "optional", "disk drive attached: keycard doors (with a redstone output for the door)")
+  end
+  if probe.hasModem and kind == "computer" then
+    add("filesync", "optional", "modem attached: keep folders in sync between computers")
+  end
 
   -- storage / power / redstone ---------------------------------------------------------------------------------------------
   if c.inventories >= 2 and profile ~= "server" then

@@ -23,7 +23,9 @@ function P.search(query)
   query = (query or ""):lower()
   local out = {}
   for name, entry in pairs(source.allPackages()) do
-    if query == "" or name:lower():find(query, 1, true) or (entry.description or ""):lower():find(query, 1, true) then
+    local tagHit = false
+    for _, t in ipairs(entry.tags or {}) do if t:lower():find(query, 1, true) then tagHit = true end end
+    if query == "" or tagHit or name:lower():find(query, 1, true) or (entry.description or ""):lower():find(query, 1, true) then
       local rec = db.get(name)
       out[#out + 1] = { name = name, entry = entry, installed = rec and rec.version or nil }
     end

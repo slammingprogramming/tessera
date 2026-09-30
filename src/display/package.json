@@ -8,5 +8,10 @@
     "core": ">=0.1.0",
     "app-kit": ">=0.1.0"
   },
-  "budget": 12000
+  "budget": 12000,
+  "tags": [
+    "monitor",
+    "clock",
+    "dashboard"
+  ]
 }

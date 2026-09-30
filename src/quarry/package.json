@@ -4,7 +4,18 @@
   "type": "app",
   "description": "Turtle quarry: dig a rectangular pit layer by layer, dumping into a chest when full; resumes after a reboot",
   "license": "AGPL-3.0-or-later",
-  "requires": { "excavate": ">=0.1.0" },
-  "platforms": { "profiles": ["turtle"] },
-  "budget": 12000
+  "requires": {
+    "excavate": ">=0.1.0"
+  },
+  "platforms": {
+    "profiles": [
+      "turtle"
+    ]
+  },
+  "budget": 12000,
+  "tags": [
+    "turtle",
+    "mining",
+    "pit"
+  ]
 }

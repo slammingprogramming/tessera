@@ -8,8 +8,7 @@
 -- Security: every request carries HMAC-SHA256(passphrase, counter|command|argument) and the turtle only accepts a
 -- counter higher than the last one it saw from that computer, so captured messages cannot be replayed. Only a fixed set
 -- of turtle commands is understood — the remote can never run arbitrary code on the turtle. Replies are signed too.
-local hash = require("tsr.hash")
-local vfs = require("tsr.vfs")
+local secure = require("tsrapps.secure")
 local cli = require("tsrapps.cli")
 
 local R = {}
@@ -22,26 +21,9 @@ R.STATE_FILE = "/var/lib/tsr/turtle/remote.json"
 -- Signing
 ---------------------------------------------------------------------------------------------------------------------
 
-function R.sign(secret, n, cmd, arg)
-  return hash.hmacSha256(secret, tostring(n) .. "|" .. cmd .. "|" .. tostring(arg == nil and "" or arg))
-end
-
---- Build a request. `n` must increase with every request from this sender (default: the current time in ms).
-function R.request(secret, cmd, arg, n)
-  n = n or (os.epoch and os.epoch("utc") or os.clock() * 1000)
-  return { v = 1, n = n, cmd = cmd, arg = arg, sig = R.sign(secret, n, cmd, arg) }
-end
-
-local function replySig(secret, n, ok, data)
-  return hash.hmacSha256(secret, tostring(n) .. "|reply|" .. tostring(ok) .. "|" .. textutils.serializeJSON(data == nil and "" or data))
-end
-
---- Check a reply came from a turtle that knows the passphrase. Returns true or false + reason.
-function R.verifyReply(secret, reply, n)
-  if type(reply) ~= "table" or reply.n ~= n then return false, "reply does not match the request" end
-  if reply.sig ~= replySig(secret, reply.n, reply.ok, reply.data) then return false, "bad signature on the reply" end
-  return true
-end
+R.sign = secure.sign
+R.request = secure.request
+R.verifyReply = secure.verifyReply
 
 ---------------------------------------------------------------------------------------------------------------------
 -- The turtle side: whitelisted commands
@@ -98,11 +80,8 @@ R.COMMANDS = {
 
 --- Handle one request from `sender`. state = { last = { [sender] = counter } } (mutated). Returns reply table, stop?
 function R.handle(secret, state, sender, msg)
-  if type(msg) ~= "table" or msg.v ~= 1 or type(msg.cmd) ~= "string" or type(msg.n) ~= "number" then return nil end
-  if msg.sig ~= R.sign(secret, msg.n, msg.cmd, msg.arg) then return nil end        -- wrong key: stay silent
-  local last = state.last[sender] or -1
-  if msg.n <= last then return nil end                                                -- replay
-  state.last[sender] = msg.n
+  msg = secure.gate(secret, state, sender, msg)
+  if not msg then return nil end
   local fn = R.COMMANDS[msg.cmd]
   local ok, data
   if not fn then
@@ -112,29 +91,13 @@ function R.handle(secret, state, sender, msg)
     if not good then ok, data = false, tostring(a)
     else ok, data = a and true or false, b end
   end
-  local reply = { v = 1, n = msg.n, ok = ok, data = data }
-  reply.sig = replySig(secret, reply.n, reply.ok, reply.data)
-  return reply, msg.cmd == "stop"
+  return secure.reply(secret, msg, ok, data), msg.cmd == "stop"
 end
 
-local function loadState()
-  local s = vfs.readJSON(R.STATE_FILE)
-  if type(s) ~= "table" or type(s.last) ~= "table" then s = { last = {} } end
-  return s
-end
+local function loadState() return secure.loadState(R.STATE_FILE) end
 
 --- The default network: rednet on the first modem found.
-function R.rednetNet()
-  local modem = peripheral.find("modem")
-  if not modem then return nil, "no modem attached" end
-  rednet.open(peripheral.getName(modem))
-  local net = {}
-  function net.receive(timeout) local id, msg = rednet.receive(R.PROTOCOL, timeout) return id, msg end
-  function net.send(id, msg) rednet.send(id, msg, R.PROTOCOL) end
-  function net.host(name) rednet.host(R.PROTOCOL, name) end
-  function net.lookup(name) return rednet.lookup(R.PROTOCOL, name) end
-  return net
-end
+function R.rednetNet() return secure.rednetNet(R.PROTOCOL) end
 
 --- Serve commands until a valid `stop` arrives (or net.receive raises). opts.rounds limits messages (tests).
 function R.serve(secret, net, io, opts)
@@ -146,7 +109,7 @@ function R.serve(secret, net, io, opts)
     if sender then
       local reply, stop = R.handle(secret, state, sender, msg)
       if reply then
-        vfs.writeJSON(R.STATE_FILE, state)
+        secure.saveState(R.STATE_FILE, state)
         net.send(sender, reply)
         handled = handled + 1
         if io and io.say and msg.cmd ~= "status" then io.say(("#%d: %s %s -> %s"):format(sender, msg.cmd, tostring(msg.arg or ""), tostring(reply.ok))) end
@@ -162,30 +125,11 @@ end
 -- Pairing (shared passphrase)
 ---------------------------------------------------------------------------------------------------------------------
 
-function R.loadKey()
-  local h = fs.open(R.KEY_FILE, "r")
-  if not h then return nil end
-  local k = h.readAll()
-  h.close()
-  k = k and k:match("^%s*(.-)%s*$")
-  return (k and k ~= "") and k or nil
-end
-
-function R.saveKey(secret)
-  return vfs.writeFile(R.KEY_FILE, secret)
-end
+function R.loadKey() return secure.loadKey(R.KEY_FILE) end
+function R.saveKey(secret) return secure.saveKey(R.KEY_FILE, secret) end
 
 --- The passphrase: saved, or asked for (and saved) when missing or --pair is given.
-function R.secret(io, force)
-  local key = (not force) and R.loadKey()
-  if key then return key end
-  io.say("Choose a passphrase shared by the turtle and its remote (at least 8 characters).")
-  local a = io.secret and io.secret("Passphrase") or io.prompt("Passphrase")
-  if not a or #a < 8 then return nil, "the passphrase must have at least 8 characters" end
-  R.saveKey(a)
-  io.say("Saved. Use the same passphrase on the other computer.")
-  return a
-end
+function R.secret(io, force) return secure.secret(io, R.KEY_FILE, force) end
 
 ---------------------------------------------------------------------------------------------------------------------
 -- Commands
@@ -213,25 +157,7 @@ function R.listen(args, io, net)
 end
 
 --- One request/response round trip. Returns reply.data (or nil, error).
-function R.call(secret, net, target, cmd, arg, timeout)
-  local req = R.request(secret, cmd, arg)
-  net.send(target, req)
-  local deadline = os.clock() + (timeout or 5)
-  while true do
-    local remaining = deadline - os.clock()
-    if remaining <= 0 then return nil, "no answer from computer " .. tostring(target) end
-    local sender, reply = net.receive(remaining)
-    if sender == target then
-      local good, why = R.verifyReply(secret, reply, req.n)
-      if good then
-        if reply.ok then return reply.data == nil and true or reply.data end
-        return nil, tostring(reply.data or "command failed")
-      elseif why ~= "reply does not match the request" then
-        return nil, why
-      end
-    end
-  end
-end
+R.call = secure.call
 
 R.KEYS = {
   w = "forward", s = "back", a = "left", d = "right", r = "up", f = "down",

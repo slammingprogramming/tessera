@@ -66,6 +66,63 @@ function F.monitor(w, h)
   return m
 end
 
+--- A fake chest network. F.inventories({ chest_a = 27, chest_b = 9 }) returns reg (name -> inventory). Each inventory
+--- implements the generic `inventory` peripheral API used by Tessera: size, list, getItemDetail, pushItems.
+--- Use inv.put(name, count) to add items; inv.total(name) to count them.
+function F.inventories(sizes)
+  local reg = {}
+  local STACK = 64
+  for name, size in pairs(sizes) do
+    local inv = { _type = "inventory", slots = {}, n = size, name = name }
+    function inv.size() return inv.n end
+    function inv.list()
+      local out = {}
+      for i, it in pairs(inv.slots) do out[i] = { name = it.name, count = it.count } end
+      return out
+    end
+    function inv.getItemDetail(slot)
+      local it = inv.slots[slot]
+      return it and { name = it.name, count = it.count, maxCount = STACK } or nil
+    end
+    --- put items in; returns how many did not fit
+    function inv.put(item, count)
+      for i = 1, inv.n do
+        local it = inv.slots[i]
+        if it and it.name == item and it.count < STACK and count > 0 then
+          local add = math.min(STACK - it.count, count)
+          it.count, count = it.count + add, count - add
+        end
+      end
+      for i = 1, inv.n do
+        if not inv.slots[i] and count > 0 then
+          local add = math.min(STACK, count)
+          inv.slots[i] = { name = item, count = add }
+          count = count - add
+        end
+      end
+      return count
+    end
+    function inv.total(item)
+      local n = 0
+      for _, it in pairs(inv.slots) do if item == nil or it.name == item then n = n + it.count end end
+      return n
+    end
+    function inv.pushItems(toName, fromSlot, limit)
+      local dest = reg[toName]
+      local it = inv.slots[fromSlot]
+      if not dest or not it then return 0 end
+      local want = math.min(limit or it.count, it.count)
+      local left = dest.put(it.name, want)
+      local moved = want - left
+      it.count = it.count - moved
+      if it.count <= 0 then inv.slots[fromSlot] = nil end
+      return moved
+    end
+    reg[name] = inv
+  end
+  return reg
+end
+
 --- A fake clock + sleep: sleep() advances `.now` instead of waiting, and records durations.
 function F.clock()
   local c = { now = 0, sleeps = {} }

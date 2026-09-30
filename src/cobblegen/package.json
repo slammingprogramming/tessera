@@ -4,7 +4,19 @@
   "type": "app",
   "description": "Cobblestone generator turtle: mines a regenerating block in front of it, emptying into a chest when full",
   "license": "AGPL-3.0-or-later",
-  "requires": { "turtle-core": ">=0.1.0", "app-kit": ">=0.1.0" },
-  "platforms": { "profiles": ["turtle"] },
-  "budget": 12000
+  "requires": {
+    "turtle-core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "platforms": {
+    "profiles": [
+      "turtle"
+    ]
+  },
+  "budget": 12000,
+  "tags": [
+    "turtle",
+    "mining",
+    "cobblestone"
+  ]
 }

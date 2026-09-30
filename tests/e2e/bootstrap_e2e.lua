@@ -131,6 +131,48 @@ local okAll, errAll = pcall(function()
     check("wizard: everything still verifies", #pkg.verify() == 0)
   end)
 
+  scenario("every package in the registry installs, verifies and its commands load", function()
+    local ok, err = runInstaller("/site", "--yes")
+    check("all packages: bootstrap ran", ok, err)
+    local loader = dofile("/sys/lib/tsr/loader.lua")
+    local config = loader.require("tsr.config")
+    config.setDefaults(loader.require("tsr.defaults"))
+    config.set("pkg.sources", { { name = "mirror", type = "dir", path = "/site" } }, "user")
+    local pkg = loader.require("tsr.pkg")
+    local names = {}
+    for name in pairs(pkg.source.allPackages()) do names[#names + 1] = name end
+    table.sort(names)
+    check("all packages: registry lists many packages (" .. #names .. ")", #names >= 25)
+    local iok, ierr = pkg.installPackages(names)
+    check("all packages: installed together without conflicts", iok, ierr)
+    local problems = pkg.verify()
+    check("all packages: every installed file matches its hash", #problems == 0,
+      #problems > 0 and (problems[1].path .. " " .. problems[1].problem) or "")
+    local bad = {}
+    local launchers = 0
+    for _, dir in ipairs({ "/usr/bin", "/sys/bin" }) do
+      for _, f in ipairs(fs.isDir(dir) and fs.list(dir) or {}) do
+        local src = readFile(dir .. "/" .. f) or ""
+        local modName, fn = src:match('req%("([%w%._%-]+)"%)%.(%w+)')
+        if modName then
+          launchers = launchers + 1
+          local good, mod = pcall(loader.require, modName)
+          if not (good and type(mod) == "table" and type(mod[fn]) == "function") then bad[#bad + 1] = dir .. "/" .. f end
+        end
+      end
+    end
+    check("all packages: " .. launchers .. " command launchers resolve to real functions in the minified build",
+      launchers >= 25 and #bad == 0, table.concat(bad, ", "))
+    -- meta package pulled everything it names
+    local jobs = pkg.db.get("turtle-jobs")
+    check("all packages: the turtle-jobs bundle is registered", jobs ~= nil and jobs.requires.bore ~= nil)
+    -- removing a package that others need is refused; removing a leaf works
+    local rok, rerr = pkg.remove({ "excavate" })
+    check("all packages: dependents protect a library from removal", rok == nil and tostring(rerr):find("required by") ~= nil, tostring(rerr))
+    local lok = pkg.remove({ "game-mork" })
+    check("all packages: a leaf app can be removed", lok == true and not fs.exists("/usr/bin/mork.lua"))
+  end)
+
   scenario("second install is refused", function()
     runInstaller("/site", "--yes")
     local before = readFile("/sys/boot.lua")

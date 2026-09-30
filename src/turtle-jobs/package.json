@@ -17,5 +17,9 @@
     "guard": ">=0.1.0",
     "turtle-remote": ">=0.1.0"
   },
-  "budget": 16000
+  "budget": 16000,
+  "tags": [
+    "turtle",
+    "bundle"
+  ]
 }
