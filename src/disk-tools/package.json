@@ -1,0 +1,12 @@
+{
+  "name": "disk-tools",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Disk drive tools: list disks, show contents and space, label, wipe, copy files, and make a disk auto-run a program",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 10000
+}

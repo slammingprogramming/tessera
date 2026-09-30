@@ -31,9 +31,39 @@ function F.peripheralApi(devices)
     end
     return table.unpack(found)
   end
+  function api.getName(obj) for n, d in pairs(devices) do if d == obj then return n end end end
   function api.getMethods(name) local m = {} for k, v in pairs(devices[name] or {}) do if type(v) == "function" then m[#m + 1] = k end end return m end
   function api.call(name, method, ...) return devices[name][method](...) end
   return api
+end
+
+--- A fake monitor: a text grid you can read back with :lines(). Records the text scale and colours.
+function F.monitor(w, h)
+  local m = { w = w or 20, h = h or 6, scale = 1, cx = 1, cy = 1, fg = colors.white, bg = colors.black, _type = "monitor" }
+  m.grid, m.fgs = {}, {}
+  local function blank() for y = 1, m.h do m.grid[y] = string.rep(" ", m.w) m.fgs[y] = {} end end
+  blank()
+  function m.getSize() return m.w, m.h end
+  function m.setTextScale(s) m.scale = s end
+  function m.clear() blank() end
+  function m.setCursorPos(x, y) m.cx, m.cy = x, y end
+  function m.setTextColor(c) m.fg = c end
+  function m.setBackgroundColor(c) m.bg = c end
+  function m.isColor() return true end
+  function m.write(s)
+    if m.cy < 1 or m.cy > m.h then return end
+    local row = m.grid[m.cy]
+    m.grid[m.cy] = (row:sub(1, m.cx - 1) .. s .. row:sub(m.cx + #s)):sub(1, m.w)
+    for i = 1, #s do m.fgs[m.cy][m.cx + i - 1] = m.fg end
+    m.cx = m.cx + #s
+  end
+  function m.lines()
+    local out = {}
+    for y = 1, m.h do out[y] = m.grid[y]:gsub("%s+$", "") end
+    return out
+  end
+  function m.text() return table.concat(m.lines(), "\n") end
+  return m
 end
 
 --- A fake clock + sleep: sleep() advances `.now` instead of waiting, and records durations.

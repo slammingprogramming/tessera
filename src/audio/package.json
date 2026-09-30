@@ -1,0 +1,12 @@
+{
+  "name": "audio",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Jukebox: play DFPWM music from files, folders or URLs on speakers, with playlist, shuffle, loop, volume and pause (successor of the planned jukebox script)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "budget": 12000
+}
