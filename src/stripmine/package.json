@@ -1,0 +1,10 @@
+{
+  "name": "stripmine",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Turtle strip miner: a main shaft with regular side branches, 1x2 tunnels, chest dumping and resume",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "excavate": ">=0.1.0" },
+  "platforms": { "profiles": ["turtle"] },
+  "budget": 12000
+}

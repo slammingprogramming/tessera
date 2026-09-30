@@ -1,0 +1,10 @@
+{
+  "name": "excavate",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Excavation engine for turtles: snake-order dig plans, fuel and inventory handling, torches, chest dumping, crash-safe resume",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "core": ">=0.1.0", "turtle-core": ">=0.1.0", "app-kit": ">=0.1.0" },
+  "provides": ["tsr:excavate"],
+  "budget": 20000
+}

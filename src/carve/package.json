@@ -1,0 +1,10 @@
+{
+  "name": "carve",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Turtle room digger: dig out a room from its corner or centre, with an optional offset; resumes after a reboot (successor of makeroom)",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "excavate": ">=0.1.0" },
+  "platforms": { "profiles": ["turtle"] },
+  "budget": 12000
+}

@@ -1,0 +1,11 @@
+{
+  "name": "turtle-core",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Turtle foundation: position/heading tracking that survives chunk unloads, fuel management, safe dig-and-move, inventory helpers, job save/resume",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "core": ">=0.1.0" },
+  "provides": ["tsr:turtle"],
+  "platforms": { "profiles": ["turtle"] },
+  "budget": 30000
+}

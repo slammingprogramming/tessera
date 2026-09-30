@@ -27,6 +27,16 @@ test("sha256 of binary data and a million-ish bytes", function()
   eq(hash.sha256(string.rep("a", 100000)), "6d1cf22d7cc09b085dfc25ee1a1f3ae0265804c607bc2074ad253bcc82fd81ee")
 end)
 
+test("hmac-sha256 RFC 4231 vectors", function()
+  eq(hash.hmacSha256(string.rep("\11", 20), "Hi There"),
+    "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7")
+  eq(hash.hmacSha256("Jefe", "what do ya want for nothing?"),
+    "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843")
+  -- key longer than the block size is hashed first (test case 6)
+  eq(hash.hmacSha256(string.rep("\170", 131), "Test Using Larger Than Block-Size Key - Hash Key First"),
+    "60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54")
+end)
+
 test("crc32 known values", function()
   eq(hash.crc32(""), 0)
   eq(hash.crc32("123456789"), 0xCBF43926)

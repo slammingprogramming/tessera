@@ -78,6 +78,20 @@ function M.sha256(msg)
   return sformat("%08x%08x%08x%08x%08x%08x%08x%08x", h1, h2, h3, h4, h5, h6, h7, h8)
 end
 
+--- HMAC-SHA256 (RFC 2104) of `msg` under `key`, as 64 hex characters.
+function M.hmacSha256(key, msg)
+  if #key > 64 then key = M.fromHex(M.sha256(key)) end
+  key = key .. srep("\0", 64 - #key)
+  local ipad, opad = {}, {}
+  for i = 1, 64 do
+    local k = sbyte(key, i)
+    ipad[i] = schar(bxor(k, 0x36))
+    opad[i] = schar(bxor(k, 0x5c))
+  end
+  local inner = M.fromHex(M.sha256(table.concat(ipad) .. msg))
+  return M.sha256(table.concat(opad) .. inner)
+end
+
 ---------------------------------------------------------------------------------------------------------------------
 -- CRC-32 (IEEE, as used by zip/gzip/PNG)
 ---------------------------------------------------------------------------------------------------------------------
