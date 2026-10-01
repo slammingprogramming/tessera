@@ -91,6 +91,9 @@ function M.packages(probe, profile)
 
   -- interface ------------------------------------------------------------------------------------------------------
   add("ui-tui", "recommended", "text interface used by the setup wizard and most tools")
+  if profile ~= "node" then
+    add("shell", "recommended", "tsh: pipes, redirects, scripts, history and tab completion (stock CraftOS programs still run)")
+  end
   if probe.computer.advanced and profile ~= "node" and profile ~= "turtle" then
     add("ui-gui", "optional", "graphical desktop with windows and mouse (you can also add it later)")
   end
@@ -151,9 +154,9 @@ function M.packages(probe, profile)
   local reasonFor = function(m) return ("%s peripherals detected (%s)"):format(m.name, m.example) end
   if modSet.advancedperipherals then
     add("integration-advancedperipherals", "recommended", reasonFor(modSet.advancedperipherals))
-    if hw.hasTypeMatching(probe, "^meBridge$") then add("integration-ae2", "recommended", "ME Bridge found: Applied Energistics 2 control") end
-    if hw.hasTypeMatching(probe, "^rsBridge$") then add("integration-rs", "recommended", "RS Bridge found: Refined Storage control") end
-    if hw.hasTypeMatching(probe, "^chatBox$") then add("svc-chatbot", "optional", "Chat Box found: in-game chat commands") end
+    if hw.hasTypeMatching(probe, "^me_?[bB]ridge$") then add("integration-ae2", "recommended", "ME Bridge found: Applied Energistics 2 control") end
+    if hw.hasTypeMatching(probe, "^rs_?[bB]ridge$") then add("integration-rs", "recommended", "RS Bridge found: Refined Storage control") end
+    if hw.hasTypeMatching(probe, "^chat_?[bB]ox$") then add("svc-chatbot", "optional", "Chat Box found: in-game chat commands") end
   end
   if modSet.mekanism then add("integration-mekanism", "recommended", reasonFor(modSet.mekanism)) end
   if modSet.create then add("integration-create", "recommended", reasonFor(modSet.create)) end

@@ -1,0 +1,14 @@
+{
+  "name": "shell",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "tsh: the Tessera shell — pipes, redirects, variables, globs, command substitution, if/for/while scripting, history and completion, and full compatibility with stock CraftOS programs",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 50000,
+  "tags": [
+    "system"
+  ]
+}

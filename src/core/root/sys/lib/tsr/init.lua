@@ -27,7 +27,17 @@ function M.startDaemons()
   return n
 end
 
---- The default interactive session: the stock CraftOS shell running as a Tessera process.
+--- Run tsh (package `shell`) when it is installed and not switched off with `shell.default = "craftos"`. Returns true when the
+--- user left it normally; false means "use the stock shell instead" (not installed, or it failed).
+local function runTsh(parentShell)
+  if config.get("shell.default", "tsh") ~= "tsh" or not fs.exists("/sys/lib/tsr/shell/repl.lua") then return false end
+  local ok, err = pcall(function() require("tsr.shell.repl").session({ parentShell = parentShell }) end)
+  if ok then return true end
+  log.error("tsh stopped with an error, falling back to the CraftOS shell: %s", tostring(err))
+  return false
+end
+
+--- The default interactive session: tsh when installed, otherwise the stock CraftOS shell, as a Tessera process.
 function M.startShellSession(parentShell)
   return kernel.spawn({
     name = "shell", session = true, focus = true,
@@ -39,6 +49,7 @@ function M.startShellSession(parentShell)
       if term.isColor() then term.setTextColor(colors.lightBlue) end
       print(version.name .. " " .. version.version)
       term.setTextColor(colors.white)
+      if runTsh(parentShell) then return end
       local env = { shell = parentShell, multishell = rawget(_G, "multishell") }
       os.run(env, SHELL)
     end,

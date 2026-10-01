@@ -50,19 +50,19 @@ local ok, err = pcall(function()
 
   typeLine("lua")
   sleep(0.6)
-  typeLine("return require('tsr.util').trim('  hi  ')")
+  typeLine("return 'A' .. require('tsr.util').trim('  hi  ') .. 'B'")
   sleep(0.6)
   text = windowText(K.get(shellProc.pid).win)
-  check("CraftOS programs can require Tessera modules", text:find("hi") ~= nil, text)
+  check("CraftOS programs can require Tessera modules", text:find("AhiB", 1, true) ~= nil, text)
   typeLine("exit()")
   sleep(0.4)
 
   -- write into /tmp through the patched fs, read back with a stock program
   local h = fs.open("/tmp/e2e.txt", "w") h.write("ram") h.close()
-  typeLine("cat /tmp/e2e.txt")
+  typeLine("list /tmp")
   sleep(0.6)
   text = windowText(K.get(shellProc.pid).win)
-  check("stock programs see the /tmp mount", text:find("ram") ~= nil, text)
+  check("stock programs see the /tmp mount", text:find("e2e.txt", 1, true) ~= nil, text)
 
   local src = tsr.sourceInfo()
   check("AGPL source info is available", src.license == "AGPL-3.0-or-later" and type(src.source) == "string")

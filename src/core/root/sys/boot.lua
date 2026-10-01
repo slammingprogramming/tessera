@@ -42,7 +42,9 @@ if tmpSize > 0 and not fs.exists("/tmp") then vfs.mount("/tmp", vfs.ramfs(tmpSiz
 power.install()
 _G.tsr = require("tsr.sys")
 pcall(function()
-  if not settings.get("shell.package_path") then
+  -- CC defines a default for this setting, so "unset" has to mean "does not yet include /sys/lib"
+  local current = settings.get("shell.package_path")
+  if not current or not current:find("/sys/lib/", 1, true) then
     settings.set("shell.package_path",
       "?;?.lua;?/init.lua;/sys/lib/?.lua;/sys/lib/?/init.lua;/usr/lib/?.lua;/usr/lib/?/init.lua;" ..
       "/rom/modules/main/?;/rom/modules/main/?.lua;/rom/modules/main/?/init.lua")

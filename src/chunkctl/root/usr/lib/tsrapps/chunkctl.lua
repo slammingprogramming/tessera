@@ -39,7 +39,8 @@ end
 --- Is any player within `range` blocks of the detector? Returns true/false, or nil without a detector.
 function M.playersNear(range, per)
   per = per or peripheral
-  local det = per.find("playerDetector")
+  -- Advanced Peripherals renamed the type at Minecraft 1.21.1
+  local det = per.find("player_detector") or per.find("playerDetector")
   if not det then return nil end
   local ok, res = pcall(function()
     if det.isPlayersInRange then return det.isPlayersInRange(range) end

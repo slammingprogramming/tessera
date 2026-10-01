@@ -80,7 +80,7 @@ async function main() {
     process.exit(1);
   }
   const res = JSON.parse(readFileSync(resultsPath, 'utf8'));
-  for (const f of res.files ?? []) {
+  for (const f of Array.isArray(res.files) ? res.files : []) {
     const bad = f.tests.filter((t) => !t.ok);
     console.log(`${bad.length ? 'FAIL' : ' ok '}  ${f.file}  (${f.tests.length} tests)`);
     for (const t of f.tests) {
