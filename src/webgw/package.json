@@ -1,0 +1,20 @@
+{
+  "name": "webgw",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Web gateway client: connects this computer out to an external gateway program so web pages and scripts can call its exposed services over HTTP (ComputerCraft cannot accept inbound connections)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:webgw"
+  ],
+  "budget": 10000,
+  "tags": [
+    "network",
+    "server",
+    "web"
+  ]
+}

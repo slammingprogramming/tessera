@@ -1,0 +1,20 @@
+{
+  "name": "net",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Networking for Tessera computers: discovery, ping, time, pairing with a short code, and authenticated (optionally encrypted) remote calls over modems",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:net"
+  ],
+  "budget": 40000,
+  "tags": [
+    "system",
+    "network",
+    "server"
+  ]
+}

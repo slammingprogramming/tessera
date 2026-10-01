@@ -1,0 +1,19 @@
+{
+  "name": "rscreen",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Remote screen: watch and control another computer's screen from this one (rview), and choose who may look at this one",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:rscreen"
+  ],
+  "budget": 12000,
+  "tags": [
+    "network",
+    "server"
+  ]
+}

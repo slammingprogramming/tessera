@@ -1,0 +1,21 @@
+{
+  "name": "int-mekanism",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Mekanism integration (native ComputerCraft support): energy cubes and induction matrices, fission/fusion reactors, turbines, digital miners as HAL devices, plus a reactor safety service (SCADA) that scrams on unsafe readings",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:int-mekanism"
+  ],
+  "budget": 20000,
+  "tags": [
+    "integration",
+    "mekanism",
+    "power"
+  ]
+}

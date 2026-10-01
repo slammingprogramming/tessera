@@ -3,7 +3,8 @@
 --
 --   return {
 --     description = "what it does",
---     path = "/usr/bin/foo.lua"   -- a program to run, or:  module = "tsrapps.foo" (its main(args) is called), or: run = function() end
+--     path = "/usr/bin/foo.lua"   -- a program to run, or:  module = "tsrapps.foo" (its main(args) is called; entry = "name" picks
+--                                 another function), or: run = function() end
 --     args = { "--daemon" },
 --     autostart = true,          -- started at boot (can be overridden with `svc enable|disable`)
 --     restart = "on-failure",    -- "never" | "on-failure" (default) | "always"
@@ -142,8 +143,9 @@ local function spawn(rec)
   elseif def.module then
     spec.fn = function(...)
       local mod = require(def.module)
-      if type(mod) == "table" and mod.main then return mod.main({ ... }) end
-      error("module " .. def.module .. " has no main()")
+      local fnName = def.entry or "main"
+      if type(mod) == "table" and type(mod[fnName]) == "function" then return mod[fnName]({ ... }) end
+      error("module " .. def.module .. " has no " .. fnName .. "()")
     end
   else
     spec.path = def.path

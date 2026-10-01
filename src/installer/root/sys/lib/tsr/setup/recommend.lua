@@ -106,11 +106,12 @@ function M.packages(probe, profile)
   if profile == "server" then
     add("net", "recommended", "servers exist to talk to other computers")
     add("svc-manager", "recommended", "starts and supervises the services this server hosts")
+    add("roles", "recommended", "one-command server roles: package mirror, file server, monitoring, log collector...")
+    add("auth", "optional", "user accounts and a login screen for a computer other people can reach")
     if probe.http.enabled and probe.hasModem then
-      add("svc-pkgmirror", "recommended", "HTTP is enabled here, so this server can fetch packages once and serve them to computers with no HTTP")
+      add("pkg-mirror", "recommended", "HTTP is enabled here, so this server can fetch packages once and serve them to computers with no HTTP")
     end
-    add("svc-auth", "optional", "shared login for the other computers")
-    add("svc-metrics", "optional", "logs and dashboards")
+    add("ops", "optional", "cron, metrics other computers can read, and central log collection")
     if probe.counts.inventories >= 2 then add("svc-storage", "recommended", ("%d inventories attached: storage indexing, auto-sorting and crafting"):format(c.inventories)) end
   end
 
@@ -153,15 +154,22 @@ function M.packages(probe, profile)
   -- mod integrations ----------------------------------------------------------------------------------------------------------
   local reasonFor = function(m) return ("%s peripherals detected (%s)"):format(m.name, m.example) end
   if modSet.advancedperipherals then
-    add("integration-advancedperipherals", "recommended", reasonFor(modSet.advancedperipherals))
-    if hw.hasTypeMatching(probe, "^me_?[bB]ridge$") then add("integration-ae2", "recommended", "ME Bridge found: Applied Energistics 2 control") end
-    if hw.hasTypeMatching(probe, "^rs_?[bB]ridge$") then add("integration-rs", "recommended", "RS Bridge found: Refined Storage control") end
-    if hw.hasTypeMatching(probe, "^chat_?[bB]ox$") then add("svc-chatbot", "optional", "Chat Box found: in-game chat commands") end
+    add("int-ap", "recommended", reasonFor(modSet.advancedperipherals))
+    if hw.hasTypeMatching(probe, "^me_?[bB]ridge$") then add("int-ap", "recommended", "ME Bridge found: Applied Energistics 2 control (me command)") end
+    if hw.hasTypeMatching(probe, "^rs_?[bB]ridge$") then add("int-ap", "recommended", "RS Bridge found: Refined Storage control (me command)") end
+    if hw.hasTypeMatching(probe, "^chat_?[bB]ox$") then add("chatbot", "optional", "Chat Box found: in-game chat commands") end
   end
-  if modSet.mekanism then add("integration-mekanism", "recommended", reasonFor(modSet.mekanism)) end
-  if modSet.create then add("integration-create", "recommended", reasonFor(modSet.create)) end
+  if modSet.mekanism then add("int-mekanism", "recommended", reasonFor(modSet.mekanism)) end
+  if modSet.create then add("int-create", "recommended", reasonFor(modSet.create)) end
   if modSet.tomsperipherals then add("hal-toms", "recommended", reasonFor(modSet.tomsperipherals)) end
   if modSet.plethora then add("integration-plethora", "optional", reasonFor(modSet.plethora)) end
+  if next(modSet) ~= nil or c.inventories > 0 or c.energy > 0 then
+    add("hal", "recommended", "one set of readings and actions for every machine and mod device that is attached")
+  end
+  if c.energy > 0 or modSet.mekanism then
+    add("power-monitor", "optional", "energy storage found: live power dashboards on screen or monitor")
+    add("rules", "optional", "automation rules: switch machines and redstone when readings cross a threshold")
+  end
 
   return items, mods
 end

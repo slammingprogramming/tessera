@@ -11,6 +11,7 @@ const node = process.execPath;
 const steps = [
   ['split check', ['tools/split/sync-public.mjs', '--check']],
   ['build + budgets', ['tools/build/build.mjs']],
+  ['gateway tests', ['tools/gateway/gateway.test.mjs']],
 ];
 if (!process.argv.includes('--no-emulator')) {
   if (!findCraftOS()) {

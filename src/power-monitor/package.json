@@ -1,0 +1,17 @@
+{
+  "name": "power-monitor",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Live power and fluid dashboards: power and tanks show every energy store and tank the HAL finds with fill bars, trend and time to full/empty, on the terminal or a monitor",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0"
+  },
+  "budget": 12000,
+  "tags": [
+    "monitoring",
+    "power",
+    "fluids"
+  ]
+}

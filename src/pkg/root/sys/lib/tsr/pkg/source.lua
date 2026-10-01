@@ -7,6 +7,7 @@
 --   http      one or more mirror base URLs (GitHub Pages, ...)        { type="http", bases={...} }
 --   dir       a directory with the layout above (disk, mount, offline import store)   { type="dir", path="..." }
 --   pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }
+--   lan       a paired computer running the pkg-mirror service         { type="lan", peer="<name>" }  (package pkg-mirror)
 -- The built-in `offline` source is a `dir` at /var/cache/tsr/offline, filled by importing a bundle. It is always
 -- consulted first, so pasting a bundle makes an HTTP-less install possible.
 local hash = require("tsr.hash")
@@ -107,6 +108,10 @@ end
 
 local function readRaw(src, rel)
   local f = fetchers[src.type]
+  if not f and type(src.type) == "string" and src.type:match("^%w+$") then
+    pcall(require, "tsr.pkg.src_" .. src.type)      -- source types provided by other packages (e.g. lan, from pkg-mirror)
+    f = fetchers[src.type]
+  end
   if not f then return nil, "unknown source type " .. tostring(src.type) end
   return f.read(src, rel)
 end

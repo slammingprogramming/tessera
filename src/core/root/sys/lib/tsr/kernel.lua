@@ -269,6 +269,15 @@ local function deliver(proc, ev)
   end
 end
 
+--- Hand an event straight to one process (honouring its event filter), whether or not it has the focus. Used by window
+--- managers to forward translated mouse and keyboard events to the program inside a window. Returns false when `pid` is gone.
+function K.send(pid, ...)
+  local p = procs[pid]
+  if not p then return false end
+  deliver(p, table.pack(...))
+  return true
+end
+
 local function dispatch(ev)
   local name = ev[1]
   if name == "key" or name == "key_up" then

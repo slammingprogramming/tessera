@@ -1,0 +1,20 @@
+{
+  "name": "roles",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Server roles: turn a computer into a package mirror, file server, shell host, monitor or log collector with one command (installs what is needed, enables the services)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "pkg": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:roles"
+  ],
+  "budget": 12000,
+  "tags": [
+    "system",
+    "server"
+  ]
+}

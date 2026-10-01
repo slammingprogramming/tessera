@@ -1,0 +1,20 @@
+{
+  "name": "rsh",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Remote shell: run commands on a paired computer (rsh, rexec) and let chosen computers run commands on this one",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0",
+    "shell": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:rsh"
+  ],
+  "budget": 12000,
+  "tags": [
+    "network",
+    "server"
+  ]
+}

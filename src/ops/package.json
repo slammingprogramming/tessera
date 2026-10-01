@@ -1,0 +1,21 @@
+{
+  "name": "ops",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Operations tools for servers: cron scheduler, metrics (local and over the network), and central log collection",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:ops"
+  ],
+  "budget": 20000,
+  "tags": [
+    "system",
+    "server",
+    "monitoring"
+  ]
+}

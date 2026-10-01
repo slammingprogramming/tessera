@@ -1,0 +1,21 @@
+{
+  "name": "pkg-mirror",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Package mirror for networks without internet access: one computer caches the registry and serves it to paired computers, which install from it with a lan package source",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "pkg": ">=0.1.0",
+    "net": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:pkg-mirror"
+  ],
+  "budget": 14000,
+  "tags": [
+    "network",
+    "server",
+    "packages"
+  ]
+}

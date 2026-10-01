@@ -1,0 +1,20 @@
+{
+  "name": "rules",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Automation rules: when a reading crosses a threshold (energy low, tank full, item stock short...) switch redstone, control machines, run commands or services; edge-triggered with hold times and hysteresis",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:rules"
+  ],
+  "budget": 18000,
+  "tags": [
+    "automation",
+    "integration"
+  ]
+}

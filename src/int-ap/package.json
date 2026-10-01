@@ -1,0 +1,22 @@
+{
+  "name": "int-ap",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Advanced Peripherals integration: ME bridge (Applied Energistics 2), RS bridge (Refined Storage), environment, energy and player detectors as HAL devices, plus the me command",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:int-ap"
+  ],
+  "budget": 20000,
+  "tags": [
+    "integration",
+    "advanced-peripherals",
+    "ae2",
+    "refined-storage"
+  ]
+}

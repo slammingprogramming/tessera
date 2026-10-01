@@ -1,0 +1,18 @@
+{
+  "name": "chatbot",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "In-game chat bot for Advanced Peripherals chat boxes: players type !status, !time, !help; administrators can control services; other packages add commands",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:chatbot"
+  ],
+  "budget": 12000,
+  "tags": [
+    "server",
+    "advanced-peripherals"
+  ]
+}

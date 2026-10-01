@@ -170,6 +170,39 @@ for (const name of packageNames()) {
   for (const n of Object.keys(requires)) visit(n, []);
 }
 
+// Service definitions and role files must point at things that exist: modules (with the named entry function), other
+// services, and packages.
+{
+  const services = new Map();   // name -> { file, text }
+  const roleFiles = [];
+  for (const pkg of packageNames()) {
+    const sdir = join(root, 'src', pkg, 'root', 'etc', 'tsr', 'services.d');
+    if (existsSync(sdir)) for (const n of readdirSync(sdir)) if (n.endsWith('.lua')) services.set(n.slice(0, -4), { pkg, text: readFileSync(join(sdir, n), 'utf8') });
+    const rdir = join(root, 'src', pkg, 'root', 'etc', 'tsr', 'roles.d');
+    if (existsSync(rdir)) for (const n of readdirSync(rdir)) if (n.endsWith('.lua')) roleFiles.push({ pkg, name: n, text: readFileSync(join(rdir, n), 'utf8') });
+  }
+  const strings = (text, key) => {
+    const m = text.match(new RegExp(key + '\\s*=\\s*\\{([^}]*)\\}'));
+    return m ? [...m[1].matchAll(/"([^"]+)"/g)].map((x) => x[1]) : [];
+  };
+  const known = new Set(Object.keys(index.packages));
+  for (const e of Object.values(index.packages)) for (const p of e.provides ?? []) known.add(p);
+  for (const [name, { pkg, text }] of services) {
+    const mod = text.match(/module\s*=\s*"([^"]+)"/)?.[1];
+    const entry = text.match(/entry\s*=\s*"([^"]+)"/)?.[1] ?? 'main';
+    if (mod) {
+      const src = moduleSource(mod);
+      if (src === null || src === undefined) errors.push(`service ${name} (${pkg}): module "${mod}" does not exist`);
+      else if (!new RegExp('function\\s+M[.:]' + entry + '\\b').test(src) && !new RegExp('M\\.' + entry + '\\s*=').test(src)) errors.push(`service ${name} (${pkg}): module "${mod}" has no ${entry}()`);
+    }
+    for (const dep of strings(text, 'requires')) if (!services.has(dep)) errors.push(`service ${name}: requires unknown service "${dep}"`);
+  }
+  for (const r of roleFiles) {
+    for (const p of strings(r.text, 'packages')) if (!known.has(p)) errors.push(`role ${r.name} (${r.pkg}): unknown package "${p}"`);
+    for (const sv of strings(r.text, 'services')) if (!services.has(sv)) errors.push(`role ${r.name} (${r.pkg}): unknown service "${sv}"`);
+  }
+}
+
 writeFileSync(join(dist, 'site', 'registry', 'index.json'), JSON.stringify(index));
 const mirrorsPath = join(root, 'tools', 'build', 'mirrors.json');
 writeFileSync(join(dist, 'site', 'mirrors.json'), existsSync(mirrorsPath) ? readFileSync(mirrorsPath) : '{"pastebin":{}}');

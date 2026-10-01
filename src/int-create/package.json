@@ -1,0 +1,19 @@
+{
+  "name": "int-create",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Create integration through CC:C Bridge: show text on Create display links (create_source) and read Create display targets (create_target) as HAL devices, plus the cdisplay command",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:int-create"
+  ],
+  "budget": 10000,
+  "tags": [
+    "integration",
+    "create"
+  ]
+}

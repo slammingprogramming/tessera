@@ -1,0 +1,18 @@
+{
+  "name": "ui-gui",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Tessera Desktop: a windowed graphical interface for advanced computers (mouse, taskbar, launcher, themes) with file manager, terminal, settings and app store. Installable later and removable at any time",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:gui"
+  ],
+  "budget": 90000,
+  "tags": [
+    "interface",
+    "gui"
+  ]
+}

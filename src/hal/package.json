@@ -1,0 +1,20 @@
+{
+  "name": "hal",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Hardware abstraction: one set of readings (energy, fluids, items, redstone, machines) and actions for every kind of device, whether it has a native ComputerCraft interface or only redstone; mod packs plug in drivers",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "redstone": ">=0.1.0",
+    "app-kit": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:hal"
+  ],
+  "budget": 24000,
+  "tags": [
+    "library",
+    "integration"
+  ]
+}
