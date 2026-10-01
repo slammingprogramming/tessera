@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Configure remotes for the split-branch workflow.
-//   node tools/split/setup-remotes.mjs --github <url> [--keybase <url>]
-// github  <- main only            (refs/heads/main:refs/heads/main)
-// keybase <- private as its main  (refs/heads/private:refs/heads/main) + public mirror (refs/heads/main:refs/heads/public)
+//   node tools/split/setup-remotes.mjs --github <url> [--github-branch github|main] [--keybase <url>]
+// github  <- <github-branch>:main   (default `github`: the documentation-only branch; use `main` once the code is public)
+// keybase <- private as its main (refs/heads/private:refs/heads/main) + public mirror (refs/heads/main:refs/heads/public)
 import { git, tryGit } from '../lib/git.mjs';
 
 const args = process.argv.slice(2);
 const get = (flag) => { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : null; };
 const gh = get('--github');
 const kb = get('--keybase');
+const ghBranch = get('--github-branch') ?? 'github';
 if (!gh && !kb) {
-  console.error('usage: setup-remotes.mjs --github <url> [--keybase <url>]');
+  console.error('usage: setup-remotes.mjs --github <url> [--github-branch github|main] [--keybase <url>]');
   process.exit(2);
 }
 
@@ -23,5 +24,5 @@ function setRemote(name, url, pushRefspecs) {
 }
 
 git(['config', 'core.hooksPath', '.githooks']);
-if (gh) setRemote('github', gh, ['refs/heads/main:refs/heads/main']);
+if (gh) setRemote('github', gh, [`refs/heads/${ghBranch}:refs/heads/main`]);
 if (kb) setRemote('keybase', kb, ['refs/heads/private:refs/heads/main', 'refs/heads/main:refs/heads/public']);

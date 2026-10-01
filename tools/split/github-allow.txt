@@ -1,0 +1,11 @@
+# What may be published on GitHub at the current release stage ("documentation only").
+# One path per line; a trailing "/" means everything under that directory. Lines starting with # are comments.
+# The `github` branch is built from the `private` branch with ONLY these paths, and .githooks/pre-push refuses to push
+# anything else to the github remote. When the project goes public, delete this file's entries (or the file) and switch
+# the remote to push `main` (see AGENTS.md).
+README.md
+LICENSE
+docs/
+.gitignore
+.gitattributes
+.editorconfig

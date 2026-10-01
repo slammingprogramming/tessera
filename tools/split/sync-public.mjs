@@ -64,7 +64,7 @@ for (const c of commits) {
     ...process.env,
     GIT_AUTHOR_NAME: meta[0], GIT_AUTHOR_EMAIL: meta[1], GIT_AUTHOR_DATE: meta[2],
   };
-  tip = git(['commit-tree', tree, ...(tip ? ['-p', tip] : []), '-m', msg], { env: cenv });
+  tip = git(['commit-tree', '-S', tree, ...(tip ? ['-p', tip] : []), '-m', msg], { env: cenv });
   made++;
 }
 rmSync(indexFile, { force: true });

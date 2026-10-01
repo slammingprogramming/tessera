@@ -1,6 +1,6 @@
 {
-  "repo": "https://github.com/OWNER/REPO",
-  "pagesBase": "https://OWNER.github.io/REPO",
+  "repo": "https://github.com/slammingprogramming/tessera",
+  "pagesBase": "https://slammingprogramming.github.io/tessera",
   "pastebinSnapshot": "",
-  "note": "OWNER/REPO are placeholders until the user provides the public GitHub repo (see AGENTS.md open questions). pastebinSnapshot is filled by release tooling once a snapshot paste exists."
+  "note": "Repository URLs for the release build. pastebinSnapshot is filled by release tooling once a snapshot paste exists."
 }

@@ -13,13 +13,13 @@ Format: ID — decision — status (**decided** = user; **delegated** = user han
 | D-06 | GUI toolkit | **Build our own from scratch** (no Basalt dependency): better optimisation and features tailored to Tessera. Basalt/GuiH-made apps may still be installable as optional third-party packages. | decided (2026-09-29) |
 | D-07 | Package registry | Own JSON registry (CCPM-like) + adapters for unicornpkg/CCPM/Pinestore. | default |
 | D-08 | License | **AGPL-3.0-or-later** for Tessera's own code (user confirmed the SPDX form). SPDX headers on every source file. See "Licensing consequences" below. | decided (2026-09-29) |
-| D-09 | Repo split | **Two parallel branches with identical shared content**: a public-safe branch for GitHub (no private files) and a private branch for Keybase (same content **plus** private-only files such as `AGENTS.md`). See "Branch split workflow" below. Keybase/GitHub URLs not yet given. | decided (2026-09-29); implemented in M1 (tools/split) |
+| D-09 | Publication | Staged: documentation first, source code at the first release. See "Publication" below. | decided (2026-09-29) |
 | D-10 | Version targets | Test on 1.20.1, 1.21.1, latest 26.x. | default |
 | D-11 | Telemetry | None by default; opt-in only. | default |
 | D-12 | Security | Best-effort model (ARCHITECTURE §13); package hashes mandatory, signatures for official registry. | default |
 | D-13 | Registry hosting cost/ownership | GitHub Pages is free; pastebin mirrors free. A self-hosted gateway/VPS is optional and undecided. | default |
 | D-14 | Offline install | Must be possible with zero in-game internet by pasting/dropping data into the terminal on prompt (registry → then app payloads as needed). See below. | decided (2026-09-29) |
-| D-15 | Test environment | User has **both CraftOS-PC and a Minecraft test world**. CraftOS-PC 2.8 is at `C:\Program Files\CraftOS-PC` (user data `%APPDATA%\CraftOS-PC`). Node 24, Python 3.13, Git available; no standalone Lua. Headless works when results are written to a mounted directory (see AGENTS.md §4); CraftOS-PC 2.8.3 emulates ComputerCraft 1.112.0 on Lua 5.2. | decided / verified 2026-09-29 |
+| D-15 | Test environment | The maintainer has **both CraftOS-PC and a Minecraft test world**. CraftOS-PC 2.8 is at `C:\Program Files\CraftOS-PC` (user data `%APPDATA%\CraftOS-PC`). Node 24, Python 3.13, Git available; no standalone Lua. Headless works when results are written to a mounted directory (see docs/RESEARCH.md §2.6); CraftOS-PC 2.8.3 emulates ComputerCraft 1.112.0 on Lua 5.2. | decided / verified 2026-09-29 |
 | D-16 | Contribution terms | DCO sign-off (default) rather than a CLA, so AGPL stays simple. | default |
 
 ## Distribution tiers (D-04, D-14)
@@ -59,25 +59,11 @@ Installer/registry client tries, in order (each probed with `http.checkURL`/a re
   permitted); the reverse is not (don't relicense their work away from them).
 - Add SPDX headers (`-- SPDX-License-Identifier: AGPL-3.0-or-later`) and a `LICENSE` file when the repo is initialised.
 
-## Branch split workflow (D-09)
+## Publication (D-09)
 
-User requirement: GitHub gets a branch without the private stuff; Keybase gets an identical branch that also has the
-private stuff. Implemented (M1) as:
-
-- Work happens on branch **`private`** (the superset; contains `AGENTS.md`). Commit messages must be public-safe.
-- Branch **`main`** (public-safe) is *generated*: `node tools/split/sync-public.mjs` replays each `private` commit onto
-  `main` with every path in `tools/split/private-paths.txt` removed. Commits that only touch private paths are skipped
-  (their messages never reach `main`). `refs/split/synced` records how far it has replayed. `--check` verifies that
-  neither the tip nor the history of `main` contains a private path.
-- Remotes (`node tools/split/setup-remotes.mjs --github <url> --keybase <url>`): `github` receives only
-  `main:main`; `keybase` receives `private:main` (the full tree, so a Keybase clone's default branch has everything)
-  and `main:public` (public mirror).
-- `.githooks/pre-push` (`core.hooksPath`) refuses to push the `private` branch or any private path to the public
-  remote (name `github` or a github.com URL).
-- Anything private goes under a path listed in `private-paths.txt` (today: `AGENTS.md`, `.private/`); `docs/` is public.
-- Nothing has been pushed; no remotes are configured yet.
+The project is published in stages. At the moment only documentation and the license are public; the source code
+will be published at the first release. The mechanics of how the stages are produced are an internal matter.
 
 ## Still open
-- Keybase repo path/name; GitHub repo name & final Pages URL (build placeholders OWNER/REPO wait for these).
 - Basic name clearance for "Tessera".
 - Which mods/MC versions get first-class priority beyond the defaults.
