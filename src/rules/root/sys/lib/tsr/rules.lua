@@ -20,6 +20,7 @@
 --   command   { line = "shell command line" }
 --   service   { start | stop | restart = "service name" }
 --   log       { level = "info" | "warn" | "error", text = "..." }          ${value}, ${rule}, ${state} are replaced
+--   notify    { title, text, level }                                         pushes a notification (package mobile)
 --   event     { name = "my_event" }                                         queues an os event: tsr_rule, rule, state
 -- A rule fires its `on` list once when it becomes active and its `off` list once when it ends (edge-triggered), not on every check.
 local hal = require("tsr.hal")
@@ -127,6 +128,15 @@ function M.actions.log(a, ctx)
   local text = ctx.format(a.text or "")
   local logger = log[level] or log.info
   logger("%s", text)
+  return true
+end
+
+--- Needs the mobile package (tsr.notify); without it the text is only logged.
+function M.actions.notify(a, ctx)
+  local text = ctx.format(a.text or "")
+  local ok, notify = pcall(require, "tsr.notify")
+  if ok then notify.push(a.title or ctx.rule.name, text, { level = a.level, source = "rules" }) return true end
+  log.info("notify: %s", text)
   return true
 end
 

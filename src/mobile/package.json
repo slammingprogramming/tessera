@@ -1,0 +1,24 @@
+{
+  "name": "mobile",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Phone-style interface for pocket computers: status bar, app tiles, back/home buttons, notifications, messages between computers, location, remote access and settings",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "ui-gui": ">=0.1.0"
+  },
+  "platforms": {
+    "profiles": [
+      "pocket"
+    ]
+  },
+  "provides": [
+    "tsr:mobile"
+  ],
+  "budget": 40000,
+  "tags": [
+    "interface",
+    "pocket"
+  ]
+}

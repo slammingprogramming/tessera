@@ -1,0 +1,20 @@
+{
+  "name": "fleet",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Turtle fleet control over the network: see every turtle's position, fuel and job, start and stop jobs on one or all of them, send them to coordinates",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0",
+    "turtle-core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:fleet"
+  ],
+  "budget": 16000,
+  "tags": [
+    "turtle",
+    "network"
+  ]
+}

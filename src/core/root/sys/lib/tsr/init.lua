@@ -51,13 +51,22 @@ local function login()
   return nil
 end
 
---- Run the desktop when the `ui-gui` package is installed and switched on (`gui enable`, or Settings). Returns the way it was left:
---- "shell", "logout", "reboot", "shutdown"; or nil when there is no desktop to run (not installed, off, or it failed).
+--- Graphical front ends: the desktop (package `ui-gui`) and the phone interface (package `mobile`).
+local UIS = {
+  gui = { module = "tsr.gui.desktop", file = "/sys/lib/tsr/gui/desktop.lua" },
+  mobile = { module = "tsr.mobile.shell", file = "/sys/lib/tsr/mobile/shell.lua" },
+}
+
+--- Run the configured front end (config `ui.default`: "gui", "mobile" or "shell"; pocket computers with the phone interface
+--- installed default to it). Returns the way it was left: "shell", "logout", "reboot", "shutdown"; or nil when there is nothing
+--- to run (not installed, switched off, or it failed).
 local function runGui()
-  if config.get("ui.default", "shell") ~= "gui" or not fs.exists("/sys/lib/tsr/gui/desktop.lua") then return nil end
-  local ok, action = pcall(function() return require("tsr.gui.desktop").start({}) end)
+  local mode = config.get("ui.default", (rawget(_G, "pocket") and fs.exists(UIS.mobile.file)) and "mobile" or "shell")
+  local ui = UIS[mode]
+  if not ui or not fs.exists(ui.file) then return nil end
+  local ok, action = pcall(function() return require(ui.module).start({}) end)
   if ok then return action or "shell" end
-  log.error("the desktop stopped with an error, using the shell instead: %s", tostring(action))
+  log.error("the %s interface stopped with an error, using the shell instead: %s", mode, tostring(action))
   return nil
 end
 
