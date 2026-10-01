@@ -29,12 +29,26 @@ end
 
 --- Run tsh (package `shell`) when it is installed and not switched off with `shell.default = "craftos"`. Returns true when the
 --- user left it normally; false means "use the stock shell instead" (not installed, or it failed).
-local function runTsh(parentShell)
+local function runTsh(parentShell, user)
   if config.get("shell.default", "tsh") ~= "tsh" or not fs.exists("/sys/lib/tsr/shell/repl.lua") then return false end
-  local ok, err = pcall(function() require("tsr.shell.repl").session({ parentShell = parentShell }) end)
+  local ok, err = pcall(function()
+    require("tsr.shell.repl").session({ parentShell = parentShell, home = user and user.home, user = user and user.name })
+  end)
   if ok then return true end
   log.error("tsh stopped with an error, falling back to the CraftOS shell: %s", tostring(err))
   return false
+end
+
+--- Ask who is using the computer when the `auth` package is installed and has users. Returns the user, or nil for an open system.
+local function login()
+  if config.get("auth.login", true) == false or not fs.exists("/sys/lib/tsr/login.lua") then return nil end
+  local ok, res = pcall(function()
+    if not require("tsr.auth").hasUsers() then return nil end
+    return require("tsr.login").run({})
+  end)
+  if ok then return res end
+  log.error("login failed to start, continuing without it: %s", tostring(res))
+  return nil
 end
 
 --- The default interactive session: tsh when installed, otherwise the stock CraftOS shell, as a Tessera process.
@@ -49,9 +63,17 @@ function M.startShellSession(parentShell)
       if term.isColor() then term.setTextColor(colors.lightBlue) end
       print(version.name .. " " .. version.version)
       term.setTextColor(colors.white)
-      if runTsh(parentShell) then return end
-      local env = { shell = parentShell, multishell = rawget(_G, "multishell") }
-      os.run(env, SHELL)
+      while true do
+        local user = login()
+        if not runTsh(parentShell, user) then
+          local env = { shell = parentShell, multishell = rawget(_G, "multishell") }
+          os.run(env, SHELL)
+        end
+        if not user then return end          -- an open system: leaving the shell ends the session
+        require("tsr.auth").endSession()     -- logged out: back to the login prompt
+        term.setBackgroundColor(colors.black)
+        term.clear()
+      end
     end,
   })
 end
@@ -61,6 +83,10 @@ end
 function M.run(opts)
   opts = opts or {}
   kernel.init()
+  if config.get("auth.guard", true) and fs.exists("/sys/lib/tsr/auth.lua") then
+    local ok, err = pcall(function() require("tsr.auth").guard.install() end)
+    if not ok then log.error("file guard not installed: %s", tostring(err)) end
+  end
   M.startDaemons()
   M.startShellSession(opts.parentShell)
   log.info("system up (profile %s)", require("tsr.profile").get())
