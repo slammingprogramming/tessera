@@ -51,6 +51,16 @@ local function login()
   return nil
 end
 
+--- Run the desktop when the `ui-gui` package is installed and switched on (`gui enable`, or Settings). Returns the way it was left:
+--- "shell", "logout", "reboot", "shutdown"; or nil when there is no desktop to run (not installed, off, or it failed).
+local function runGui()
+  if config.get("ui.default", "shell") ~= "gui" or not fs.exists("/sys/lib/tsr/gui/desktop.lua") then return nil end
+  local ok, action = pcall(function() return require("tsr.gui.desktop").start({}) end)
+  if ok then return action or "shell" end
+  log.error("the desktop stopped with an error, using the shell instead: %s", tostring(action))
+  return nil
+end
+
 --- The default interactive session: tsh when installed, otherwise the stock CraftOS shell, as a Tessera process.
 function M.startShellSession(parentShell)
   return kernel.spawn({
@@ -65,9 +75,24 @@ function M.startShellSession(parentShell)
       term.setTextColor(colors.white)
       while true do
         local user = login()
-        if not runTsh(parentShell, user) then
-          local env = { shell = parentShell, multishell = rawget(_G, "multishell") }
-          os.run(env, SHELL)
+        local again = true
+        while again do
+          again = false
+          local action = runGui()
+          if action == "reboot" or action == "shutdown" then
+            local sys = require("tsr.sys")
+            if action == "reboot" then sys.reboot() else sys.shutdown() end
+            return
+          elseif action ~= "logout" then
+            if not runTsh(parentShell, user) then
+              local env = { shell = parentShell, multishell = rawget(_G, "multishell") }
+              os.run(env, SHELL)
+            end
+            again = action == "shell"       -- came from the desktop's "Exit to shell": back to the desktop afterwards
+            term.setBackgroundColor(colors.black)
+            term.clear()
+            term.setCursorPos(1, 1)
+          end
         end
         if not user then return end          -- an open system: leaving the shell ends the session
         require("tsr.auth").endSession()     -- logged out: back to the login prompt

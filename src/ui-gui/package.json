@@ -10,7 +10,7 @@
   "provides": [
     "tsr:gui"
   ],
-  "budget": 90000,
+  "budget": 70000,
   "tags": [
     "interface",
     "gui"
