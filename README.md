@@ -25,6 +25,7 @@ been smoke-tested in real Minecraft yet.
 - [Apps](docs/APPS.md) — the optional apps: turtle mining/farming/building jobs, redstone tools, door security,
   jukebox, storage sorting, file sync, a text adventure and more
 - [Package format](docs/PACKAGE-FORMAT.md) · [Integrations](docs/INTEGRATIONS.md) · [Feature parity matrix](docs/PARITY-MATRIX.md)
+- [Real-world tools in the game](docs/REALWORLD.md) (time sync, ssh, pgp, torrent, firewall, DNS, encrypted folders, tar/diff) · [Security model](docs/SECURITY.md)
 - [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Research notes](docs/RESEARCH.md)
 
 Not affiliated with CC: Tweaked, Mojang or Microsoft.

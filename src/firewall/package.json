@@ -1,0 +1,21 @@
+{
+  "name": "firewall",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Network firewall: allow/deny/rate-limit incoming messages by type and sender (paired computers, ids, names), with presets, hit counters and a log of what was dropped",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:firewall"
+  ],
+  "budget": 20000,
+  "tags": [
+    "network",
+    "security",
+    "server"
+  ]
+}

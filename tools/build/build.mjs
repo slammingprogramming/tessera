@@ -21,6 +21,7 @@ import { deflateRawSync } from 'node:zlib';
 import { root, packageNames } from '../lib/craftos.mjs';
 import { tryGit } from '../lib/git.mjs';
 import { minifyLua } from './minify.mjs';
+import { CONTEXT, TRUST_CONTEXT, loadKey, signText } from '../lib/sign.mjs';
 
 const args = process.argv.slice(2);
 const noMinify = args.includes('--no-minify');
@@ -39,7 +40,15 @@ const walk = (dir) => readdirSync(dir).flatMap((n) => {
   return statSync(p).isDirectory() ? walk(p) : [p];
 });
 
+// Registry signing: keys that clients trust (public) and, when available, the secret key that signs this build.
+const signingKeyFile = process.env.TSR_SIGNING_KEY_FILE ?? config.signingKeyFile ?? null;
+const signingKey = signingKeyFile && existsSync(signingKeyFile) ? loadKey(signingKeyFile) : null;
+const trustedKeys = [...(config.trustedKeys ?? [])];
+for (const hex of (process.env.TSR_TRUSTED_KEYS ?? '').split(',').filter(Boolean)) trustedKeys.push({ name: 'build key', public: hex });
+if (signingKey && !trustedKeys.some((k) => k.public === signingKey.public)) trustedKeys.push({ name: signingKey.name, public: signingKey.public });
+
 const PLACEHOLDERS = [
+  ['@TRUSTED_KEYS@', JSON.stringify(trustedKeys.map((k) => ({ name: k.name, public: k.public })))],
   ['https://OWNER.github.io/REPO', config.pagesBase],
   ['https://github.com/OWNER/REPO', config.repo],
   ['@PASTEBIN_SNAPSHOT@', config.pastebinSnapshot ?? ''],
@@ -58,6 +67,8 @@ function moduleSource(name) {
   for (const pkg of packageNames()) {
     const p = join(root, 'src', pkg, ...rel, last);
     if (existsSync(p)) return readFileSync(p, 'utf8');
+    const init = join(root, 'src', pkg, ...rel, last.slice(0, -4), 'init.lua');       // a module that is a folder: tsr/<name>/init.lua
+    if (existsSync(init)) return readFileSync(init, 'utf8');
   }
   throw new Error(`cannot inline unknown module ${name}`);
 }
@@ -89,7 +100,8 @@ mkdirSync(join(dist, 'overlay'), { recursive: true });
 
 const commit = tryGit(['rev-parse', '--verify', 'refs/heads/main']) ?? tryGit(['rev-parse', 'HEAD']) ?? 'unknown';
 const errors = [];
-const index = { format: 1, generated: new Date().toISOString(), packages: {} };
+const now = Date.now();
+const index = { format: 1, generated: new Date(now).toISOString(), serial: Math.floor(now / 1000), expires: Math.floor(now / 1000) + 180 * 86400, packages: {} };
 let totalInstalled = 0;
 
 for (const name of packageNames()) {
@@ -143,9 +155,9 @@ for (const name of packageNames()) {
     ...(meta.hooks ? { hooks: meta.hooks } : {}),
     ...(meta.lazy ? { lazy: meta.lazy } : {}),
   };
-  writeFileSync(join(dist, 'site', 'registry', 'packages', `${name}.json`),
-    JSON.stringify({ name, latest: meta.version, versions: { [meta.version]: manifest } }));
-  index.packages[name] = { version: meta.version, type: meta.type, description: meta.description, size: installed, provides: meta.provides ?? [], tags: meta.tags ?? [] };
+  const docText = JSON.stringify({ name, latest: meta.version, versions: { [meta.version]: manifest } });
+  writeFileSync(join(dist, 'site', 'registry', 'packages', `${name}.json`), docText);
+  index.packages[name] = { version: meta.version, type: meta.type, description: meta.description, size: installed, provides: meta.provides ?? [], tags: meta.tags ?? [], docSha256: sha256(Buffer.from(docText)) };
   console.log(`${name.padEnd(24)} ${meta.version.padEnd(8)} ${String(files.length).padStart(3)} files  ${String(installed).padStart(7)} B installed  ${String(download).padStart(7)} B deflated`);
 }
 
@@ -203,7 +215,20 @@ for (const name of packageNames()) {
   }
 }
 
-writeFileSync(join(dist, 'site', 'registry', 'index.json'), JSON.stringify(index));
+const indexText = JSON.stringify(index);
+writeFileSync(join(dist, 'site', 'registry', 'index.json'), indexText);
+if (signingKey) {
+  writeFileSync(join(dist, 'site', 'registry', 'index.json.sig'), signText(signingKey, indexText, CONTEXT));
+  // A signed trust update lets clients that trust this key learn about further keys / revocations (config.json "trustUpdate").
+  if (config.trustUpdate) {
+    const doc = JSON.stringify({ format: 1, serial: config.trustUpdate.serial ?? 1, keys: config.trustUpdate.keys ?? [], revoked: config.trustUpdate.revoked ?? [] });
+    writeFileSync(join(dist, 'site', 'registry', 'trust.json'), doc);
+    writeFileSync(join(dist, 'site', 'registry', 'trust.json.sig'), signText(signingKey, doc, TRUST_CONTEXT));
+  }
+  console.log(`registry signed with key ${signingKey.keyid} (${signingKey.name})`);
+} else {
+  console.log('registry NOT signed (no signing key: set TSR_SIGNING_KEY_FILE or config.json "signingKeyFile")');
+}
 const mirrorsPath = join(root, 'tools', 'build', 'mirrors.json');
 writeFileSync(join(dist, 'site', 'mirrors.json'), existsSync(mirrorsPath) ? readFileSync(mirrorsPath) : '{"pastebin":{}}');
 const installer = join(root, 'src', 'installer', 'site', 'install.lua');

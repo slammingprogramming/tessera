@@ -2,19 +2,21 @@
 -- Tessera bootstrap installer. Run with:   wget run https://OWNER.github.io/REPO/install.lua
 -- (or `pastebin run <id>`, or from a disk / mounted mirror: install.lua /disk/mirror).
 --
--- It installs just enough — `core` and `pkg` — to get a working package manager, by the first channel that works:
+-- It installs just enough — `core`, `crypto` and `pkg` — to get a working package manager, by the first channel that works:
 --   1. HTTP mirrors (GitHub Pages)     2. Pastebin snapshot     3. a mirror directory on a disk (path argument)
 --   4. fully offline: drop a bundle file on this window (or  --bundle <file>) / paste TSR1 lines
--- Every payload is checked against its SHA-256 before being written. Everything else (the setup wizard, apps,
+-- Every payload is checked against its SHA-256 before being written, and the registry index must carry a valid signature
+-- of this project's key (built into this installer) unless the build has no key. Everything else (the setup wizard, apps,
 -- drivers) is then installed with the package manager itself.
 --
 -- Options:  <path>        mirror directory      --bundle <file>   offline bundle file
 --           --yes         no questions          --no-reboot       do not offer a reboot
---@inline tsr.hash tsr.inflate tsr.bundle tsr.pkg.importer
+--@inline tsr.hash tsr.inflate tsr.bundle tsr.pkg.importer tsr.crypto.yield tsr.crypto.fe tsr.crypto.sha512 tsr.crypto.ed25519 tsr.crypto.kdf tsr.crypto.sign tsr.pkg.sig
 
 local BASES = { "https://OWNER.github.io/REPO" }
 local SNAPSHOT = "@PASTEBIN_SNAPSHOT@"
-local SET = { "core", "pkg" }
+local SET = { "core", "crypto", "pkg" }
+local KEYS = [==[@TRUSTED_KEYS@]==]     -- the project's registry keys, filled in by the build
 
 local args = { ... }
 local opts = { yes = false, reboot = true, wizard = true }
@@ -97,7 +99,8 @@ local function trySources()
       if snap then
         say(colors.lightGray, "channel: pastebin")
         return function(rel)
-          if rel == "registry/index.json" then return textutils.serializeJSON(snap.index or {}) end
+          if rel == "registry/index.json" then return snap.indexJson or textutils.serializeJSON(snap.index or {}) end
+          if rel == "registry/index.json.sig" then return snap.indexSig end
           local key = rel:match("^registry/packages/(.+)%.json$")
           key = key and ("packages/" .. key) or rel:match("^blobs/(%x+)$")
           local id = key and snap.pastes and snap.pastes[key]
@@ -123,8 +126,9 @@ local function get(rel)
     local sha = rel:match("^blobs/(%x+)$")
     if sha then return source.blobs[sha] end
     local name = rel:match("^registry/packages/(.+)%.json$")
-    if name then return source.packages[name] and textutils.serializeJSON(source.packages[name]) end
-    if rel == "registry/index.json" then return source.index and textutils.serializeJSON(source.index) end
+    if name then return source.packageRaw[name] or (source.packages[name] and textutils.serializeJSON(source.packages[name])) end
+    if rel == "registry/index.json" then return source.indexRaw or (source.index and textutils.serializeJSON(source.index)) end
+    if rel == "registry/index.json.sig" then return source.indexSig end
     return nil
   end
   return source(rel)
@@ -135,10 +139,32 @@ end
 ---------------------------------------------------------------------------------------------------------------------
 
 say(colors.yellow, "Tessera installer")
+
+-- Registry signature: when this installer carries the project's key, the index must be signed by it, and every package
+-- description must match the hash in the signed index.
+local sig = require("tsr.pkg.sig")
+local keys = KEYS:sub(1, 1) == "[" and sig.parseKeys(KEYS, "builtin") or {}
+local signedIndex
+if next(keys) then
+  local raw, sigRaw = get("registry/index.json"), get("registry/index.json.sig")
+  if not raw or not sigRaw then die("the registry is not signed; refusing to install from it") end
+  write("verifying the registry signature...")
+  local key, why = sig.verify(raw, sigRaw, keys, sig.CONTEXT)
+  if not key then print() die("registry signature check failed: " .. tostring(why)) end
+  signedIndex = textutils.unserializeJSON(raw)
+  say(colors.lime, " ok (" .. key.name .. ")")
+else
+  say(colors.orange, "This installer has no registry key built in: package descriptions are not signature-checked.")
+end
+
 local manifests, payloads, total = {}, {}, 0
 for _, name in ipairs(SET) do
   local body, err = get("registry/packages/" .. name .. ".json")
   if not body then die("cannot read package '" .. name .. "': " .. tostring(err)) end
+  if signedIndex then
+    local good, gwhy = sig.checkDoc(body, signedIndex.packages and signedIndex.packages[name])
+    if not good then die(name .. ": " .. tostring(gwhy)) end
+  end
   local doc = textutils.unserializeJSON(body)
   local m = doc and doc.versions and doc.versions[doc.latest]
   if not m then die("package '" .. name .. "' has no usable version") end
@@ -166,7 +192,7 @@ end
 if total + 4096 > freeSpace() then
   die(("not enough space: need %d bytes, %.0f free"):format(total, freeSpace()))
 end
-print(("Tessera core + package manager: %d bytes, %.0f free."):format(total, freeSpace()))
+print(("Tessera core + crypto + package manager: %d bytes, %.0f free."):format(total, freeSpace()))
 if fs.exists("/sys/boot.lua") then
   say(colors.orange, "Tessera appears to be installed already; use `pkg upgrade` instead.")
   return

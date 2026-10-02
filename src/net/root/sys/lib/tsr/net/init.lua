@@ -100,9 +100,53 @@ function M.default()
 end
 function M.setDefault(node) defaultNode = node end
 
-function Node:send(id, msg) self.transport.send(id, msg) end
-function Node:broadcast(msg) self.transport.broadcast(msg) end
-function Node:receive(timeout) return self.transport.receive(timeout) end
+--- Taps see every message that goes through the node (this is what `netmon` uses): fn(direction, node, peerId, msg, dropped) with
+--- direction "out" (sent), "bcast" (broadcast), "in" (accepted) or "drop" (refused by the firewall). A tap must not block or fail the node.
+--- Returns a function that removes the tap.
+function Node:tap(fn)
+  self.taps = self.taps or {}
+  self.taps[#self.taps + 1] = fn
+  return function()
+    for i, f in ipairs(self.taps) do if f == fn then table.remove(self.taps, i) return true end end
+    return false
+  end
+end
+
+local function fire(self, direction, peer, msg)
+  if not self.taps then return end
+  for _, fn in ipairs(self.taps) do pcall(fn, direction, self, peer, msg) end
+end
+
+--- Who we talked to lately (clock seconds): replies from them are expected, so a firewall lets them through.
+function Node:send(id, msg)
+  self.contacted = self.contacted or {}
+  self.contacted[id] = os.clock()
+  fire(self, "out", id, msg)
+  self.transport.send(id, msg)
+end
+
+function Node:broadcast(msg)
+  self.broadcastAt = os.clock()
+  fire(self, "bcast", nil, msg)
+  self.transport.broadcast(msg)
+end
+
+--- Next message for this node. A firewall (tsr.fw) may be installed as `node.firewall = function(node, from, msg) -> boolean`: messages it
+--- refuses are dropped here, for everybody who reads from the node (the daemon, `ssh`, `torrent`...).
+function Node:receive(timeout)
+  local deadline = timeout and (os.clock() + timeout)
+  while true do
+    local remaining = deadline and math.max(0, deadline - os.clock()) or nil
+    local id, msg = self.transport.receive(remaining)
+    if id == nil then return nil end
+    if not self.firewall or self.firewall(self, id, msg) then
+      fire(self, "in", id, msg)
+      return id, msg
+    end
+    fire(self, "drop", id, msg)
+    if deadline and os.clock() >= deadline then return nil end
+  end
+end
 
 --- Wait for a message from `from` (nil = anyone) accepted by `want(msg)`; returns the message or nil on timeout.
 function Node:await(from, want, timeout)
@@ -220,6 +264,14 @@ function Node:resolve(target, timeout)
   local cached = self.cache[target]
   if cached and os.clock() - cached.at < M.CACHE_SECONDS then return cached.id end
   if tonumber(target) then return tonumber(target) end
+  if self.noDns == nil then self.noDns = not fs.exists("/sys/lib/tsr/dns/resolver.lua") end
+  if not self.noDns then                                      -- the dns package: names from zone files and the hosts file
+    local okDns, dns = pcall(require, "tsr.dns.resolver")
+    if okDns then
+      local id = dns.lookup(self, target, timeout)
+      if id then self.cache[target] = { id = id, at = os.clock() } return id end
+    end
+  end
   local found = self:lookup(nil, timeout or 1, target)
   if found[1] then return found[1].id end
   return nil, "cannot find a computer called " .. tostring(target)

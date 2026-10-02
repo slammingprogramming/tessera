@@ -71,6 +71,10 @@ function M.setDefaults(tbl)
 end
 
 --- Load a persisted layer from disk (silently keeps the current contents if the file is missing/corrupt).
+--- Files that exist but could not be read as configuration: { { layer, path, copy } }. A copy of each is kept next to it as <file>.damaged
+--- (once), because the next save of that layer would overwrite the damaged original.
+M.problems = {}
+
 function M.load(layer)
   local p = paths[layer]
   if not p then return false end
@@ -78,6 +82,11 @@ function M.load(layer)
   if type(t) == "table" then
     layers[layer] = t
     return true
+  end
+  if fs.exists(p) and not fs.isDir(p) then
+    local copy = p .. ".damaged"
+    if not fs.exists(copy) then pcall(fs.copy, p, copy) end
+    M.problems[#M.problems + 1] = { layer = layer, path = p, copy = copy }
   end
   return false
 end

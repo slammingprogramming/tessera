@@ -6,7 +6,9 @@ Interop adapters for unicornpkg/CCPM/Pinestore are planned. Format is JSON (read
 ## Registry layout (static hosting: GitHub Pages / raw / jsDelivr)
 
 ```
-index.json                       # { format, updated, packages: { name: {latest, summary, type, size} } }
+index.json                       # { format, updated, serial, expires, packages: { name: {latest, summary, type, size, docSha256} } }
+index.json.sig                   # { format, alg: "ed25519", keyid, sig } over the exact bytes of index.json (see SECURITY.md)
+trust.json (+ .sig)              # optional: signed key updates (rotation)
 packages/<name>/package.json     # name, description, author, license, homepage, type, tags, versions[]
 packages/<name>/<version>.json   # manifest (below)
 ```
@@ -31,9 +33,20 @@ packages/<name>/<version>.json   # manifest (below)
   "license": "AGPL-3.0-or-later",   // SPDX; required
   "source": { "repo": "https://github.com/<org>/<repo>", "commit": "<sha>", "path": "src/…" },  // required (AGPL)
   "mirrors": { "pastebin": { "/usr/lib/mek/init.lua": "<paste id>" } },  // optional backup tiers
-  "signature": "…"                  // optional, official registry
 }
 ```
+
+## Signatures
+
+- `index.json.sig` is JSON: `{ "format": 1, "alg": "ed25519", "keyid": "<first 8 bytes of SHA-256(public key), hex>", "sig": "<base64>" }`.
+  The signed message is `"tessera-signature-v1" 0x00 context 0x00 SHA-256(index.json bytes)`.
+- `docSha256` in the index pins each package description; each description pins each file. One signature therefore covers every
+  byte that is installed.
+- `serial` only increases; clients remember the highest serial per source (`/var/lib/tsr/pkg/trust-state.json`) and refuse a
+  smaller one. `expires` (UTC ms) bounds how long a captured index stays valid.
+- Offline bundles contain the raw signed index (bundle record kind 4); Pastebin snapshots carry `indexJson` and `indexSig`.
+- Keys: `/etc/tsr/trust.json` on the device, built-in keys from the build (`trustedKeys` in `tools/build/config.json`). The private key
+  is generated with `node tools/build/keys.mjs gen` and kept outside the repository.
 
 ## Rules
 - Every file pinned by SHA-256; installer verifies before swap; failed verification aborts the transaction.

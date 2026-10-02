@@ -1,0 +1,18 @@
+{
+  "name": "doctor",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Self-check for a Tessera computer in the real game: environment and Lua VM quirks, cryptography known answers and speed, installed-file integrity, signatures, services, log, clock, network; writes a report to send with bug reports",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:doctor"
+  ],
+  "budget": 20000,
+  "tags": [
+    "system",
+    "tools"
+  ]
+}

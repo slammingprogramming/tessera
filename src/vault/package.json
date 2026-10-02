@@ -1,0 +1,19 @@
+{
+  "name": "vault",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Encrypted volumes: a folder that holds only ciphertext (ChaCha20-Poly1305, PBKDF2 passphrase, recovery key) that you mount as ordinary files after unlocking, like BitLocker or FileVault",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:vault"
+  ],
+  "budget": 20000,
+  "tags": [
+    "security",
+    "tools"
+  ]
+}

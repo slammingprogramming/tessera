@@ -23,12 +23,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Registry signing key
+        env:
+          TSR_SIGNING_KEY: ${{ secrets.TSR_SIGNING_KEY }}
+        run: |
+          if [ -n "$TSR_SIGNING_KEY" ]; then
+            umask 077
+            printf '%s' "$TSR_SIGNING_KEY" > "$RUNNER_TEMP/signing.key"
+            echo "TSR_SIGNING_KEY_FILE=$RUNNER_TEMP/signing.key" >> "$GITHUB_ENV"
+          else
+            echo "::warning::no TSR_SIGNING_KEY secret: the published registry will NOT be signed"
+          fi
       - name: Build registry and installer
         run: node tools/build/build.mjs
       - name: Build offline bundles
         run: |
           node tools/build/bundle.mjs --name full
-          node tools/build/bundle.mjs --name starter core pkg installer ui-tui
+          node tools/build/bundle.mjs --name starter core crypto pkg installer ui-tui
           mkdir -p dist/site/bundles
           cp dist/bundles/* dist/site/bundles/
       - uses: actions/upload-pages-artifact@v3

@@ -1,0 +1,22 @@
+{
+  "name": "ssh",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "In-game secure shell: ssh, scp, ssh-keygen, ssh-copy-id and the sshd service, with host keys, known_hosts, authorized_keys and forward secrecy (Ed25519, X25519, ChaCha20-Poly1305)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0",
+    "net": ">=0.1.0",
+    "shell": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:ssh"
+  ],
+  "budget": 40000,
+  "tags": [
+    "network",
+    "server",
+    "security"
+  ]
+}

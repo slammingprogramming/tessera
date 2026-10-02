@@ -1,0 +1,19 @@
+{
+  "name": "netmon",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Network monitor: watch what this computer sends and receives, or listen on modem channels for traffic between other computers (promiscuous mode), classify it by protocol and protection, save captures",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:netmon"
+  ],
+  "budget": 20000,
+  "tags": [
+    "network",
+    "tools"
+  ]
+}

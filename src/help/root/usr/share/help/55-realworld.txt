@@ -1,0 +1,17 @@
+Real-world tools in the game
+Familiar tools, rebuilt for Minecraft. They work between the computers of one world; none of them reaches the real Internet
+(the only exception is an optional HTTPS clock for `ntp`).
+
+  ntp status | ntp sync | ntp serve on     clock: in-game time servers, HTTPS clock if allowed, or by hand (ntp set <time>)
+  ssh user@host | scp a host:b             secure shell and copy, keys instead of passwords (sshd status on the server)
+  pgp --gen-key | --sign | --encrypt       signatures, encryption and a web of trust
+  torrent get <file.tsrt | magnet>         share and fetch files between computers
+  fw status | fw preset lockdown           who may talk to this computer
+  vault create <folder> / vault open ...   encrypted folders with a recovery key
+  tar czf x.tgz /home | tar xf x.tgz       archives (the standard formats)
+  diff old new > fix.patch | patch -i ...  compare files and apply changes
+  netmon                                   see the messages going in and out, and how well each one is protected
+  doctor                                   self-check; run it first on a real computer and send the report with a bug report
+
+Install what you need with `pkg install ssh ntp ...`. The setup wizard suggests them when your computer has a modem.
+Details: docs/REALWORLD.md and docs/SECURITY.md in the project.

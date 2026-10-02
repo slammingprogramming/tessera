@@ -66,16 +66,18 @@ end
 local function makeCtx()
   local sourceOf = {}
   local docs = {}
+  local why = {}
   local all
   return {
     sourceOf = sourceOf,
+    why = why,
     installed = db.get,
     installedProvider = db.provider,
     lookup = function(name)
       if docs[name] ~= nil then return docs[name] or nil end
       local doc, src = source.findPackage(name)
       docs[name] = doc or false
-      if doc then sourceOf[name] = src.name end
+      if doc then sourceOf[name] = src.name else why[name] = src end
       return doc
     end,
     providers = function(virt)

@@ -31,7 +31,7 @@ local function fission(state)
 end
 
 test("energy cubes and matrices report power", function()
-  local cube = { _type = "energyCube", getEnergy = function() return 2500 end, getMaxEnergy = function() return 10000 end }
+  local cube = { _type = "eliteEnergyCube", getEnergy = function() return 2500 end, getMaxEnergy = function() return 10000 end }
   local matrix = { _type = "inductionPort", getEnergy = function() return 0 end, getMaxEnergy = function() return 0 end }
   local e = env({ cube = cube, port = matrix })
   local d = hal.get("cube", e)
@@ -42,13 +42,13 @@ test("energy cubes and matrices report power", function()
 end)
 
 test("a fission reactor is a reactor and a machine", function()
-  local r = fission({ temp = 650, damage = 0.5 })
+  local r = fission({ temp = 650, damage = 50 })
   local e = env({ reactor_0 = r })
   local d = hal.get("reactor_0", e)
   ok(d:has("reactor") and d:has("machine"))
   eq(d:get("reactor.running"), true)
   eq({ d:get("reactor.temperature") }, { 650, "K" })
-  eq({ d:get("reactor.damage") }, { 50, "%" }, "fractions are shown as percent")
+  eq({ d:get("reactor.damage") }, { 50, "%" }, "getDamagePercent is already a percentage")
   eq({ d:get("reactor.coolant") }, { 100, "%" })
   eq({ d:get("reactor.burn_rate") }, { 5.5, "mB/t" })
   ok(d:act("reactor.scram"))
@@ -70,9 +70,9 @@ end)
 
 test("fusion, turbine and digital miner", function()
   local fusion
-  fusion = { _type = "fusionReactor", getTemperature = function() return 1e8 end, isIgnited = function() return true end,
+  fusion = { _type = "fusionReactorLogicAdapter", getPlasmaTemperature = function() return 1e8 end, isIgnited = function() return true end,
                    getProductionRate = function() return 99 end, setInjectionRate = function(n) fusion.rate = n end }
-  local turbine = { _type = "industrialTurbine", getFlowRate = function() return 100 end, getProductionRate = function() return 7 end }
+  local turbine = { _type = "turbineValve", getFlowRate = function() return 100 end, getProductionRate = function() return 7 end }
   local miner
   miner = { _type = "digitalMiner", running = false, isRunning = function() return miner.running end,
                   start = function() miner.running = true end, stop = function() miner.running = false end,
@@ -91,7 +91,7 @@ test("fusion, turbine and digital miner", function()
 end)
 
 test("SCADA leaves a healthy reactor alone", function()
-  local r = fission({ temp = 700, damage = 2, coolant = 0.9, waste = 10 })
+  local r = fission({ temp = 700, damage = 2, coolant = 0.9, waste = 0.1 })
   local e = env({ reactor_0 = r })
   local report = scada.check(e)
   eq(#report, 1)
@@ -103,8 +103,8 @@ test("SCADA scrams on each kind of unsafe reading, once, and latches", function(
   for _, case in ipairs({
     { { temp = 1500 }, "temperature" },
     { { damage = 50 }, "damage" },
-    { { coolant = 5 }, "coolant" },
-    { { waste = 99 }, "waste" },
+    { { coolant = 0.05 }, "coolant" },
+    { { waste = 0.99 }, "waste" },
   }) do
     local r = fission(case[1])
     local e = env({ reactor_0 = r })
@@ -181,4 +181,27 @@ test("the scada command", function()
   ok1, text = run("config")
   ok(text:find("max_temperature = 1000", 1, true))
   eq(run("bogus"), false)
+end)
+
+test("every Mekanism machine with an energy buffer is an energy device (real peripheral names)", function()
+  local function machine(typeName, stored) return { _type = typeName, getEnergy = function() return stored end, getMaxEnergy = function() return 1000 end } end
+  local e = env({
+    a = machine("basicEnergyCube", 100), b = machine("ultimateEnergyCube", 500), c = machine("enrichmentChamber", 250),
+    d = machine("inductionPort", 750), f = machine("someOtherMod", 999), g = machine("fusionReactorPort", 10),
+    h = { _type = "eliteBin", getEnergy = nil },
+  })
+  for _, name in ipairs({ "a", "b", "c", "d", "g" }) do ok(hal.get(name, e):has("energy"), name) end
+  ok(hal.get("f", e) == nil or not hal.get("f", e):has("energy"), "a device of another mod is not claimed")
+  eq({ hal.get("c", e):get("energy.percent") }, { 25, "%" })
+  ok(not (hal.get("h", e) and hal.get("h", e):has("energy")), "a bin has no energy")
+end)
+
+test("units follow the mod: damage is a 0-100 percentage, filled readings are fractions (1% damage is not 100%)", function()
+  local r = fission({ temp = 700, damage = 1, coolant = 1, waste = 1 })
+  local d = hal.get("reactor_0", env({ reactor_0 = r }))
+  eq({ d:get("reactor.damage") }, { 1, "%" }, "a damage of exactly 1 is one percent")
+  eq({ d:get("reactor.coolant") }, { 100, "%" }, "a full tank is the fraction 1")
+  eq({ d:get("reactor.waste") }, { 100, "%" })
+  local safe = fission({ temp = 700, damage = 1, coolant = 0.5, waste = 0.2 })
+  eq(scada.check(env({ reactor_0 = safe }))[1].ok, true, "1% damage must not trigger a scram")
 end)

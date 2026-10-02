@@ -1,0 +1,20 @@
+{
+  "name": "ntp",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Clock, time zones and time synchronisation: in-game time servers (NTP-style), optional real-world UTC over HTTPS, manual setting; date, ntp, ntpdate, timedatectl",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:ntp",
+    "tsr:time"
+  ],
+  "budget": 40000,
+  "tags": [
+    "system",
+    "network"
+  ]
+}

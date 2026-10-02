@@ -1,5 +1,10 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
--- HAL drivers for Mekanism's native ComputerCraft support (peripheral types are the machine names, camelCase).
+-- HAL drivers for Mekanism's native ComputerCraft support. The peripheral type of a Mekanism block is its "computer name", camelCase and
+-- checked against the mod's source (mekanism/Mekanism, branch 1.21.x, MekanismBlockTypes / GeneratorsBlockTypes): machines such as
+-- digitalMiner or enrichmentChamber, multiblock ports (inductionPort, boilerValve, dynamicValve, turbineValve, fissionReactorPort,
+-- fissionReactorLogicAdapter, fusionReactorPort, fusionReactorLogicAdapter, thermalEvaporationController...) and tiered blocks
+-- (basicEnergyCube, eliteBin, ultimateFluidTank...). EVERY Mekanism machine with an energy buffer has getEnergy, getMaxEnergy,
+-- getEnergyNeeded and getEnergyFilledPercentage, so the energy driver accepts them all.
 -- Documented methods (mekanism.github.io, 10.7): energy cube getEnergy/getMaxEnergy/getEnergyFilledPercentage; digital miner
 -- start/stop/isRunning/getState; fission reactor activate/scram/getStatus/getTemperature/setBurnRate/getFuel; fusion reactor
 -- getTemperature/isIgnited/setInjectionRate/getProductionRate; turbine getFlowRate/getMaxFlowRate/getProductionRate/getSteam.
@@ -29,14 +34,36 @@ local function optional(read, have, name, method, unit, convert)
   end
 end
 
-local energyDevices = { "energyCube", "inductionPort", "inductionMatrix" }
+local TIER = { basic = true, advanced = true, elite = true, ultimate = true, creative = true }
+local PLAIN = {}
+for name in ("enrichmentChamber crusher energizedSmelter precisionSawmill osmiumCompressor combiner metallurgicInfuser purificationChamber " ..
+  "chemicalInjectionChamber pressurizedReactionChamber chemicalCrystallizer chemicalDissolutionChamber chemicalInfuser chemicalOxidizer " ..
+  "chemicalWasher rotaryCondensentrator electrolyticSeparator digitalMiner formulaicAssemblicator electricPump fluidicPlenisher " ..
+  "solarNeutronActivator teleporter chargepad laser laserAmplifier laserTractorBeam resistiveHeater seismicVibrator fuelwoodHeater " ..
+  "oredictionificator quantumEntangloporter logisticalSorter modificationStation isotopicCentrifuge nutritionalLiquifier " ..
+  "antiprotonicNucleosynthesizer pigmentExtractor pigmentMixer paintingMachine dimensionalStabilizer qioDriveArray qioDashboard " ..
+  "qioImporter qioExporter qioRedstoneAdapter dynamicValve boilerValve inductionPort thermalEvaporationController thermalEvaporationValve " ..
+  "radioactiveWasteBarrel spsPort heatGenerator bioGenerator solarGenerator windGenerator gasBurningGenerator advancedSolarGenerator " ..
+  "turbineValve fissionReactorPort fissionReactorLogicAdapter fusionReactorPort fusionReactorLogicAdapter"):gmatch("%S+") do
+  PLAIN[name] = true
+end
+
+--- Is this a Mekanism machine? (a known computer name, or a tiered block such as basicEnergyCube)
+local function isMekanism(dev)
+  for _, t in ipairs(dev.types) do
+    if PLAIN[t] then return true end
+    local tier, rest = t:match("^(%l+)(%u%w+)$")
+    if tier and TIER[tier] and (rest == "EnergyCube" or rest == "Bin" or rest == "FluidTank" or rest == "ChemicalTank") then return true end
+  end
+  return false
+end
 
 local energy = {
   id = "mekanism.energy",
   match = function(dev)
-    if not isType(dev, table.unpack(energyDevices)) then return nil end
+    if not isMekanism(dev) then return nil end
     local have = methodSet(dev)
-    if not have.getEnergy then return nil end
+    if not (have.getEnergy and have.getMaxEnergy) then return nil end
     return {
       caps = { "energy" },
       read = {
@@ -63,10 +90,15 @@ local fission = {
       ["reactor.running"] = function(d) return d.call("getStatus") == true end,
     }
     optional(read, have, "reactor.temperature", "getTemperature", "K")
-    optional(read, have, "reactor.damage", "getDamagePercent", "%", function(v) return v <= 1 and v * 100 or v end)
-    optional(read, have, "reactor.coolant", "getCoolantFilledPercentage", "%", function(v) return v <= 1 and v * 100 or v end)
-    optional(read, have, "reactor.fuel", "getFuelFilledPercentage", "%", function(v) return v <= 1 and v * 100 or v end)
-    optional(read, have, "reactor.waste", "getWasteFilledPercentage", "%", function(v) return v <= 1 and v * 100 or v end)
+    -- Units checked in the mod's source: getDamagePercent is ALREADY 0-100 (a rounded percentage); the *FilledPercentage methods return a
+    -- fraction 0-1 (stored / capacity), so they are multiplied by 100 here.
+    local fraction = function(v) return v * 100 end
+    optional(read, have, "reactor.damage", "getDamagePercent", "%")
+    optional(read, have, "reactor.coolant", "getCoolantFilledPercentage", "%", fraction)
+    optional(read, have, "reactor.fuel", "getFuelFilledPercentage", "%", fraction)
+    optional(read, have, "reactor.waste", "getWasteFilledPercentage", "%", fraction)
+    optional(read, have, "reactor.heated_coolant", "getHeatedCoolantFilledPercentage", "%", fraction)
+    optional(read, have, "reactor.actual_burn_rate", "getActualBurnRate", "mB/t")
     optional(read, have, "reactor.burn_rate", "getBurnRate", "mB/t")
     optional(read, have, "reactor.max_burn_rate", "getMaxBurnRate", "mB/t")
     local act = {}
@@ -82,10 +114,12 @@ local fission = {
 local fusion = {
   id = "mekanism.fusion",
   match = function(dev)
-    if not isType(dev, "fusionReactor", "fusionReactorLogicAdapter") then return nil end
+    if not isType(dev, "fusionReactor", "fusionReactorLogicAdapter", "fusionReactorPort") then return nil end
     local have = methodSet(dev)
     local read = {}
-    optional(read, have, "reactor.temperature", "getTemperature", "K")
+    optional(read, have, "reactor.temperature", have.getPlasmaTemperature and "getPlasmaTemperature" or "getTemperature", "K")
+    optional(read, have, "reactor.case_temperature", "getCaseTemperature", "K")
+    optional(read, have, "reactor.injection_rate", "getInjectionRate")
     optional(read, have, "reactor.production", "getProductionRate", "J/t")
     if have.isIgnited then read["reactor.running"] = function(d) return d.call("isIgnited") == true end end
     local act = {}
@@ -97,7 +131,7 @@ local fusion = {
 local turbine = {
   id = "mekanism.turbine",
   match = function(dev)
-    if not isType(dev, "industrialTurbine", "turbineValve") then return nil end
+    if not isType(dev, "turbineValve", "industrialTurbine") then return nil end
     local have = methodSet(dev)
     local read = {}
     optional(read, have, "turbine.flow", "getFlowRate", "mB/t")

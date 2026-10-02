@@ -1,0 +1,22 @@
+{
+  "name": "pgp-keyserver",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "An in-game key server for the pgp tool: paired computers publish and look up public keys here",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0",
+    "pgp": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:keyserver"
+  ],
+  "budget": 4000,
+  "tags": [
+    "security",
+    "server",
+    "network"
+  ]
+}

@@ -2,7 +2,7 @@
 // Client-side builder for Tessera offline bundles (the format of src/core/root/sys/lib/tsr/bundle.lua). It runs in the browser
 // (and in Node 18+ for tests): nothing is uploaded anywhere. The page fetches the registry files from the same site, chooses the
 // packages with their dependencies, and packs them.
-export const KIND = { index: 1, package: 2, blob: 3 };
+export const KIND = { index: 1, package: 2, blob: 3, signature: 4 };
 
 const enc = new TextEncoder();
 
@@ -97,18 +97,24 @@ export async function toChunks(container, chunkSize = 400) {
 }
 
 /** Everything the page does after the user picked packages: fetch blobs, build the container. fetchBytes(url) -> Uint8Array.
- *  Calls progress(done, total). Returns { container, names, size }. */
-export async function assemble(wanted, { index, docs, fetchBytes, progress }) {
+ *  A signed registry passes `indexRaw` + `indexSig` (the files exactly as served) and `docsRaw` (name -> text): they are packed
+ *  unchanged so the signatures and hashes stay valid. Calls progress(done, total). Returns { container, names, size }. */
+export async function assemble(wanted, { index, docs, indexRaw, indexSig, docsRaw, fetchBytes, progress }) {
   const names = resolve(wanted, index, docs);
   const subIndex = { format: 1, packages: {} };
   const entries = [];
   const blobs = new Set();
   for (const n of names) {
     subIndex.packages[n] = index.packages[n];
-    entries.push({ kind: KIND.package, name: n, data: JSON.stringify(docs[n]) });
+    entries.push({ kind: KIND.package, name: n, data: docsRaw?.[n] ?? JSON.stringify(docs[n]) });
     for (const f of docs[n].versions[docs[n].latest].files) blobs.add(f.sha256);
   }
-  entries.unshift({ kind: KIND.index, name: 'index', data: JSON.stringify(subIndex) });
+  if (indexSig && indexRaw) {
+    entries.unshift({ kind: KIND.signature, name: 'index', data: indexSig });
+    entries.unshift({ kind: KIND.index, name: 'index', data: indexRaw });
+  } else {
+    entries.unshift({ kind: KIND.index, name: 'index', data: JSON.stringify(subIndex) });
+  }
   const list = [...blobs].sort();
   let done = 0;
   for (const sha of list) {

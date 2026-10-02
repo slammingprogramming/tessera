@@ -86,3 +86,24 @@ test("config.get returns copies", function()
   t.a = 99
   eq(config.get("t.a"), 1)
 end)
+
+test("a damaged configuration file is ignored, reported and copied aside before anything can overwrite it", function()
+  local config = require("tsr.config")
+  local dir = "/tmp-cfg-damaged"
+  if fs.exists(dir) then fs.delete(dir) end
+  fs.makeDir(dir)
+  config.reset()
+  config.problems = {}
+  local h = fs.open(dir .. "/system.cfg", "w") h.write("this is { not lua (((") h.close()
+  local original = config.paths.system
+  config.paths.system = dir .. "/system.cfg"
+  ok(not config.load("system"))
+  config.paths.system = original
+  eq(#config.problems, 1)
+  eq(config.problems[1].copy, dir .. "/system.cfg.damaged")
+  local c = fs.open(dir .. "/system.cfg.damaged", "r")
+  eq(c.readAll(), "this is { not lua (((")
+  c.close()
+  config.problems = {}
+  fs.delete(dir)
+end)

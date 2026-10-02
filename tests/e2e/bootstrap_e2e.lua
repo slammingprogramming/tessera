@@ -180,6 +180,81 @@ local okAll, errAll = pcall(function()
     check("second install: nothing changed", ok and readFile("/sys/boot.lua") == before)
   end)
 
+  -- Signed registry: the installer carries the build's key and must refuse every kind of tampering before writing anything.
+  scenario("tampered or unsigned registries are refused by the installer", function()
+    local function registryCopy(name)
+      local dest = "/tmp-e2e/" .. name
+      fs.makeDir("/tmp-e2e")
+      if fs.exists(dest) then fs.delete(dest) end
+      fs.copy("/site/registry", dest .. "/registry")
+      return dest
+    end
+    local function write(path, data) local h = fs.open(path, "wb") h.write(data) h.close() end
+    local function refused(label, dir, wanted)
+      local ok = runInstaller(dir, "--yes")
+      check(label .. ": installer refused", not ok and not fs.exists("/sys/boot.lua") and not fs.exists("/startup.lua"), lastOutput)
+      check(label .. ": says why (" .. wanted .. ")", lastOutput:find(wanted, 1, true) ~= nil, lastOutput)
+    end
+    check("registry in the e2e build is signed", fs.exists("/site/registry/index.json.sig"))
+    -- 1. index changed after signing
+    local d = registryCopy("tampered-index")
+    local idx = readFile(d .. "/registry/index.json")
+    write(d .. "/registry/index.json", idx:gsub('"version":"0.1.0"', '"version":"9.9.9"', 1))
+    refused("tampered index", d, "signature")
+    -- 2. no signature file at all
+    d = registryCopy("unsigned")
+    fs.delete(d .. "/registry/index.json.sig")
+    refused("unsigned registry", d, "not signed")
+    -- 3. a package description swapped (index and signature untouched)
+    d = registryCopy("tampered-doc")
+    local doc = readFile(d .. "/registry/packages/core.json")
+    write(d .. "/registry/packages/core.json", (doc:gsub('"path":"/startup.lua"', '"path":"/startup.lua "', 1)))
+    refused("tampered package description", d, "signed index")
+    -- 4. signed by somebody else
+    d = registryCopy("other-key")
+    write(d .. "/registry/index.json.sig", readFile("/bundles/other-key.sig"))
+    refused("signature by an unknown key", d, "signed by an unknown")
+  end)
+
+  scenario("pkg refuses a tampered mirror once installed", function()
+    local ok, err = runInstaller("/site", "--yes")
+    check("signed mirror: bootstrap ran", ok, err)
+    local loader = dofile("/sys/lib/tsr/loader.lua")
+    local config = loader.require("tsr.config")
+    config.setDefaults(loader.require("tsr.defaults"))
+    local trust = loader.require("tsr.pkg.trust")
+    check("signed mirror: signatures are required (built-in key)", trust.policy() == "require" and #trust.list() == 1, trust.policy())
+    config.set("pkg.sources", { { name = "mirror", type = "dir", path = "/site" } }, "user")
+    local pkg = loader.require("tsr.pkg")
+    local good, why = pkg.installPackages({ "ui-tui" })
+    check("signed mirror: install from the genuine mirror works", good, why)
+    local info = trust.sourceInfo("mirror")
+    check("signed mirror: the verification was remembered (key and serial)", info and info.serial and info.serial > 0 and info.key == "bootstrap test key", info and info.key)
+    -- a tampered copy of the mirror
+    local dest = "/tmp-e2e/evil"
+    fs.makeDir("/tmp-e2e")
+    fs.copy("/site/registry", dest .. "/registry")
+    local h = fs.open(dest .. "/registry/packages/ui-tui.json", "rb") local text = h.readAll() h.close()
+    h = fs.open(dest .. "/registry/packages/ui-tui.json", "wb") h.write((text:gsub('"size"', '"sizee"', 1))) h.close()
+    config.set("pkg.sources", { { name = "evil", type = "dir", path = dest } }, "user")
+    loader.unload("tsr.pkg.source")
+    loader.unload("tsr.pkg")
+    local pkg2 = loader.require("tsr.pkg")
+    local bad, bwhy = pkg2.installPackages({ "ui-tui" }, { reinstall = true })
+    check("signed mirror: a tampered package description is refused", bad == nil and tostring(bwhy):find("signed index", 1, true) ~= nil, tostring(bwhy))
+    -- rolling back to an older signed index is refused
+    local idxFile = dest .. "/registry/index.json"
+    fs.delete(dest) fs.copy("/site/registry", dest .. "/registry")
+    h = fs.open(dest .. "/registry/index.json", "rb") local raw = h.readAll() h.close()
+    local state = textutils.unserializeJSON(readFile("/var/lib/tsr/pkg/trust-state.json"))
+    state.sources.evil = { digest = "x", serial = 99999999999, keyid = "x" }
+    h = fs.open("/var/lib/tsr/pkg/trust-state.json", "wb") h.write(textutils.serializeJSON(state)) h.close()
+    loader.unload("tsr.pkg.source") loader.unload("tsr.pkg")
+    local pkg3 = loader.require("tsr.pkg")
+    local idx3, ierr = pkg3.source.getIndex({ name = "evil", type = "dir", path = dest }, true)
+    check("signed mirror: an index older than one already seen is refused as a rollback", idx3 == nil and tostring(ierr):find("rollback", 1, true) ~= nil, tostring(ierr))
+  end)
+
   scenario("corrupted bundle is rejected before anything is written", function()
     local data = readFile("/bundles/boot.tsrbundle")
     local i = math.floor(#data / 2)

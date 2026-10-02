@@ -32,12 +32,12 @@ Exemplar details come from docs/RESEARCH.md (sources there); keep this file upda
 | 23 | Remote FS / file sync | Opus remote FS, Netmount | `netfs`, `filesync` | P1 | wip |
 | 24 | Package mirror over rednet (HTTP-less clients) | — | `pkg-mirror` | P1 | wip |
 | 25 | Browser/outside access, web gateway | Cloud Catcher, Ultron Control | `webgw` + `tools/gateway` | P2 | wip |
-| 26 | Encryption (hash, HMAC, ChaCha, ECC, FS encryption, signing) | Anavrins libs, ecc, FSEncrypt, VeriCode | `core/hash`, `net/crypto` (no ECC/signing yet) | P1 | wip |
+| 26 | Encryption (hash, HMAC, ChaCha, ECC, FS encryption, signing) | Anavrins libs, ecc, FSEncrypt, VeriCode | `crypto` (SHA-512, Ed25519, X25519, ChaCha20-Poly1305, HKDF, PBKDF2), `core/hash`, `net/crypto`, `vault` | P1 | wip |
 | 27 | Scheduler / cron / alarms | — | `ops` cron | P1 | wip |
 | 28 | Telemetry / metrics dashboards | Telem | `ops` metrics, `power-monitor` | P2 | wip |
 | 29 | GPS host/client, waypoints, maps | stock gps | `gps` | P1 | wip |
 | 30 | Audio (DFPWM, streams, trackers) | AUKit, austream, Musicify, tracc | `audio`, `media` | P2 | wip |
-| 31 | Video/image (NFP/32vid, sanjuuni pipeline) | sanjuuni, YouCube | `media` (BIMG, NFP, DFPWM; 32vid not supported) | P2 | wip |
+| 31 | Video/image (NFP/32vid, sanjuuni pipeline) | sanjuuni, YouCube | `media` (BIMG, NFP, DFPWM, 32vid) | P2 | wip |
 | 32 | 2D/3D graphics libs | Pine3D, C3D, Pixelbox, GEMU | `gfx` | P2 | wip |
 | 33 | Games | CCDoom, CC-Minecraft, LuaGB, 8086, classics | `games`, `game-mork` | P2 | wip |
 | 34 | Printing / documents | printer periph, printshop | `print` | P3 | wip |
@@ -57,12 +57,25 @@ Exemplar details come from docs/RESEARCH.md (sources there); keep this file upda
 | 48 | Multi-computer scripting | Opus | `rsh` (rexec) | P2 | wip |
 | 49 | Virtualization/emulators | OrangeBox, lunatic86, LuaGB | `sandbox` (vm) | P3 | wip |
 | 50 | Kiosk / digital signage | — | `tv` (signage, kiosk) | P3 | wip |
+| 51 | Crafting turtle | CC crafting API scripts | `craft` (`autocraft`) | P2 | wip |
+| 52 | Package signing | VeriCode, apt/Authenticode | `crypto` + `pkg` (signed index, rollback protection, key rotation) | P1 | wip |
+| 53 | Time sync, time zones | NTP, chrony | `ntp` (in-game servers, optional HTTPS clock, manual), `tsr.time` | P2 | wip |
+| 54 | Secure remote shell and copy | ssh, scp | `ssh` | P2 | wip |
+| 55 | Signatures, encryption, web of trust | GnuPG | `pgp`, `pgp-keyserver` | P3 | wip |
+| 56 | Peer-to-peer file sharing | BitTorrent | `p2p` (`torrent`) | P3 | wip |
+| 57 | Firewall, name service | iptables, DNS | `firewall`, `dns` | P3 | wip |
+| 58 | Disk encryption | BitLocker, LUKS | `vault` | P3 | wip |
+| 59 | Archives, diff and patch | tar, gzip, diff, patch | `archive`, `diff` | P3 | wip |
+| 60 | Network analysis | tcpdump, Wireshark | `netmon` | P3 | wip |
+| 61 | Self-diagnosis | sfc, Reliability Monitor | `doctor` | P2 | wip |
 
 Status notes (2026-10-01): every area above now has a first version that is built and tested in CraftOS-PC (unit tests on a simulated
 turtle world, fake peripherals and an in-memory network, plus boot and installer end-to-end runs). They stay `wip` until each has been run in
-real Minecraft; `done` means that has happened (only the dev tooling row qualifies). Known gaps: 32vid video is not decoded (convert with
-`sanjuuni --bimg`), no package signing, no ECC, Tom's Peripherals have no driver (type names unverified), mod method names beyond those listed in
-docs/RESEARCH.md section 9 are checked at run time rather than assumed.
+real Minecraft; `done` means that has happened (only the dev tooling row qualifies). Known gaps: 32vid is decoded (checked against the reference decoder) but multi-monitor frames are skipped and playback speed on real
+computers is unknown; the mod drivers were corrected against the mods' source code but never run with the mods; SSH and PGP are Tessera's
+own protocols (not interoperable with the real ones); mail is not built; speed of public-key cryptography in the real game is unmeasured
+(`doctor` measures it).
+Update 2026-10-02: rows 51-61 were added with the real-world tools (docs/REALWORLD.md).
 
 Rule: an area is only "done" when a user can accomplish the task end-to-end on a stock CC:T server without extra mods
 (except where the area is mod-specific).

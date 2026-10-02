@@ -15,10 +15,6 @@ Effective value: highest layer that defines the key. Tables from several layers 
 
 Set `key` in `layer` (default "system"). Use value=nil to unset. Persist with M.save().
 
-## `M.load(layer)`
-
-Load a persisted layer from disk (silently keeps the current contents if the file is missing/corrupt).
-
 ## `M.watch(prefix, fn)`
 
 Call fn(key, newValue) whenever a key starting with `prefix` is set. Returns an unwatch function.

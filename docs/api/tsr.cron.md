@@ -5,6 +5,8 @@ Package: `ops`
 Cron: run commands on a schedule. The table lives in /etc/tsr/cron.tab, one job per line:
     every 10m   rs set top on          every <n>s|m|h|d   (real time, from when the scheduler started)
     at 06:00    tsr-backup             every day at that in-game time
+    daily 03:30 tsr-backup             every day at that WALL-CLOCK time (system time zone, see the ntp package)
+    weekly mon 06:00 pkg update        every week on that day (sun mon tue wed thu fri sat)
     boot        svc start netd         once when the scheduler starts
   Lines starting with # are comments.
 Commands run in a tsh session (or the CraftOS shell without tsh) inside their own process with a time limit;
@@ -24,7 +26,8 @@ Remove the nth job (counting only real jobs, as `crontab list` numbers them).
 
 ## `M.now()`
 
-Time source: { seconds = real seconds (monotonic enough), hour = in-game hour 0-24, day = in-game day number }.
+Time source: { seconds = real seconds, hour = in-game hour 0-24, day = in-game day number, minute/weekday/date = wall-clock time in
+the system time zone (from the ntp package's clock when it is installed) }.
 
 ## `M.due(job, now, state)`
 

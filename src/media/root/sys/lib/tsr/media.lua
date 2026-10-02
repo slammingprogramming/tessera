@@ -3,7 +3,7 @@
 --   .bimg   pictures and videos in "blit image" format (sanjuuni's default output; several frames = an animation)
 --   .nfp    pictures from the paint program
 --   .dfpwm  audio for speakers (a video's sound is the .dfpwm file next to it with the same name)
---   (32vid, sanjuuni's compressed video container, is not supported yet: convert with `sanjuuni --bimg`.)
+--   .32vid  sanjuuni's compressed video container with sound and subtitles (ANS, Huffman, DEFLATE or raw; see tsr.media.vid32)
 --   play <file> [--monitor name] [--loop]     play list [folder]
 local image = require("tsr.gfx.image")
 
@@ -11,7 +11,7 @@ local M = {}
 
 M.AUDIO_CHUNK = 16 * 1024
 
-local KINDS = { bimg = "video", nfp = "picture", dfpwm = "audio" }
+local KINDS = { bimg = "video", nfp = "picture", dfpwm = "audio", ["32vid"] = "video", ["32v"] = "video" }
 
 --- "video" (BIMG), "picture" (NFP) or "audio" (DFPWM) from the file name, or nil.
 function M.kind(path)
@@ -84,6 +84,94 @@ function M.playVideo(path, t, opts)
   end
 end
 
+--- Play a 32vid file (sanjuuni's compressed video, with sound and subtitles) on terminal `t`. opts: loop, interruptible (default true), pull,
+--- stop, speakers (array; the file's audio goes to all of them), volume, handle (an open binary handle, e.g. from http.get(url, nil, true), instead
+--- of the path), clock (function -> ms, tests). Frames are paced by the file's frame rate against the clock; a slow computer drops waiting, not
+--- frames. Returns "done" or "stopped", or nil + reason.
+function M.play32vid(path, t, opts)
+  opts = opts or {}
+  local vid32 = require("tsr.media.vid32")
+  local pull = opts.pull or function() return os.pullEvent() end
+  local clock = opts.clock or function() return os.epoch("utc") end
+  local speakers = opts.speakers or {}
+  local volume = opts.volume or 1
+  local palette = t.setPaletteColor or t.setPaletteColour
+  local native = (t.nativePaletteColor or t.nativePaletteColour) or (term.nativePaletteColor or term.nativePaletteColour)
+
+  local function resetPalette()
+    if palette and native then for i = 0, 15 do palette(2 ^ i, native(2 ^ i)) end end
+  end
+
+  while true do
+    local v, err
+    if opts.handle then v, err = vid32.fromHandle(opts.handle) else v, err = vid32.open(path) end
+    if not v then return nil, err end
+    local tw, th = t.getSize()
+    local x0 = math.max(1, math.floor((tw - v.width) / 2) + 1)
+    local y0 = math.max(1, math.floor((th - v.height) / 2) + 1)
+    t.setBackgroundColor(colors.black)
+    t.clear()
+    local audio = v:audioChunks()                       -- separate-stream files: all audio is known up front
+    local audioIndex = 0
+    local startMs = clock()
+    local result
+
+    local function feed(samples)
+      for _, sp in ipairs(speakers) do
+        while not sp.playAudio(samples, volume) do
+          local ev, a = pull()
+          if opts.interruptible ~= false and interrupted(ev, a) then return false end
+          if opts.stop and opts.stop() then return false end
+        end
+      end
+      return true
+    end
+
+    local function waitUntil(targetMs)
+      while true do
+        local remaining = targetMs - clock()
+        if remaining <= 0 then return true end
+        local timer = os.startTimer(remaining / 1000)
+        repeat
+          local ev, a = pull()
+          if opts.interruptible ~= false and interrupted(ev, a) then os.cancelTimer(timer) return false end
+          if opts.stop and opts.stop() then os.cancelTimer(timer) return false end
+        until ev == "timer" and a == timer
+      end
+    end
+
+    local shown = 0
+    while true do
+      local kind, data = v:next()
+      if not kind then result = "done" break end
+      if kind == "audio" then
+        if not feed(data) then result = "stopped" break end
+      elseif kind == "video" then
+        if palette then for i = 0, 15 do palette(2 ^ i, data.palette[i][1], data.palette[i][2], data.palette[i][3]) end end
+        for row = 1, v.height do
+          t.setCursorPos(x0, y0 + row - 1)
+          t.blit(data[row][1], data[row][2], data[row][3])
+        end
+        for _, s in ipairs(data.subtitles or {}) do
+          local fg = ("0123456789abcdef"):sub(s.color % 16 + 1, s.color % 16 + 1)
+          local bg = ("0123456789abcdef"):sub(math.floor(s.color / 16) + 1, math.floor(s.color / 16) + 1)
+          t.setCursorPos(x0 + s.x - 1, y0 + s.y - 1)
+          t.blit(s.text, fg:rep(#s.text), bg:rep(#s.text))
+        end
+        shown = shown + 1
+        if audio and audioIndex < #audio and shown % math.max(1, math.floor(v.fps / 2)) == 1 then       -- about half a second of sound at a time
+          audioIndex = audioIndex + 1
+          if not feed(audio[audioIndex]) then result = "stopped" break end
+        end
+        if not waitUntil(startMs + shown * 1000 / v.fps) then result = "stopped" break end
+      end
+    end
+    v:close()
+    resetPalette()
+    if result == "stopped" or not opts.loop or opts.handle then return result end
+  end
+end
+
 --- Play a .dfpwm file on the given speakers (all play the same stream). opts: volume (0-3, default 1), stop, decoder (tests),
 --- pull. Returns "done" or "stopped".
 function M.playAudio(path, speakers, opts)
@@ -116,10 +204,11 @@ end
 function M.play(path, opts)
   opts = opts or {}
   local kind = M.kind(path)
-  if not kind then return nil, "not a media file I can play (bimg, nfp, dfpwm)" end
+  if not kind then return nil, "not a media file I can play (bimg, nfp, dfpwm, 32vid)" end
   if not fs.exists(path) then return nil, "no such file: " .. tostring(path) end
   if kind == "audio" then return M.playAudio(path, opts.speakers or {}, opts) end
   local t = opts.term or term.current()
+  if path:lower():match("%.32vid?$") or path:lower():match("%.32v$") then return M.play32vid(path, t, opts) end
   local companion = path:gsub("%.%w+$", ".dfpwm")
   local speakers = opts.speakers or {}
   if kind == "video" and #speakers > 0 and fs.exists(companion) then

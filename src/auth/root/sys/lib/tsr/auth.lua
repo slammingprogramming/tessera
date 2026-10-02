@@ -19,7 +19,7 @@ M.MIN_PASSWORD = 4
 M.ROOT = "root"      -- pseudo-user used by sudo / elevated sections: unrestricted
 
 --- Files and folders that hold secrets: ordinary users can neither read nor write them.
-M.SECRET_PATHS = { "/etc/tsr/net", "/etc/tsr/webgw.cfg", "/etc/tsr/rsh.allow", "/etc/tsr/fleet.allow", "/etc/tsr/rscreen.allow",
+M.SECRET_PATHS = { "/etc/tsr/net", "/etc/tsr/ssh", "/etc/tsr/sshd.cfg", "/var/lib/tsr/random.seed", "/etc/tsr/webgw.cfg", "/etc/tsr/rsh.allow", "/etc/tsr/fleet.allow", "/etc/tsr/rscreen.allow",
                    "/etc/tsr/kiosk.cfg", "/var/lib/tsr/pkg/txn.json" }
 
 local db = nil

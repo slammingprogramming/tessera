@@ -2,6 +2,8 @@
 -- Cron: run commands on a schedule. The table lives in /etc/tsr/cron.tab, one job per line:
 --     every 10m   rs set top on          every <n>s|m|h|d   (real time, from when the scheduler started)
 --     at 06:00    tsr-backup             every day at that in-game time
+--     daily 03:30 tsr-backup             every day at that WALL-CLOCK time (system time zone, see the ntp package)
+--     weekly mon 06:00 pkg update        every week on that day (sun mon tue wed thu fri sat)
 --     boot        svc start netd         once when the scheduler starts
 --   Lines starting with # are comments.
 -- Commands run in a tsh session (or the CraftOS shell without tsh) inside their own process with a time limit;
@@ -21,6 +23,7 @@ M.TIMEOUT = 60
 ---------------------------------------------------------------------------------------------------------------------
 
 local UNITS = { s = 1, m = 60, h = 3600, d = 86400 }
+local WEEKDAYS = { sun = 0, mon = 1, tue = 2, wed = 3, thu = 4, fri = 5, sat = 6 }
 
 --- Parse one line. Returns a job { kind, seconds | hour, command, text } or nil + error. Blank/comment lines return false.
 function M.parseLine(line)
@@ -41,8 +44,19 @@ function M.parseLine(line)
     h, m = tonumber(h), tonumber(m)
     if not h or h > 23 or m > 59 then return nil, "expected: at HH:MM <command> (in-game time)" end
     return { kind = "at", hour = h + m / 60, command = cmd, text = line }
+  elseif kind == "daily" then
+    local h, m, cmd = rest:match("^(%d%d?):(%d%d)%s+(.+)$")
+    h, m = tonumber(h), tonumber(m)
+    if not h or h > 23 or m > 59 then return nil, "expected: daily HH:MM <command> (wall-clock time)" end
+    return { kind = "daily", minute = h * 60 + m, command = cmd, text = line }
+  elseif kind == "weekly" then
+    local day, h, m, cmd = rest:match("^(%a%a%a)%s+(%d%d?):(%d%d)%s+(.+)$")
+    local wd = day and WEEKDAYS[day:lower()]
+    h, m = tonumber(h), tonumber(m)
+    if not wd or not h or h > 23 or m > 59 then return nil, "expected: weekly <sun|mon|...|sat> HH:MM <command>" end
+    return { kind = "weekly", weekday = wd, minute = h * 60 + m, command = cmd, text = line }
   end
-  return nil, "unknown schedule '" .. tostring(kind) .. "' (use every, at or boot)"
+  return nil, "unknown schedule '" .. tostring(kind) .. "' (use every, at, daily, weekly or boot)"
 end
 
 --- Read the table. Returns jobs, problems (strings).
@@ -101,9 +115,18 @@ end
 -- Scheduler
 ---------------------------------------------------------------------------------------------------------------------
 
---- Time source: { seconds = real seconds (monotonic enough), hour = in-game hour 0-24, day = in-game day number }.
+--- Time source: { seconds = real seconds, hour = in-game hour 0-24, day = in-game day number, minute/weekday/date = wall-clock time in
+--- the system time zone (from the ntp package's clock when it is installed) }.
 function M.now()
-  return { seconds = (os.epoch and os.epoch("utc") or os.clock() * 1000) / 1000, hour = os.time("ingame"), day = os.day("ingame") }
+  local okT, time = pcall(require, "tsr.time")
+  local ms = (okT and time.now()) or (os.epoch and os.epoch("utc")) or os.clock() * 1000
+  local now = { seconds = ms / 1000, hour = os.time("ingame"), day = os.day("ingame") }
+  if okT then                                   -- wall-clock fields exist only with the ntp package (it owns time zones)
+    local offset = time.offsetAt(time.currentZone(), math.floor(ms / 1000))
+    local y, mo, d, h, mi, _, wd = time.fields(math.floor(ms / 1000) + offset * 60)
+    now.minute, now.weekday, now.date = h * 60 + mi, wd, y * 10000 + mo * 100 + d
+  end
+  return now
 end
 
 --- Does `job` need to run at `now`? state is the job's memory ({ last = seconds, lastDay = n, ran = bool }) and is updated.
@@ -128,6 +151,16 @@ function M.due(job, now, state)
       end
       state.lastDay = now.day
       return true
+    end
+    return false
+  elseif job.kind == "daily" or job.kind == "weekly" then
+    if now.minute == nil then return false end
+    if job.kind == "weekly" and now.weekday ~= job.weekday then return false end
+    if now.minute >= job.minute and state.lastDate ~= now.date then
+      -- do not fire for a time that passed long before the scheduler began
+      local missed = state.lastDate == nil and now.minute - job.minute > 5
+      state.lastDate = now.date
+      return not missed
     end
     return false
   end

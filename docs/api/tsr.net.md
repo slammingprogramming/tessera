@@ -28,6 +28,21 @@ The default transport: rednet with every attached modem opened.
 
 Create a node. opts: id, hostname, transport, peersPath (default /etc/tsr/net/peers.db).
 
+## `Node:tap(fn)`
+
+Taps see every message that goes through the node (this is what `netmon` uses): fn(direction, node, peerId, msg, dropped) with
+direction "out" (sent), "bcast" (broadcast), "in" (accepted) or "drop" (refused by the firewall). A tap must not block or fail the node.
+Returns a function that removes the tap.
+
+## `Node:send(id, msg)`
+
+Who we talked to lately (clock seconds): replies from them are expected, so a firewall lets them through.
+
+## `Node:receive(timeout)`
+
+Next message for this node. A firewall (tsr.fw) may be installed as `node.firewall = function(node, from, msg) -> boolean`: messages it
+refuses are dropped here, for everybody who reads from the node (the daemon, `ssh`, `torrent`...).
+
 ## `Node:await(from, want, timeout)`
 
 Wait for a message from `from` (nil = anyone) accepted by `want(msg)`; returns the message or nil on timeout.

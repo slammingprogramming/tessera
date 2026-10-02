@@ -11,10 +11,10 @@ import { root } from '../lib/craftos.mjs';
 const DISK = 1_000_000;
 const FLOPPY = 125_000;
 const LIMITS = {
-  installer: 40_000,                 // install.lua alone
+  installer: 48_000,                 // install.lua alone (it carries the Ed25519 verifier)
   floppyKit: 100_000,                // install.lua + the offline bundle of core + pkg (compressed)
-  baseInstalled: 200_000,            // core + pkg + installer + ui-tui + shell, installed and minified
-  pasteLines: 150,                   // lines to paste for the base bundle at the default chunk size
+  baseInstalled: 235_000,            // core + crypto + pkg + installer + ui-tui + shell, installed and minified
+  pasteLines: 175,                   // lines to paste for the base bundle (signed index included) at the default chunk size
 };
 
 const site = join(root, 'dist', 'site');
@@ -28,15 +28,15 @@ const installer = statSync(join(site, 'install.lua')).size;
 check('install.lua', installer, LIMITS.installer);
 
 const sizeOf = (names) => names.reduce((s, n) => s + (index.packages[n]?.size ?? 0), 0);
-const base = ['core', 'pkg', 'installer', 'ui-tui', 'shell'].filter((n) => index.packages[n]);
+const base = ['core', 'crypto', 'pkg', 'installer', 'ui-tui', 'shell'].filter((n) => index.packages[n]);
 check(`installed size of ${base.join('+')}`, sizeOf(base), LIMITS.baseInstalled);
 
 const bundle = join(root, 'dist', 'bundles', 'boot.tsrbundle');
 if (existsSync(bundle)) {
   const bundleSize = statSync(bundle).size;
-  check('floppy kit (install.lua + core/pkg bundle)', installer + bundleSize, Math.min(LIMITS.floppyKit, FLOPPY));
+  check('floppy kit (install.lua + core/crypto/pkg bundle)', installer + bundleSize, Math.min(LIMITS.floppyKit, FLOPPY));
   const txt = join(root, 'dist', 'bundles', 'boot.txt');
-  if (existsSync(txt)) check('paste lines for core+pkg', readFileSync(txt, 'utf8').split('\n').filter(Boolean).length, LIMITS.pasteLines, ' lines');
+  if (existsSync(txt)) check('paste lines for core+crypto+pkg', readFileSync(txt, 'utf8').split('\n').filter(Boolean).length, LIMITS.pasteLines, ' lines');
 }
 
 let all = 0;

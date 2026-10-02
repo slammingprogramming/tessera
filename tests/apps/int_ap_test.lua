@@ -133,3 +133,42 @@ test("the me command", function()
   local none, _, err2 = run("storage")
   ok(none == false and err2:find("no ME or RS bridge"))
 end)
+
+--- A bridge as Advanced Peripherals 0.8 names things (checked against the mod's source).
+local function bridge08(items)
+  local b = { _type = "me_bridge" }
+  function b.getStoredEnergy() return 3000 end
+  function b.getEnergyCapacity() return 12000 end
+  function b.getEnergyUsage() return 7 end
+  function b.getItems() local out = {} for name, count in pairs(items) do out[#out + 1] = { name = name, count = count } end return out end
+  function b.getItem(filter) return { name = filter.name, count = items[filter.name] or 0 } end
+  function b.isCraftable(filter) return filter.name == "minecraft:stick" end
+  function b.isCrafting(filter) return filter.name == "minecraft:torch" end
+  function b.craftItem(filter) return filter.name == "minecraft:stick" end
+  function b.getTotalItemStorage() return 400 end
+  function b.getUsedItemStorage() return 100 end
+  function b.getAvailableItemStorage() return 300 end
+  return b
+end
+
+test("Advanced Peripherals 0.8 method names work as well as the 0.7 ones", function()
+  local e = env({ me = bridge08({ ["minecraft:iron_ingot"] = 50, ["minecraft:coal"] = 5 }) })
+  hal.loadDrivers()
+  local d = hal.get("me", e)
+  eq({ d:get("energy.percent") }, { 25, "%" })
+  eq({ d:get("energy.stored") }, { 3000, "AE" })
+  eq({ d:get("energy.capacity") }, { 12000, "AE" })
+  eq(d:get("network.items"), 55)
+  eq(d:get("network.types"), 2)
+  eq(d:get("network.count", "minecraft:iron_ingot"), 50)
+  ok(d:get("network.craftable", "minecraft:stick"))
+  ok(not d:get("network.craftable", "minecraft:dirt"))
+  ok(d:get("network.crafting", "minecraft:torch"))
+  ok(d:act("network.craft", "minecraft:stick", 4))
+  -- the me command lists with getItems too
+  local lines = {}
+  local io = { say = function(t) lines[#lines + 1] = t end, err = function(t) lines[#lines + 1] = "ERR " .. t end }
+  ok(me.run({ "items" }, io, e))
+  local text = table.concat(lines, " | ")
+  ok(text:find("minecraft:iron_ingot", 1, true), text)
+end)

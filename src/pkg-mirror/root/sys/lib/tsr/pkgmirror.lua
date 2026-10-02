@@ -15,7 +15,8 @@ M.INDEX_MAX_AGE = 600        -- seconds before the index is fetched again from u
 
 local function validRel(rel)
   if type(rel) ~= "string" then return false end
-  if rel == "registry/index.json" then return true end
+  if rel == "registry/index.json" or rel == "registry/index.json.sig" then return true end
+  if rel == "registry/trust.json" or rel == "registry/trust.json.sig" then return true end
   if rel:match("^registry/packages/[%w_%-%.]+%.json$") then return true end
   if rel:match("^blobs/%x+$") and #rel == 6 + 64 then return true end
   return false
@@ -46,6 +47,7 @@ end
 --- The bytes for registry file `rel`: from the cache, else upstream (then cached). Returns data or nil + error.
 function M.get(rel)
   if not validRel(rel) then return nil, "bad path" end
+  if rel == "registry/index.json.sig" then M.get("registry/index.json") end   -- refresh index and signature together (below)
   local path = M.cacheDir .. "/" .. rel
   local cached = vfs.readFile(path, true)
   local isBlob = rel:sub(1, 6) == "blobs/"
@@ -54,6 +56,10 @@ function M.get(rel)
   if data then
     if isBlob and hash.sha256(data) ~= rel:sub(7) then return nil, "upstream blob failed verification" end
     vfs.writeFile(path, data, true)
+    if rel == "registry/index.json" then                    -- keep the signature that belongs to this index
+      local sig = upstream("registry/index.json.sig")
+      if sig then vfs.writeFile(path .. ".sig", sig, true) elseif fs.exists(path .. ".sig") then fs.delete(path .. ".sig") end
+    end
     return data
   end
   if cached then return cached end             -- upstream unreachable: stale beats nothing

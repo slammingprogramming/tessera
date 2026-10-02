@@ -78,3 +78,55 @@ test("the cdisplay command", function()
   local _, text2 = run("list")
   ok(text2:find("No Create displays", 1, true))
 end)
+
+test("Create's own peripherals: gauges, controllers, sequenced gearshift, display link, nixie tube", function()
+  local rpm = { _type = "Create_Speedometer", getSpeed = function() return 64 end }
+  local stress = { _type = "Create_Stressometer", getStress = function() return 2000 end, getStressCapacity = function() return 8000 end }
+  local ctl = { _type = "Create_RotationSpeedController", target = 0 }
+  function ctl.getTargetSpeed() return ctl.target end
+  function ctl.setTargetSpeed(n) ctl.target = n end
+  local motor = { _type = "Create_CreativeMotor", speed = 16 }
+  function motor.getGeneratedSpeed() return motor.speed end
+  function motor.setGeneratedSpeed(n) motor.speed = n end
+  local gear = { _type = "Create_SequencedGearshift", calls = {}, running = false }
+  function gear.rotate(...) gear.calls[#gear.calls + 1] = { "rotate", ... } gear.running = true end
+  function gear.move(...) gear.calls[#gear.calls + 1] = { "move", ... } end
+  function gear.isRunning() return gear.running end
+  local link = source(10, 2)
+  link._type = "Create_DisplayLink"
+  link.updates = 0
+  function link.update() link.updates = link.updates + 1 end
+  local nixie = { _type = "Create_NixieTube", calls = {} }
+  function nixie.setText(...) nixie.calls[#nixie.calls + 1] = { "setText", ... } end
+  function nixie.setTextColour(c) nixie.calls[#nixie.calls + 1] = { "setTextColour", c } end
+  local e = env({ rpm = rpm, stress = stress, ctl = ctl, motor = motor, gear = gear, link = link, nixie = nixie })
+  hal.loadDrivers()
+  eq({ hal.get("rpm", e):get("kinetic.speed") }, { 64, "RPM" })
+  local s = hal.get("stress", e)
+  eq({ s:get("kinetic.percent") }, { 25, "%" })
+  eq({ s:get("kinetic.stress") }, { 2000, "SU" })
+  local c = hal.get("ctl", e)
+  ok(c:act("kinetic.set_speed", 100))
+  eq(ctl.target, 100)
+  ok(c:act("kinetic.set_speed", 9999))
+  eq(ctl.target, 256, "clamped to the controller's range")
+  ok(hal.get("motor", e):act("kinetic.set_speed", -32))
+  eq(motor.speed, -32)
+  local g = hal.get("gear", e)
+  ok(g:act("gearshift.rotate", 90, -1))
+  eq(gear.calls[1], { "rotate", 90, -1 })
+  eq(g:get("machine.running"), true)
+  ok(g:act("gearshift.move", 3))
+  eq(gear.calls[2], { "move", 3, 1 })
+  local l = hal.get("link", e)
+  ok(l:act("display.clear"))
+  ok(l:act("display.write", "HELLO", 2, 1))
+  ok(l:act("display.update"))
+  eq(link.updates, 1)
+  eq(link.rows[1], " HELLO    ")
+  local n = hal.get("nixie", e)
+  ok(n:act("display.text", "42", "red"))
+  eq(nixie.calls[1], { "setText", "42", "red" })
+  ok(n:act("display.color", "blue"))
+  eq(nixie.calls[2], { "setTextColour", "blue" })
+end)

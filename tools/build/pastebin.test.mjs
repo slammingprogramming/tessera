@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createPaste, plan, publish } from './pastebin.mjs';
+import { createPaste, plan, publish, verify } from './pastebin.mjs';
 
 let failures = 0;
 async function test(name, fn) {
@@ -104,6 +104,35 @@ await test('an interrupted upload resumes without repeating pastes', async () =>
   await publish(p, { devKey: 'K', endpoint, delay: 0, statePath, log: () => {} });
   assert.equal(received.length, p.items.length + 1 - 3, 'only the missing pastes and the snapshot were created');
   assert.ok(first >= 4);
+});
+
+await test('verification reads every paste back and notices damage', async () => {
+  // the fake Pastebin keeps what it was sent; "raw" URLs answer with it
+  const store = new Map();
+  let n = 500;
+  const rawServer = createServer((req, res) => {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => (body += c));
+      req.on('end', () => { const id = 'v' + ++n; store.set(id, new URLSearchParams(body).get('api_paste_code')); res.end('https://pastebin.com/' + id); });
+    } else { const t = store.get(req.url.slice(1)); if (t === undefined) { res.statusCode = 404; res.end(); } else res.end(t); }
+  });
+  await new Promise((r) => rawServer.listen(0, '127.0.0.1', r));
+  const base = 'http://127.0.0.1:' + rawServer.address().port;
+  const statePath = join(dir, 'verify-state.json');
+  const p = plan(site, ['pkg']);
+  const id = await publish(p, { devKey: 'K', endpoint: base + '/api', delay: 0, statePath, log: () => {} });
+  assert.deepEqual(await verify(p, id, { statePath, rawBase: base + '/', delay: 0 }), []);
+  // damage one paste
+  const state = JSON.parse((await import('node:fs')).readFileSync(statePath, 'utf8'));
+  const victim = Object.values(state.pastes)[0];
+  store.set(victim, 'tampered');
+  const problems = await verify(p, id, { statePath, rawBase: base + '/', delay: 0 });
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /differs from the file/);
+  store.delete(victim);
+  assert.match((await verify(p, id, { statePath, rawBase: base + '/', delay: 0 }))[0], /cannot be read back/);
+  rawServer.close();
 });
 
 server.close();

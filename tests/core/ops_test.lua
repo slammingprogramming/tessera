@@ -260,3 +260,37 @@ test("the collector limits what a peer can write", function()
     end)
   if failure then error(failure, 0) end
 end)
+
+test("wall-clock cron jobs: daily and weekly, with the system time zone", function()
+  local j = assert(cron.parseLine("daily 03:30 backup now"))
+  eq({ j.kind, j.minute, j.command }, { "daily", 210, "backup now" })
+  j = assert(cron.parseLine("weekly mon 06:00 pkg update"))
+  eq({ j.kind, j.weekday, j.minute }, { "weekly", 1, 360 })
+  ok(cron.parseLine("daily 25:00 x") == nil)
+  ok(cron.parseLine("weekly funday 06:00 x") == nil)
+  local daily = cron.parseLine("daily 03:30 x")
+  local state = {}
+  -- scheduler starts at 03:00: nothing yet, then fires once at 03:30, not again that day, again the next day
+  eq(cron.due(daily, { minute = 180, date = 20261002 }, state), false)
+  eq(cron.due(daily, { minute = 210, date = 20261002 }, state), true)
+  eq(cron.due(daily, { minute = 211, date = 20261002 }, state), false)
+  eq(cron.due(daily, { minute = 210, date = 20261003 }, state), true)
+  -- started long after the time: do not fire a job whose time passed hours ago
+  local late = {}
+  eq(cron.due(daily, { minute = 900, date = 20261002 }, late), false)
+  local weekly = cron.parseLine("weekly mon 06:00 x")
+  local ws = {}
+  eq(cron.due(weekly, { minute = 360, date = 20261005, weekday = 2 }, ws), false, "Tuesday")
+  eq(cron.due(weekly, { minute = 360, date = 20261005, weekday = 1 }, ws), true, "Monday")
+  eq(cron.due(weekly, { minute = 361, date = 20261005, weekday = 1 }, ws), false)
+  -- the clock comes from tsr.time when the ntp package is there, in the system zone
+  local time = require("tsr.time")
+  time.statePath = DIR .. "/time-cron.json"
+  time.reload()
+  time.clock = function() return time.timegm(2026, 10, 5, 4, 0, 0) * 1000 end   -- a Monday, 04:00 UTC
+  time.setZone("Europe/Berlin")                                                  -- CEST: 06:00 local
+  local now = cron.now()
+  eq({ now.minute, now.weekday, now.date }, { 360, 1, 20261005 })
+  time.reload()
+  time.clock = function() return os.epoch("utc") end
+end)

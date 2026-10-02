@@ -1,0 +1,20 @@
+{
+  "name": "dns",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "In-game name service: hosts file, zone files (A, CNAME, TXT, NS), a name server with registration by paired computers, a caching resolver that every network command uses, and the host / dig / dns commands",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "net": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:dns"
+  ],
+  "budget": 30000,
+  "tags": [
+    "network",
+    "server"
+  ]
+}

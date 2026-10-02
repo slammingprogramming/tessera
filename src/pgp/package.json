@@ -1,0 +1,19 @@
+{
+  "name": "pgp",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "PGP-style keys, signing, encryption and web of trust (Ed25519, X25519, ChaCha20-Poly1305) with an in-game key server: the pgp / gpg command",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:pgp"
+  ],
+  "budget": 40000,
+  "tags": [
+    "security",
+    "tools"
+  ]
+}

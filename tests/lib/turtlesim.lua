@@ -85,6 +85,22 @@ function Sim:give(name, count, slot)
   return true
 end
 
+--- Where a stack of `name` goes when the turtle collects it with `start` selected: like CC, the selected slot first, then the following slots
+--- (wrapping), a slot that holds the same item with room, or an empty one.
+function Sim:slotFrom(name, start)
+  for k = 0, 15 do
+    local i = (start - 1 + k) % 16 + 1
+    local cur = self.inv[i]
+    if not cur or (cur.name == name and cur.count < STACK) then return i end
+  end
+end
+
+--- Crafting recipes for turtle.craft: { out, count, shape = { "PP", "PP" }, key = { P = "item" } } or { out, count, shapeless = { items } } with exact names.
+function Sim:addRecipe(r)
+  self.craftRecipes = self.craftRecipes or {}
+  self.craftRecipes[#self.craftRecipes + 1] = r
+end
+
 function Sim:firstSlotFor(name)
   for i = 1, 16 do
     if self.inv[i] and self.inv[i].name == name and self.inv[i].count < STACK then return i end
@@ -321,9 +337,75 @@ function Sim:makeApi()
     local take = math.min(count or it.count, it.count)
     it.count = it.count - take
     if it.count <= 0 then table.remove(chest, 1) end
-    sim:pickUp(it.name, take)
+    local left = take
+    while left > 0 do                                   -- like CC: from the selected slot on
+      local slot = sim:slotFrom(it.name, sim.selected)
+      if not slot then sim.lost[it.name] = (sim.lost[it.name] or 0) + left break end
+      local cur = sim.inv[slot]
+      local put = math.min(STACK - (cur and cur.count or 0), left)
+      if cur then cur.count = cur.count + put else sim.inv[slot] = { name = it.name, count = put } end
+      left = left - put
+    end
     return true
   end
+  local GRID = { 1, 2, 3, 5, 6, 7, 9, 10, 11 }
+  --- CC's crafting: the 3x3 grid is slots 1-3, 5-7, 9-11; every other slot must be empty; the result is stored from the selected slot on.
+  function T.craft(limit)
+    limit = limit or 64
+    local isGrid = {}
+    for _, s in ipairs(GRID) do isGrid[s] = true end
+    for s = 1, 16 do if not isGrid[s] and sim.inv[s] then return false, "No matching recipe" end end
+    local cells = {}
+    for i, s in ipairs(GRID) do cells[i] = sim.inv[s] and sim.inv[s].name or nil end
+    local found
+    for _, r in ipairs(sim.craftRecipes or {}) do
+      if r.shapeless then
+        local want, got, n = {}, {}, 0
+        for _, name in ipairs(r.shapeless) do want[name] = (want[name] or 0) + 1 end
+        for i = 1, 9 do if cells[i] then got[cells[i]] = (got[cells[i]] or 0) + 1 n = n + 1 end end
+        local same = n == #r.shapeless
+        for name, c in pairs(want) do if got[name] ~= c then same = false end end
+        if same then found = r break end
+      else
+        -- compare the occupied bounding boxes
+        local function box(get)
+          local minx, maxx, miny, maxy = 4, 0, 4, 0
+          for y = 1, 3 do for x = 1, 3 do if get(x, y) then minx, maxx, miny, maxy = math.min(minx, x), math.max(maxx, x), math.min(miny, y), math.max(maxy, y) end end end
+          return minx, maxx, miny, maxy
+        end
+        local function recipeAt(x, y) local row = r.shape[y] local ch = row and row:sub(x, x) return (ch and ch ~= " " and ch ~= ".") and r.key[ch] or nil end
+        local function gridAt(x, y) return cells[(y - 1) * 3 + x] end
+        local ax, bx, ay, by = box(recipeAt)
+        local cx, dx, cy, dy = box(gridAt)
+        if bx - ax == dx - cx and by - ay == dy - cy and bx >= ax then
+          local same = true
+          for oy = 0, by - ay do for ox = 0, bx - ax do if recipeAt(ax + ox, ay + oy) ~= gridAt(cx + ox, cy + oy) then same = false end end end
+          if same then found = r break end
+        end
+      end
+    end
+    if not found then return false, "No matching recipe" end
+    local steps = limit
+    for i = 1, 9 do if cells[i] then steps = math.min(steps, sim.inv[GRID[i]].count) end end
+    for i = 1, 9 do
+      if cells[i] then
+        local slot = GRID[i]
+        sim.inv[slot].count = sim.inv[slot].count - steps
+        if sim.inv[slot].count <= 0 then sim.inv[slot] = nil end
+      end
+    end
+    local left = steps * (found.count or 1)
+    while left > 0 do
+      local slot = sim:slotFrom(found.out, sim.selected)
+      if not slot then sim.lost[found.out] = (sim.lost[found.out] or 0) + left break end
+      local cur = sim.inv[slot]
+      local put = math.min(STACK - (cur and cur.count or 0), left)
+      if cur then cur.count = cur.count + put else sim.inv[slot] = { name = found.out, count = put } end
+      left = left - put
+    end
+    return true
+  end
+
   function T.suck(n) return suck("f", n) end
   function T.suckUp(n) return suck("u", n) end
   function T.suckDown(n) return suck("d", n) end

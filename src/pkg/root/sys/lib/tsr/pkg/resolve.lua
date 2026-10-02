@@ -67,7 +67,8 @@ function M.plan(requests, ctx, opts)
         if prov then return end -- an installed package already provides this virtual name
         local candidates = ctx.providers(name)
         if candidates and #candidates > 0 then return need(candidates[1], "*", by, "auto") end
-        return err("package '%s' not found%s", name, by and (" (required by " .. by .. ")") or "")
+        local why = ctx.why and ctx.why[name]
+        return err("package '%s' not found%s%s", name, by and (" (required by " .. by .. ")") or "", why and (": " .. why) or "")
       end
     end
     doc = ctx.lookup(name)
@@ -82,9 +83,9 @@ function M.plan(requests, ctx, opts)
         kept[name] = inst.version
         return
       end
-      if not best then return err("%s: no available version satisfies %s", name, range_all) end
+      if not best then return err("%s: no available version satisfies %s%s", name, range_all, ctx.why and ctx.why[name] and (": " .. ctx.why[name]) or "") end
     elseif not best then
-      return err("%s: no available version satisfies %s", name, range_all)
+      return err("%s: no available version satisfies %s%s", name, range_all, ctx.why and ctx.why[name] and (": " .. ctx.why[name]) or "")
     end
 
     local manifest = doc.versions[best]

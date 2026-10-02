@@ -21,8 +21,12 @@ if (!existsSync(join(site, 'registry', 'index.json'))) {
   console.error('dist/site not found - run tools/build/build.mjs first');
   process.exit(1);
 }
-const index = JSON.parse(readFileSync(join(site, 'registry', 'index.json'), 'utf8'));
-const pkgDoc = (n) => JSON.parse(readFileSync(join(site, 'registry', 'packages', `${n}.json`), 'utf8'));
+const indexText = readFileSync(join(site, 'registry', 'index.json'), 'utf8');
+const sigPath = join(site, 'registry', 'index.json.sig');
+const indexSig = existsSync(sigPath) ? readFileSync(sigPath, 'utf8') : null;   // a signed registry: the bundle carries the whole signed index
+const index = JSON.parse(indexText);
+const docText = (n) => readFileSync(join(site, 'registry', 'packages', `${n}.json`), 'utf8');
+const pkgDoc = (n) => JSON.parse(docText(n));
 
 const names = new Set();
 const visit = (n) => {
@@ -42,10 +46,15 @@ const blobs = new Set();
 for (const n of [...names].sort()) {
   subIndex.packages[n] = index.packages[n];
   const doc = pkgDoc(n);
-  entries.push({ kind: KIND.package, name: n, data: JSON.stringify(doc) });
+  entries.push({ kind: KIND.package, name: n, data: docText(n) });   // byte for byte: the signed index hashes this text
   for (const f of doc.versions[doc.latest].files) blobs.add(f.sha256);
 }
-entries.unshift({ kind: KIND.index, name: 'index', data: JSON.stringify(subIndex) });
+if (indexSig) {
+  entries.unshift({ kind: KIND.signature, name: 'index', data: indexSig });
+  entries.unshift({ kind: KIND.index, name: 'index', data: indexText });
+} else {
+  entries.unshift({ kind: KIND.index, name: 'index', data: JSON.stringify(subIndex) });
+}
 for (const sha of [...blobs].sort()) {
   entries.push({ kind: KIND.blob, name: sha, data: readFileSync(join(site, 'blobs', sha)) });
 }

@@ -116,8 +116,39 @@ function commands.remove()
 end
 
 function commands.update()
+  local trust = (rawget(_G, "tsr") and tsr.require or require)("tsr.pkg.trust")
   for name, res in pairs(pkgApi.update()) do
-    if res == true then say(colors.lime, name .. ": ok") else say(colors.red, name .. ": " .. tostring(res)) end
+    if res == true then
+      local info = trust.sourceInfo(name)
+      say(colors.lime, name .. ": ok" .. ((info and trust.policy() ~= "off") and (" (signed by " .. tostring(info.key) .. ")") or ""))
+    else
+      say(colors.red, name .. ": " .. tostring(res))
+    end
+  end
+  if trust.policy() == "off" then say(colors.orange, "note: no registry key is trusted here, package descriptions are not signature-checked (see: pkg trust)") end
+end
+
+function commands.trust()
+  local trust = (rawget(_G, "tsr") and tsr.require or require)("tsr.pkg.trust")
+  local sub = words[1] or "list"
+  if sub == "list" or sub == "status" then
+    print("signature policy: " .. trust.policy() .. "  (change with: config set pkg.signatures require|warn|off)")
+    local keys = trust.list()
+    if #keys == 0 then say(colors.orange, "no trusted keys: registries are accepted without a signature check") end
+    for _, k in ipairs(keys) do print(("%-18s %s  %s"):format(k.id, k.name, k.source)) end
+  elseif sub == "add" then
+    local name, public = words[2], words[3]
+    if not (name and public) then die("usage: pkg trust add <name> <64-hex-public-key>") end
+    local id, note = trust.add(name, public)
+    if not id then die(tostring(note)) end
+    say(colors.lime, "now trusting key " .. id .. (note and (" (" .. note .. ")") or ""))
+    print("Only trust a key you got from its owner in person or over a channel you trust: whoever holds it can sign software that this computer will install.")
+  elseif sub == "remove" or sub == "revoke" then
+    local id = words[2] or die("usage: pkg trust remove <key-id>")
+    trust.revoke(id)
+    say(colors.lime, "key " .. id .. " is no longer trusted")
+  else
+    die("usage: pkg trust [list | add <name> <public key> | remove <key id>]")
   end
 end
 
@@ -200,6 +231,7 @@ function commands.help()
   print("  verify [pkg] | clean [--all]")
   print("  import [file]      offline install data (drop file or paste)")
   print("  source [list|add|remove]")
+  print("  trust [list|add|remove]   who may sign registries")
 end
 
 if not cmd or not commands[cmd] then

@@ -1,0 +1,20 @@
+{
+  "name": "hal-toms",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Tom's Peripherals integration: GPU / bitmap monitors, redstone port (more sides, bundled), watchdog timer and keyboard as HAL devices",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:hal-toms"
+  ],
+  "budget": 12000,
+  "tags": [
+    "integration",
+    "toms-peripherals",
+    "redstone"
+  ]
+}

@@ -10,6 +10,8 @@ Source types:
   http      one or more mirror base URLs (GitHub Pages, ...)        { type="http", bases={...} }
   dir       a directory with the layout above (disk, mount, offline import store)   { type="dir", path="..." }
   pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }
+Registries may be signed (see tsr.pkg.trust): registry/index.json.sig vouches for the index, and the index records the
+SHA-256 of every package description ("docSha256"); registry/trust.json(.sig) carries signed key updates.
   lan       a paired computer running the pkg-mirror service         { type="lan", peer="<name>" }  (package pkg-mirror)
 The built-in `offline` source is a `dir` at /var/cache/tsr/offline, filled by importing a bundle. It is always
 consulted first, so pasting a bundle makes an HTTP-less install possible.
@@ -17,6 +19,10 @@ consulted first, so pasting a bundle makes an HTTP-less install possible.
 ## `M.list()`
 
 Configured sources in priority order, with the offline store first when it has content.
+
+## `M.getIndex(src, force)`
+
+The registry index of `src`, signature-checked according to the policy in tsr.pkg.trust. Returns index, status or nil, err.
 
 ## `M.findPackage(name, force)`
 
@@ -36,7 +42,9 @@ Fetch a payload by its SHA-256 from the first source that has it (offline store 
 
 ## `M.importBundle(b)`
 
-Store a parsed bundle (tsr.bundle) in the offline source. Returns { packages = n, blobs = n }.
+Store a parsed bundle (tsr.bundle) in the offline source. A bundle that carries a signed index is checked like any registry:
+when signatures are required it must be signed by a trusted key, must not be older than what is stored, and every package
+description in it must match the signed index. Returns { packages = n, blobs = n } or nil, err.
 
 ## `M.clean(all)`
 

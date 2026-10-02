@@ -139,3 +139,21 @@ test("each recommendation lists a package once (recommended wins over optional)"
     seen[it.pkg] = true
   end
 end)
+
+test("security, time and system tools are suggested by what the computer can do", function()
+  local server = pkgs(recommend.packages(fake({ peripherals = { { type = "modem", wireless = true } } }), "server"))
+  eq(server.ntp.tier, "recommended") eq(server.ssh.tier, "recommended") eq(server.firewall.tier, "recommended")
+  ok(server.dns and server["pgp-keyserver"] and server.vault and server.doctor and server.archive and server.diff)
+  local client = pkgs(recommend.packages(fake({ peripherals = { { type = "modem", wireless = true } } }), "client"))
+  eq(client.ssh.tier, "optional") ok(client.p2p and client.netmon and client.pgp)
+  ok(client.dns == nil, "name servers are for servers")
+  -- no modem and no HTTP: nothing network-related, but local tools stay
+  local alone = pkgs(recommend.packages(fake({ http = false }), "client"))
+  ok(alone.ntp == nil and alone.ssh == nil and alone.firewall == nil)
+  ok(alone.vault and alone.doctor and alone.archive and alone.diff)
+  -- turtles: no archive/diff, but the crafting helper
+  local turtle = pkgs(recommend.packages(fake({ kind = "turtle", peripherals = { { type = "modem", wireless = true } } }), "turtle"))
+  ok(turtle.craft and turtle.archive == nil and turtle.diff == nil)
+  -- HTTP alone is enough for the clock
+  eq(pkgs(recommend.packages(fake({}), "client")).ntp.tier, "optional")
+end)

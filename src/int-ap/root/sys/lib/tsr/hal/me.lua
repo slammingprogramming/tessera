@@ -58,7 +58,9 @@ function M.run(args, io, env)
     return true
 
   elseif cmd == "items" then
-    local list = dev.call("listItems") or {}
+    local have = {}
+    for _, m in ipairs(dev.methods()) do have[m] = true end
+    local list = dev.call(have.getItems and "getItems" or "listItems") or {}    -- 0.8 renamed listItems to getItems
     local filter = rest[2] and rest[2]:lower()
     local rows = {}
     for _, it in pairs(list) do

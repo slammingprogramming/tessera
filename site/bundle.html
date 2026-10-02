@@ -61,7 +61,7 @@ const fetchBytes = async (url) => {
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
   return new Uint8Array(await r.arrayBuffer());
 };
-let index = null, docs = {};
+let index = null, docs = {}, docsRaw = {}, indexRaw = null, indexSig = null;
 const selected = new Set();
 
 function render() {
@@ -90,7 +90,10 @@ function render() {
 
 async function load() {
   try {
-    index = await (await fetch('registry/index.json')).json();
+    indexRaw = await (await fetch('registry/index.json')).text();
+    index = JSON.parse(indexRaw);
+    const sigRes = await fetch('registry/index.json.sig');
+    indexSig = sigRes.ok ? await sigRes.text() : null;
     render();
   } catch (e) {
     $('list').innerHTML = '';
@@ -116,10 +119,11 @@ $('build').addEventListener('click', async () => {
     while (pending.length) {
       const n = pending.pop();
       if (docs[n]) continue;
-      docs[n] = await (await fetch(`registry/packages/${n}.json`)).json();
+      docsRaw[n] = await (await fetch(`registry/packages/${n}.json`)).text();
+      docs[n] = JSON.parse(docsRaw[n]);
       for (const dep of Object.keys(docs[n].versions[docs[n].latest].requires ?? {})) if (index.packages[dep]) pending.push(dep);
     }
-    const { container, names, size } = await assemble([...selected], { index, docs, fetchBytes, progress: (d, t) => { status.textContent = `Downloading files ${d}/${t}...`; } });
+    const { container, names, size } = await assemble([...selected], { index, docs, indexRaw, indexSig, docsRaw, fetchBytes, progress: (d, t) => { status.textContent = `Downloading files ${d}/${t}...`; } });
     status.textContent = 'Compressing...';
     const file = await toFile(container);
     const chunkSize = Math.max(100, Math.min(2000, Number($('chunk').value) || 400));

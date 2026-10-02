@@ -1,0 +1,18 @@
+{
+  "name": "archive",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "tar and gzip: pack folders into one file (ustar, readable by real tar) and compress with DEFLATE (readable by real gzip); tar, gzip, gunzip, zcat",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:archive"
+  ],
+  "budget": 20000,
+  "tags": [
+    "tools"
+  ]
+}

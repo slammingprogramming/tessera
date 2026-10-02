@@ -5,7 +5,7 @@
 //   PASTEBIN_DEV_KEY=... node tools/build/pastebin.mjs [--user-key <key>] [--packages core,pkg,ui-tui] [--delay 3000]
 //
 // Pastebin allows few pastes per day without an account and none without an API key, and every file of a package needs a paste of its
-// own, so only a SMALL set of packages is mirrored (default: the packages the installer needs: core, pkg). A snapshot paste maps the
+// own, so only a SMALL set of packages is mirrored (default: the packages the installer needs: core, crypto, pkg). A snapshot paste maps the
 // registry files to those pastes (see src/pkg/root/sys/lib/tsr/pkg/source.lua). Progress is kept in .scratch/pastebin-state.json so an
 // interrupted run continues where it stopped. The key is read from the environment or argv, used for the API calls only and
 // never written anywhere. On success tools/build/mirrors.json is updated with the snapshot id.
@@ -18,7 +18,10 @@ const sha256 = (b) => createHash('sha256').update(b).digest('hex');
 
 /** Everything that must become a paste for `packages` (plus their dependencies): [{ key, text, label }] and the snapshot index. */
 export function plan(site, packages) {
-  const index = JSON.parse(readFileSync(join(site, 'registry', 'index.json'), 'utf8'));
+  const indexText = readFileSync(join(site, 'registry', 'index.json'), 'utf8');
+  const sigPath = join(site, 'registry', 'index.json.sig');
+  const indexSig = existsSync(sigPath) ? readFileSync(sigPath, 'utf8') : null;
+  const index = JSON.parse(indexText);
   const names = new Set();
   const visit = (n) => {
     if (names.has(n)) return;
@@ -47,7 +50,7 @@ export function plan(site, packages) {
       items.push({ key: f.sha256, text, label: `${n} ${f.path}` });
     }
   }
-  return { items, index: subIndex, names: [...names].sort(), problems };
+  return { items, index: subIndex, indexText, indexSig, names: [...names].sort(), problems };
 }
 
 /** Create one paste. Returns the paste id. fetchFn defaults to fetch. */
@@ -79,12 +82,40 @@ export async function publish(p, opts) {
     save();
     log(`uploaded ${item.label} -> ${state.pastes[item.key]}`);
   }
-  const snapshot = { index: p.index, pastes: state.pastes };
+  // A signed registry travels as the exact index text plus its signature (the snapshot only lists a few packages, which is fine:
+  // the signed index covers all of them and clients just cannot fetch the others from this channel).
+  const snapshot = p.indexSig ? { indexJson: p.indexText, indexSig: p.indexSig, pastes: state.pastes } : { index: p.index, pastes: state.pastes };
   if (opts.delay) await new Promise((r) => setTimeout(r, opts.delay));
   const id = await call('tessera snapshot', JSON.stringify(snapshot));
   state.snapshot = id;
   save();
   return id;
+}
+
+/** Fetch every uploaded paste back (the raw URLs are public: no key needed) and compare it with what was meant to be there.
+ *  Returns a list of problems (empty = the snapshot on Pastebin is exactly what the clients will read). */
+export async function verify(p, snapshotId, opts) {
+  const fetchFn = opts.fetchFn ?? fetch;
+  const rawBase = opts.rawBase ?? 'https://pastebin.com/raw/';
+  const state = JSON.parse(readFileSync(opts.statePath, 'utf8'));
+  const problems = [];
+  const get = async (id) => { const res = await fetchFn(rawBase + id); return res.ok ? await res.text() : null; };
+  for (const item of p.items) {
+    const id = state.pastes[item.key];
+    if (!id) { problems.push(`${item.label}: was never uploaded`); continue; }
+    const text = await get(id);
+    if (text === null) problems.push(`${item.label}: cannot be read back (paste ${id})`);
+    else if (text !== item.text) problems.push(`${item.label}: the paste differs from the file (paste ${id})`);
+    if (opts.delay) await new Promise((r) => setTimeout(r, opts.delay));
+  }
+  const snapText = await get(snapshotId);
+  const snap = snapText ? JSON.parse(snapText) : null;
+  if (!snap) problems.push('the snapshot paste cannot be read back');
+  else {
+    for (const item of p.items) if (snap.pastes?.[item.key] !== state.pastes[item.key]) problems.push(`snapshot does not list ${item.label}`);
+    if (p.indexSig && (snap.indexJson !== p.indexText || snap.indexSig !== p.indexSig)) problems.push('snapshot carries a different signed index');
+  }
+  return problems;
 }
 
 // CLI
@@ -93,7 +124,7 @@ if (process.argv[1] && process.argv[1].endsWith('pastebin.mjs')) {
   const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
   const site = join(root, 'dist', 'site');
   if (!existsSync(join(site, 'registry', 'index.json'))) { console.error('dist/site not found - run tools/build/build.mjs first'); process.exit(1); }
-  const p = plan(site, (opt('--packages', 'core,pkg')).split(','));
+  const p = plan(site, (opt('--packages', 'core,crypto,pkg')).split(','));
   console.log(`${p.items.length} pastes (+1 snapshot) for: ${p.names.join(', ')}`);
   for (const pr of p.problems) console.error('problem: ' + pr);
   if (p.problems.length) process.exit(1);
@@ -107,6 +138,13 @@ if (process.argv[1] && process.argv[1].endsWith('pastebin.mjs')) {
     devKey, userKey: opt('--user-key', process.env.PASTEBIN_USER_KEY), endpoint: opt('--api', 'https://pastebin.com/api/api_post.php'),
     delay: Number(opt('--delay', 3000)), statePath: join(root, '.scratch', 'pastebin-state.json'), log: console.log,
   });
+  if (!args.includes('--no-verify')) {
+    console.log('verifying the uploaded pastes (reading them back) ...');
+    const problems = await verify(p, id, { statePath: join(root, '.scratch', 'pastebin-state.json'), delay: 1000 });
+    for (const pr of problems) console.error('verify: ' + pr);
+    if (problems.length) process.exit(1);
+    console.log('all pastes read back identical');
+  }
   const mirrorsPath = join(root, 'tools', 'build', 'mirrors.json');
   const mirrors = existsSync(mirrorsPath) ? JSON.parse(readFileSync(mirrorsPath, 'utf8')) : { pastebin: {} };
   mirrors.pastebin = { ...(mirrors.pastebin ?? {}), snapshot: id };

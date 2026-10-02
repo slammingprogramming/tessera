@@ -1,0 +1,17 @@
+{
+  "name": "diff",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "diff and patch: compare files and folders, make and apply unified diffs (the format diff -u, git and patch use), undo a patch with -R",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:diff"
+  ],
+  "budget": 20000,
+  "tags": [
+    "tools"
+  ]
+}

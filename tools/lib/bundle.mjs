@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 import { deflateRawSync } from 'node:zlib';
 
-export const KIND = { index: 1, package: 2, blob: 3 };
+export const KIND = { index: 1, package: 2, blob: 3, signature: 4 };
 
 const sha256 = (b) => createHash('sha256').update(b).digest('hex');
 

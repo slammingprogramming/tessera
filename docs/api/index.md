@@ -13,6 +13,11 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsrapps.cli](tsrapps.cli.md) (5 functions)
 - [tsrapps.secure](tsrapps.secure.md) (8 functions)
 
+## Package `archive`
+
+- [tsr.archive.deflate](tsr.archive.deflate.md) (3 functions)
+- [tsr.archive.tar](tsr.archive.tar.md) (2 functions)
+
 ## Package `audio`
 
 - [tsrapps.jukebox](tsrapps.jukebox.md) (6 functions)
@@ -58,7 +63,7 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 ## Package `core`
 
 - [tsr.bundle](tsr.bundle.md) (4 functions)
-- [tsr.config](tsr.config.md) (6 functions)
+- [tsr.config](tsr.config.md) (5 functions)
 - [tsr.hash](tsr.hash.md) (4 functions)
 - [tsr.hw](tsr.hw.md) (5 functions)
 - [tsr.inflate](tsr.inflate.md) (1 functions)
@@ -72,9 +77,29 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.util](tsr.util.md) (4 functions)
 - [tsr.vfs](tsr.vfs.md) (6 functions)
 
+## Package `craft`
+
+- [tsr.craft](tsr.craft.md) (13 functions)
+- [tsr.craftcli](tsr.craftcli.md) (1 functions)
+
 ## Package `cropfarm`
 
 - [tsrapps.cropfarm](tsrapps.cropfarm.md) (3 functions)
+
+## Package `crypto`
+
+- [tsr.crypto.chacha](tsr.crypto.chacha.md) (2 functions)
+- [tsr.crypto.fe](tsr.crypto.fe.md) (8 functions)
+- [tsr.crypto](tsr.crypto.md) (6 functions)
+- [tsr.crypto.kdf](tsr.crypto.kdf.md) (5 functions)
+- [tsr.crypto.rand](tsr.crypto.rand.md) (4 functions)
+- [tsr.crypto.sha512](tsr.crypto.sha512.md) (2 functions)
+- [tsr.crypto.sign](tsr.crypto.sign.md) (2 functions)
+- [tsr.crypto.yield](tsr.crypto.yield.md) (1 functions)
+
+## Package `diff`
+
+- [tsr.diff](tsr.diff.md) (3 functions)
 
 ## Package `disk-tools`
 
@@ -83,6 +108,16 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 ## Package `display`
 
 - [tsrapps.display](tsrapps.display.md) (5 functions)
+
+## Package `dns`
+
+- [tsr.dns.resolver](tsr.dns.resolver.md) (2 functions)
+- [tsr.dns.server](tsr.dns.server.md) (3 functions)
+- [tsr.dns.zone](tsr.dns.zone.md) (3 functions)
+
+## Package `doctor`
+
+- [tsr.doctor](tsr.doctor.md) (2 functions)
 
 ## Package `editor`
 
@@ -97,6 +132,10 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 ## Package `filesync`
 
 - [tsrapps.filesync](tsrapps.filesync.md) (6 functions)
+
+## Package `firewall`
+
+- [tsr.fw](tsr.fw.md) (7 functions)
 
 ## Package `fleet`
 
@@ -151,7 +190,8 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 ## Package `media`
 
-- [tsr.media](tsr.media.md) (6 functions)
+- [tsr.media](tsr.media.md) (7 functions)
+- [tsr.media.vid32](tsr.media.vid32.md) (6 functions)
 
 ## Package `mobile`
 
@@ -163,17 +203,45 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.net.cli](tsr.net.cli.md) (2 functions)
 - [tsr.net.crypto](tsr.net.crypto.md) (6 functions)
-- [tsr.net](tsr.net.md) (15 functions)
+- [tsr.net](tsr.net.md) (18 functions)
 
 ## Package `netfs`
 
 - [tsr.netfs](tsr.netfs.md) (5 functions)
+
+## Package `netmon`
+
+- [tsr.netmon](tsr.netmon.md) (8 functions)
+
+## Package `ntp`
+
+- [tsr.ntp](tsr.ntp.md) (7 functions)
+- [tsr.ntp.proto](tsr.ntp.proto.md) (3 functions)
+- [tsr.ntp.web](tsr.ntp.web.md) (4 functions)
+- [tsr.time](tsr.time.md) (19 functions)
 
 ## Package `ops`
 
 - [tsr.cron](tsr.cron.md) (9 functions)
 - [tsr.logship](tsr.logship.md) (6 functions)
 - [tsr.metrics](tsr.metrics.md) (5 functions)
+
+## Package `p2p`
+
+- [tsr.p2p.bencode](tsr.p2p.bencode.md) (2 functions)
+- [tsr.p2p.blobs](tsr.p2p.blobs.md) (3 functions)
+- [tsr.p2p.cli](tsr.p2p.cli.md) (2 functions)
+- [tsr.p2p.meta](tsr.p2p.meta.md) (9 functions)
+- [tsr.p2p.store](tsr.p2p.store.md) (2 functions)
+- [tsr.p2p.swarm](tsr.p2p.swarm.md) (9 functions)
+- [tsr.p2p.tracker](tsr.p2p.tracker.md) (2 functions)
+
+## Package `pgp`
+
+- [tsr.pgp.armor](tsr.pgp.armor.md) (5 functions)
+- [tsr.pgp](tsr.pgp.md) (23 functions)
+- [tsr.pgp.keyserver](tsr.pgp.keyserver.md) (3 functions)
+- [tsr.pgp.ring](tsr.pgp.ring.md) (10 functions)
 
 ## Package `pkg`
 
@@ -183,7 +251,9 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.pkg.install](tsr.pkg.install.md) (4 functions)
 - [tsr.pkg.resolve](tsr.pkg.resolve.md) (2 functions)
 - [tsr.pkg.semver](tsr.pkg.semver.md) (2 functions)
-- [tsr.pkg.source](tsr.pkg.source.md) (7 functions)
+- [tsr.pkg.sig](tsr.pkg.sig.md) (6 functions)
+- [tsr.pkg.source](tsr.pkg.source.md) (8 functions)
+- [tsr.pkg.trust](tsr.pkg.trust.md) (9 functions)
 
 ## Package `pkg-mirror`
 
@@ -240,6 +310,13 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.shop](tsr.shop.md) (10 functions)
 
+## Package `ssh`
+
+- [tsr.ssh.chan](tsr.ssh.chan.md) (5 functions)
+- [tsr.ssh.client](tsr.ssh.client.md) (3 functions)
+- [tsr.ssh.keys](tsr.ssh.keys.md) (12 functions)
+- [tsr.ssh.server](tsr.ssh.server.md) (6 functions)
+
 ## Package `stripmine`
 
 - [tsrapps.stripmine](tsrapps.stripmine.md) (1 functions)
@@ -292,6 +369,10 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.utils.fm](tsr.utils.fm.md) (4 functions)
 - [tsr.utils.repl](tsr.utils.repl.md) (2 functions)
+
+## Package `vault`
+
+- [tsr.vault](tsr.vault.md) (8 functions)
 
 ## Package `webgw`
 

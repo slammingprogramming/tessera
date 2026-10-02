@@ -1,0 +1,11 @@
+{
+  "name": "crypto",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Real cryptography in pure Lua: SHA-512, Ed25519, X25519, ChaCha20-Poly1305, HKDF/PBKDF2 and a random pool, checked against the RFC test vectors",
+  "license": "AGPL-3.0-or-later",
+  "requires": { "core": ">=0.1.0" },
+  "provides": ["tsr:crypto"],
+  "budget": 40000,
+  "tags": ["system", "security"]
+}

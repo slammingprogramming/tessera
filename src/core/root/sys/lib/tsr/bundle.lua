@@ -4,14 +4,15 @@
 --   * as a file dropped onto the terminal (file_transfer event) or read from a disk  -> "TSRZ" + raw DEFLATE stream
 --   * as numbered text lines pasted at a prompt                                       -> "TSR1 <id> <n>/<total> <crc32> <base64>"
 -- Container (before compression):  "TSRB" u8 version(1) u16 count, then per entry:
---   u8 kind (1=index json, 2=package doc json, 3=blob)  u8 nameLen  name  u32 dataLen  data
+--   u8 kind (1=index json, 2=package doc json, 3=blob, 4=signature file of the index)  u8 nameLen  name  u32 dataLen  data
+-- Index and package entries hold the registry files byte for byte, so their signatures and hashes stay valid.
 -- Blob entries are named by the SHA-256 of their content and verified on load.
 local hash = require("tsr.hash")
 local inflate = require("tsr.inflate")
 
 local M = {}
 
-M.KIND_INDEX, M.KIND_PACKAGE, M.KIND_BLOB = 1, 2, 3
+M.KIND_INDEX, M.KIND_PACKAGE, M.KIND_BLOB, M.KIND_SIGNATURE = 1, 2, 3, 4
 
 local function u16(s, p) local a, b = s:byte(p, p + 1) return a * 256 + b end
 local function u32(s, p)
@@ -19,13 +20,13 @@ local function u32(s, p)
   return ((a * 256 + b) * 256 + c) * 256 + d
 end
 
---- Parse an (already decompressed) container. Returns { index = table|nil, packages = {name=doc}, blobs = {sha=data} }.
+--- Parse an (already decompressed) container. Returns { index = table|nil, indexRaw, indexSig, packages = {name=doc}, packageRaw = {name=text}, blobs = {sha=data} }.
 function M.parseContainer(s)
   if s:sub(1, 4) ~= "TSRB" then return nil, "not a Tessera bundle" end
   if s:byte(5) ~= 1 then return nil, "unsupported bundle version " .. tostring(s:byte(5)) end
   local count = u16(s, 6)
   local pos = 8
-  local out = { packages = {}, blobs = {} }
+  local out = { packages = {}, packageRaw = {}, blobs = {} }
   for _ = 1, count do
     if pos + 5 > #s then return nil, "truncated bundle" end
     local kind, nameLen = s:byte(pos), s:byte(pos + 1)
@@ -41,10 +42,14 @@ function M.parseContainer(s)
     elseif kind == M.KIND_INDEX then
       out.index = textutils.unserializeJSON(data)
       if not out.index then return nil, "bad index json" end
+      out.indexRaw = data
+    elseif kind == M.KIND_SIGNATURE then
+      out.indexSig = data
     elseif kind == M.KIND_PACKAGE then
       local doc = textutils.unserializeJSON(data)
       if not doc then return nil, "bad package json for " .. name end
       out.packages[name] = doc
+      out.packageRaw[name] = data
     end
   end
   return out

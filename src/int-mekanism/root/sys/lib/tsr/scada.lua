@@ -11,7 +11,9 @@
 --     poll = 2,                 -- seconds between checks
 --     alarm = "top",            -- redstone port switched on while any reactor is latched (siren, lamp...) }
 --
--- The defaults are deliberately cautious guesses for Mekanism 10.x; check them against your build in-game. A reading the machine
+-- Reference points from Mekanism's source (FissionReactorMultiblockData, 1.21.x): the reactor starts taking damage above 1200 K, damage
+-- grows faster up to 1800 K, and a damage of 100% is a meltdown; getDamagePercent is 0-100 and the filled readings are fractions that the
+-- driver converts to percent. The defaults below stay well below those limits on purpose; tune them for your build in-game. A reading the machine
 -- does not provide is ignored, EXCEPT that a reactor that cannot be read at all (chunk unloaded, error) is treated as unsafe.
 local hal = require("tsr.hal")
 local vfs = require("tsr.vfs")

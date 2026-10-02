@@ -17,6 +17,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findCraftOS, installOverlays, root } from '../lib/craftos.mjs';
+import { generateKey, saveKey, signText } from '../lib/sign.mjs';
 
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(n);
@@ -37,10 +38,19 @@ async function main() {
   mkdirSync(out, { recursive: true });
 
   if (bootstrap) {
-    for (const cmd of [['build/build.mjs'], ['build/bundle.mjs', 'core', 'pkg', '--name', 'boot']]) {
-      const r = spawnSync(process.execPath, [join(root, 'tools', ...cmd[0].split('/')), ...cmd.slice(1)], { encoding: 'utf8' });
+    // the installer test builds a SIGNED registry with a throw-away key that this build trusts (like a release build would)
+    const keyFile = join(root, '.scratch', 'test-signing.key');
+    rmSync(keyFile, { force: true });
+    saveKey(keyFile, generateKey('bootstrap test key'));
+    const env = { ...process.env, TSR_SIGNING_KEY_FILE: keyFile };
+    const buildStep = [['build/build.mjs'], ['build/bundle.mjs', 'core', 'crypto', 'pkg', '--name', 'boot']];
+    for (const cmd of buildStep) {
+      const r = spawnSync(process.execPath, [join(root, 'tools', ...cmd[0].split('/')), ...cmd.slice(1)], { encoding: 'utf8', env });
       if (r.status !== 0) { console.error(r.stdout + r.stderr); process.exit(1); }
     }
+    // the same index signed by a key nobody trusts (the e2e checks that it is refused)
+    writeFileSync(join(root, 'dist', 'bundles', 'other-key.sig'),
+      signText(generateKey('someone else'), readFileSync(join(root, 'dist', 'site', 'registry', 'index.json'), 'utf8')));
   } else if (flag('--minified')) {
     const r = spawnSync(process.execPath, [join(root, 'tools', 'build', 'build.mjs')], { encoding: 'utf8' });
     if (r.status !== 0) { console.error(r.stdout + r.stderr); process.exit(1); }

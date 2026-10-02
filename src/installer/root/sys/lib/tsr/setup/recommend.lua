@@ -115,8 +115,38 @@ function M.packages(probe, profile)
     if probe.counts.inventories >= 2 then add("svc-storage", "recommended", ("%d inventories attached: storage indexing, auto-sorting and crafting"):format(c.inventories)) end
   end
 
+  -- security, time and system tools -------------------------------------------------------------------------------------------
+  local serverish = profile == "server"
+  if probe.hasModem or probe.http.enabled then
+    add("ntp", serverish and "recommended" or "optional",
+      serverish and "a server is the natural time source for your other computers (an in-game time server, or an HTTPS clock if allowed)"
+        or "keeps the clock right: ask a time server in the game, or an HTTPS clock where HTTP is allowed, or set it by hand")
+  end
+  if probe.hasModem and profile ~= "node" then
+    add("ssh", serverish and "recommended" or "optional", "secure remote shell and file copy between your computers (host keys, no passwords on the wire)")
+    add("firewall", serverish and "recommended" or "optional", "decide who may talk to this computer, by sender and message type, with rate limits")
+    add("p2p", "optional", "share files and packages between computers without a server (torrent-style swarm)")
+    add("netmon", "optional", "see what this computer sends and receives, and what an eavesdropper in range could read")
+  end
+  if serverish and probe.hasModem then
+    add("dns", "optional", "give computers names that follow them around, instead of numbers")
+    add("pgp-keyserver", "optional", "a directory where people publish public keys for signing and encrypted messages")
+  end
+  if profile ~= "node" then
+    add("vault", "optional", "encrypted folders you unlock with a passphrase (recovery key included)")
+    add("doctor", "optional", "self-check: finds problems and measures how fast this computer runs the cryptography")
+  end
+  if probe.hasModem and kind == "computer" and profile ~= "node" then
+    add("pgp", "optional", "sign and encrypt files and messages, with a web of trust for keys")
+  end
+  if kind ~= "turtle" and profile ~= "node" and kind ~= "pocket" then
+    add("archive", "optional", "tar and gzip: pack folders into one file and compress it")
+    add("diff", "optional", "diff and patch: compare files and apply changes")
+  end
+
   -- turtles / pockets ----------------------------------------------------------------------------------------------------
   if kind == "turtle" then
+    add("craft", "optional", "if this turtle has a crafting table: `autocraft` makes items and what they are made of from a chest")
     add("turtle-core", "recommended", "position tracking that survives chunk unloads, fuel management and job queue")
     add("turtle-jobs", "optional", "ready-made mining, farming, tree-felling and building jobs")
     if probe.hasModem then add("gps", "optional", "GPS lets the turtle know where it is") end

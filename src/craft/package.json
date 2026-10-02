@@ -1,0 +1,23 @@
+{
+  "name": "craft",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Crafting turtle: recipe database (vanilla included, learn modded ones), dependency planning and automatic crafting with a stash chest",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:craft"
+  ],
+  "platforms": {
+    "profiles": [
+      "turtle"
+    ]
+  },
+  "budget": 40000,
+  "tags": [
+    "turtle",
+    "tools"
+  ]
+}

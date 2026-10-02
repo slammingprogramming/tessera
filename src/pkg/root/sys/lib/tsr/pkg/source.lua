@@ -7,12 +7,15 @@
 --   http      one or more mirror base URLs (GitHub Pages, ...)        { type="http", bases={...} }
 --   dir       a directory with the layout above (disk, mount, offline import store)   { type="dir", path="..." }
 --   pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }
+-- Registries may be signed (see tsr.pkg.trust): registry/index.json.sig vouches for the index, and the index records the
+-- SHA-256 of every package description ("docSha256"); registry/trust.json(.sig) carries signed key updates.
 --   lan       a paired computer running the pkg-mirror service         { type="lan", peer="<name>" }  (package pkg-mirror)
 -- The built-in `offline` source is a `dir` at /var/cache/tsr/offline, filled by importing a bundle. It is always
 -- consulted first, so pasting a bundle makes an HTTP-less install possible.
 local hash = require("tsr.hash")
 local vfs = require("tsr.vfs")
 local config = require("tsr.config")
+local trust = require("tsr.pkg.trust")
 local log = require("tsr.log").get("pkg.source")
 
 local M = {}
@@ -83,7 +86,10 @@ fetchers.pastebin = {
   read = function(src, rel)
     local snap, err = snapshot(src)
     if not snap then return nil, err end
-    if rel == "registry/index.json" then return textutils.serializeJSON(snap.index or {}) end
+    if rel == "registry/index.json" then return snap.indexJson or textutils.serializeJSON(snap.index or {}) end
+    if rel == "registry/index.json.sig" then return snap.indexSig end
+    if rel == "registry/trust.json" then return snap.trustJson end
+    if rel == "registry/trust.json.sig" then return snap.trustSig end
     local key = rel:match("^registry/packages/(.+)%.json$")
     key = key and ("packages/" .. key) or rel:match("^blobs/(%x+)$")
     local id = key and snap.pastes and snap.pastes[key]
@@ -123,46 +129,82 @@ M.read = readRaw
 
 local function cachePath(src, rel) return M.cacheDir .. "/registry/" .. src.name .. "/" .. rel:gsub("^registry/", "") end
 
-local function getDoc(src, rel, force)
+--- Raw text of a registry file for `src`: from the cache (unless `force`), else the source (then cached). Network failures fall back
+--- to the cache so browsing works offline after `pkg update`.
+local function getRaw(src, rel, force)
   local cp = cachePath(src, rel)
   if src.type ~= "dir" then
     if not force then
-      local cached = vfs.readJSON(cp)
+      local cached = vfs.readFile(cp, true)
       if cached then return cached end
     end
     local body, err = readRaw(src, rel)
     if body then
-      local doc = textutils.unserializeJSON(body)
-      if type(doc) == "table" then
-        vfs.writeFile(cp, body)
-        return doc
-      end
-      return nil, "bad JSON from " .. src.name
+      vfs.writeFile(cp, body)
+      return body
     end
-    local cached = vfs.readJSON(cp) -- network failed: fall back to whatever we had
+    local cached = vfs.readFile(cp, true)
     if cached then return cached end
     return nil, err
   end
-  local body, err = readRaw(src, rel)
-  if not body then return nil, err end
+  return readRaw(src, rel)
+end
+
+local function parseDoc(body, name)
   local doc = textutils.unserializeJSON(body)
-  if type(doc) ~= "table" then return nil, "bad JSON in " .. src.name end
+  if type(doc) ~= "table" then return nil, "bad JSON from " .. name end
   return doc
 end
 
-function M.getIndex(src, force) return getDoc(src, "registry/index.json", force) end
+--- The registry index of `src`, signature-checked according to the policy in tsr.pkg.trust. Returns index, status or nil, err.
+function M.getIndex(src, force)
+  if src._index and not force then return src._index, src._indexStatus end
+  local body, err = getRaw(src, "registry/index.json", force)
+  if not body then return nil, err end
+  local sigRaw
+  if trust.policy() ~= "off" then
+    sigRaw = getRaw(src, "registry/index.json.sig", force)
+    -- a cached copy from before the registry was signed: refetch both together once
+    if not sigRaw and not force and src.type ~= "dir" then
+      body = getRaw(src, "registry/index.json", true) or body
+      sigRaw = getRaw(src, "registry/index.json.sig", true)
+    end
+  end
+  local ok, status = trust.verifyIndex(src.name, body, sigRaw)
+  if not ok then
+    log.warn("%s: %s", src.name, tostring(status))
+    return nil, tostring(status)
+  end
+  local doc, perr = parseDoc(body, src.name)
+  if not doc then return nil, perr end
+  src._index, src._indexStatus = doc, status
+  return doc, status
+end
 
 function M.getPackage(src, name, force)
-  return getDoc(src, "registry/packages/" .. name .. ".json", force)
+  local body, err = getRaw(src, "registry/packages/" .. name .. ".json", force)
+  if not body then return nil, err end
+  if trust.policy() ~= "off" then
+    local idx, ierr = M.getIndex(src)
+    if not idx then return nil, ierr end
+    local ok, why = trust.verifyDoc(idx.packages and idx.packages[name], body)
+    if not ok then
+      log.warn("%s/%s: %s", src.name, name, tostring(why))
+      return nil, why
+    end
+  end
+  return parseDoc(body, name)
 end
 
 --- First source that knows `name`. Returns package doc, source.
 function M.findPackage(name, force)
+  local problem
   for _, src in ipairs(M.list()) do
-    local doc = M.getPackage(src, name, force)
+    local doc, err = M.getPackage(src, name, force)
     if doc then return doc, src end
+    if err and tostring(err):find("signed", 1, true) then problem = src.name .. ": " .. tostring(err) end   -- a refusal, not just absence
   end
-  return nil, "package not found: " .. name
+  return nil, problem or ("package not found: " .. name)
 end
 
 --- Refresh the cached index of every source. Returns { [sourceName] = true | errorString }.
@@ -171,6 +213,15 @@ function M.update()
   for _, src in ipairs(M.list()) do
     local idx, err = M.getIndex(src, true)
     res[src.name] = idx and true or err
+    if idx and src.type ~= "dir" then
+      local raw = getRaw(src, "registry/trust.json", true)
+      local sigRaw = raw and getRaw(src, "registry/trust.json.sig", true)
+      if raw and sigRaw then
+        local applied, terr = trust.applyUpdate(raw, sigRaw)
+        if applied then log.info("trust update from %s: %d key(s) added, %d revoked", src.name, applied.added, applied.revoked)
+        elseif not tostring(terr):find("not newer", 1, true) then log.warn("trust update from %s ignored: %s", src.name, tostring(terr)) end
+      end
+    end
   end
   return res
 end
@@ -182,7 +233,8 @@ function M.allPackages()
     local idx = M.getIndex(src)
     if idx and idx.packages then
       for name, entry in pairs(idx.packages) do
-        if not out[name] then
+        local available = src.name ~= "offline" or fs.exists(src.path .. "/registry/packages/" .. name .. ".json")
+        if available and not out[name] then
           local e = {}
           for k, v in pairs(entry) do e[k] = v end
           e.source = src.name
@@ -227,22 +279,47 @@ end
 -- Offline import
 ---------------------------------------------------------------------------------------------------------------------
 
---- Store a parsed bundle (tsr.bundle) in the offline source. Returns { packages = n, blobs = n }.
+--- Store a parsed bundle (tsr.bundle) in the offline source. A bundle that carries a signed index is checked like any registry:
+--- when signatures are required it must be signed by a trusted key, must not be older than what is stored, and every package
+--- description in it must match the signed index. Returns { packages = n, blobs = n } or nil, err.
 function M.importBundle(b)
   local root = M.offlineDir
   local idxPath = root .. "/registry/index.json"
-  local idx = vfs.readJSON(idxPath) or { format = 1, packages = {} }
-  if b.index and b.index.packages then
-    for name, entry in pairs(b.index.packages) do idx.packages[name] = entry end
+  local policy = trust.policy()
+  local signed = b.indexRaw and b.indexSig
+  if signed then
+    local ok, status = trust.verifyIndex("offline-import", b.indexRaw, b.indexSig)
+    if not ok then return nil, "bundle rejected: " .. tostring(status) end
+    local index = b.index or {}
+    for name, raw in pairs(b.packageRaw or {}) do
+      local good, why = trust.verifyDoc(index.packages and index.packages[name], raw)
+      if not good then return nil, "bundle rejected: " .. tostring(why) end
+    end
+    local old = vfs.readJSON(idxPath)
+    if old and tonumber(old.serial) and tonumber(index.serial) and tonumber(index.serial) < tonumber(old.serial) then
+      return nil, "bundle rejected: it is older than the registry data already stored"
+    end
+    vfs.writeFile(idxPath, b.indexRaw)
+    vfs.writeFile(idxPath .. ".sig", b.indexSig)
+  elseif policy == "require" then
+    return nil, "bundle rejected: it is not signed (signatures are required; see `pkg trust`)"
+  else
+    local idx = vfs.readJSON(idxPath) or { format = 1, packages = {} }
+    if b.index and b.index.packages then
+      for name, entry in pairs(b.index.packages) do idx.packages[name] = entry end
+    end
+    idx.serial, idx.generated = nil, nil
+    vfs.writeJSON(idxPath, idx)
+    if fs.exists(idxPath .. ".sig") then fs.delete(idxPath .. ".sig") end
   end
   for name, doc in pairs(b.packages) do
-    vfs.writeJSON(root .. "/registry/packages/" .. name .. ".json", doc)
-    if not idx.packages[name] and doc.latest and doc.versions and doc.versions[doc.latest] then
-      local m = doc.versions[doc.latest]
-      idx.packages[name] = { version = m.version, type = m.type, description = m.description, size = m.size and m.size.installed }
+    local raw = b.packageRaw and b.packageRaw[name]
+    if raw then
+      vfs.writeFile(root .. "/registry/packages/" .. name .. ".json", raw)
+    else
+      vfs.writeJSON(root .. "/registry/packages/" .. name .. ".json", doc)
     end
   end
-  vfs.writeJSON(idxPath, idx)
   local nb = 0
   for sha, data in pairs(b.blobs) do
     vfs.writeFile(root .. "/blobs/" .. sha, data, true)
