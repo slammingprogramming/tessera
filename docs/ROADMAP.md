@@ -33,6 +33,8 @@ Each milestone must run on CraftOS-PC headless tests and be smoke-tested in-game
 | M9 | built | editor, text file manager, Lua prompt, manual and tour, graphics + image formats + palettes, snapshots + recycle bin, sandbox and virtual computers, shop, games |
 | M10 | built | TV home screen, media player, signage, kiosk, mirroring, pocket remote |
 
+| M11 | built | (2026-10-02) signed registries, crypto library, 32vid, crafting turtle, Tom's Peripherals driver, mod drivers verified against source, boot-recovery scenarios, and the real-world set: `ntp`, `ssh`, `pgp`, `torrent`, `fw`, `dns`, `vault`, `tar`/`gzip`, `diff`/`patch`, `netmon`, `doctor` (see REALWORLD.md) |
+
 "built" = implemented and green in CraftOS-PC; nothing has run in real Minecraft yet. The next milestone for every row is an in-game
 smoke test (see AGENTS.md for the list of what to try first).
 

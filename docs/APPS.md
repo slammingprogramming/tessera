@@ -117,3 +117,24 @@ Same status as above: built and tested in CraftOS-PC, not yet run in real Minecr
 | `games` | `snake`, `2048`, `mines` | Small games with high scores. |
 | `fleet` | `fleet` | Turtle fleet control over the network. |
 | `calibrate` | `tsr-calibrate` | Measures this setup's real limits (paste length, file drops, yield timeout, Lua features). |
+
+## Real-world tools (added 2026-10-02)
+
+See [REALWORLD.md](REALWORLD.md) for how they work and what is the same as the real thing.
+
+| Package | Command(s) | What it does |
+|---|---|---|
+| `crypto` | (library) | SHA-512, Ed25519, X25519, ChaCha20-Poly1305, HKDF, PBKDF2 in pure Lua. |
+| `ntp` | `ntp`, `ntpdate`, `timedatectl`, `date` | Clock sync from in-game time servers, an optional HTTPS source or by hand; time zones; can serve time. |
+| `ssh` | `ssh`, `scp`, `ssh-keygen`, `ssh-copy-id`, `sshd` | Secure shell and file copy between computers (own protocol). |
+| `pgp`, `pgp-keyserver` | `pgp`, `gpg` | Signatures, encryption, web of trust and a key server (own format). |
+| `p2p` | `torrent` | Torrent-style sharing between computers, magnet links, tracker, package sharing. |
+| `firewall` | `fw` | Rules by sender, message type and rate. |
+| `dns` | `dns`, `host`, `dig` | Names for computers, zones, resolver and server. |
+| `vault` | `vault` | Encrypted folders with a recovery key. |
+| `archive` | `tar`, `gzip`, `gunzip`, `zcat` | Standard tar and gzip. |
+| `diff` | `diff`, `patch` | Unified diffs and patches (git-compatible). |
+| `netmon` | `netmon` | Network monitor with a promiscuous mode. |
+| `doctor` | `doctor` | Self-check and speed measurement; writes a report for bug reports. |
+| `craft` | `autocraft` | Crafting turtle: make items and what they are made of. |
+| `hal-toms` | (drivers) | Tom's Peripherals through `hal`. |
