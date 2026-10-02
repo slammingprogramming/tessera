@@ -154,16 +154,18 @@ mods that support them, comparator reads, AP Redstone Integrator). See INTEGRATI
 
 ## 7. Backlog — still to research
 
-1. How Phoenix achieves "preemptive" multitasking; is `debug.sethook`/instruction limiting exposed in CC:T's Cobalt VM?
-2. Exact CC:T Lua feature level (Cobalt: 5.1 + which 5.2/5.3 additions) and `_HOST` string format for detection.
-3. Current tweaked.cc behaviours for: `fs` mounting APIs (`fs.attributes`, `fs.getCapacity`), `peripheral.hasType`, `require` search paths.
-4. Refined Storage / AE2 current CC support on 1.21.1 and 26.x.
-5. Tom's Simple Storage, Sophisticated Storage, Thermal, Ender IO, Powah, Flux Networks, Valkyrien Skies (CC:VS), Create: Trains — CC support status.
-6. Licenses: Basalt, Pine3D, ecc, ecnet, cash, MBS, unicornpkg, Opus (MIT) — for reuse vs. compatibility-only.
-7. Signing scheme feasible in Lua performance-wise (ed25519 verify time on a stock computer).
-8. Server-admin norms: how servers restrict HTTP; how to make installs admin-friendly.
-9. Existing "smart TV / kiosk / video" pipelines (sanjuuni formats: NFP, 32vid; YouCube protocol).
-10. Bundled-cable mods (Project Red, Immersive Engineering?, RFTools?) status on 1.20.1/1.21.1.
+Answered (see section 9): Lua feature level, `debug` availability, `peripheral.hasType`, the `fs` API, Advanced Peripherals / Mekanism /
+CC:C Bridge peripheral names and methods, sanjuuni output formats.
+
+Still open:
+1. In-game measurement of: paste event length, `file_transfer` size limit, the "too long without yielding" timeout (none is documented).
+2. Whether `debug.sethook` count hooks can drive preemption in Cobalt (the `debug` API is present, hook behaviour inside CC:T is not documented).
+3. Tom's Peripherals GPU API and peripheral type names (wiki pages did not load).
+4. Refined Storage / AE2 via Storage for ComputerCraft on 1.21.1/26.x; Tom's Simple Storage, Sophisticated Storage, Thermal, Ender IO, Powah, Flux Networks, CC:VS, Create: Trains.
+5. Licenses: Basalt, Pine3D, ecc, ecnet, cash, MBS, unicornpkg — for reuse vs. compatibility-only.
+6. ed25519 verify time of ccryptolib on a stock computer (no published numbers found).
+7. How servers restrict HTTP in practice.
+8. Bundled-cable mods (Project Red etc.) on 1.20.1/1.21.1.
 
 ## 8. Sources
 
@@ -184,3 +186,59 @@ mods that support them, comparator reads, AP Redstone Integrator). See INTEGRATI
 - https://www.curseforge.com/minecraft/mc-mods/storage-for-computercraft
 - https://github.com/MikaylaFischler/cc-mek-scada
 - https://github.com/AllTheMods/ATM-4 (config example), https://www.craftos-pc.cc/docs/config
+
+## 9. Verified integration facts (2026-10-01)
+
+Sources: tweaked.cc reference pages, docs.advanced-peripherals.de (0.7), mekanism.github.io computer data (10.7.0),
+cccbridge.kleinbox.dev, sanjuuni README.
+
+**Lua level of CC: Tweaked (Cobalt)** — https://tweaked.cc/reference/feature_compat.html. Supported: `goto`/labels, `_ENV`,
+`bit32`, `table.pack/unpack`, `string.pack/unpack`, `utf8`, `table.move`, `coroutine.isyieldable`, `math.atan` with two
+arguments, hex / `\z` / `\xNN` / `\u{}` escapes. **Not** supported: integer subtype, bitwise operators (`&`, `|`, `~`, `<<`),
+floor division `//`, `math.tointeger/type`, `loadstring`, `os.exit/execute`. The `debug` API is always present (since CC:T 1.97).
+Consequence: use `bit32`, never Lua 5.3 operators; all numbers are doubles.
+
+**Peripheral API** — `peripheral.getNames/isPresent/getType (returns several types)/hasType(p, type)/getMethods/getName/call/wrap/find(type, filter)`.
+A chest is both `minecraft:chest` and `inventory`. **fs** — `getFreeSpace` may return the string "unlimited"; `getCapacity` returns
+nil on read-only drives; `makeDir/move/copy` create parents; `attributes` gives size, isDir, isReadOnly, created, modified (ms);
+`isDriveRoot`. **window** — `create(parent,x,y,w,h,visible)`, `setVisible/isVisible/redraw/restoreCursor/getPosition/reposition/getLine`
+(getLine returns text, text colours, background colours). **Events** — `paste` carries the text (no limit documented);
+`file_transfer` carries a TransferredFiles object whose `getFiles()` gives binary file handles with `getName()` (no size limit documented).
+
+**Advanced Peripherals — type names changed at Minecraft 1.21.1** (snake_case from 1.21.1, camelCase before). Always match both:
+`meBridge`/`me_bridge`, `rsBridge`/`rs_bridge`, `playerDetector`/`player_detector`, `inventoryManager`/`inventory_manager`,
+`energyDetector`/`energy_detector`, `environmentDetector`/`environment_detector`, `blockReader`/`block_reader`,
+`geoScanner`/`geo_scanner`, `nbtStorage`/`nbt_storage`, `chatBox`/`chat_box`; `redstoneIntegrator` (documented without a snake_case variant).
+
+- ME Bridge: `listItems, listFluid, listGas, listCraftableItems, listCraftableFluid, getItem(filter), craftItem(filter[, cpu]),
+  craftFluid, isItemCrafting, isItemCraftable, importItem/exportItem(filter, direction), importItemFromPeripheral /
+  exportItemToPeripheral(filter, container), getEnergyStorage, getMaxEnergyStorage, getEnergyUsage, getCraftingCPUs, listCells`,
+  storage totals `getTotalItemStorage, getUsedItemStorage, getAvailableItemStorage` (and the Fluid variants); event `crafting`.
+- RS Bridge: `listItems, listFluids, listCraftableItems, listCraftableFluids, getItem, craftItem, craftFluid(fluid, amount),
+  getPattern, isItemCrafting, isItemCraftable, import/export variants, getEnergyStorage, getMaxEnergyStorage, getEnergyUsage`,
+  `getMaxItemDiskStorage, getMaxFluidDiskStorage, getMaxItemExternalStorage, getMaxFluidExternalStorage`.
+- Player Detector: `getOnlinePlayers, getPlayersInRange(range), getPlayersInCoords, getPlayersInCubic, getPlayerPos(name),
+  isPlayerInRange(range, name), isPlayersInRange(range), ...`; events `playerClick, playerJoin, playerLeave, playerChangedDimension`.
+- Inventory Manager: `addItemToPlayer(direction, item), removeItemFromPlayer, getItems, getArmor, getOwner, getItemInHand,
+  getFreeSlot, isSpaceAvailable`.
+- Energy Detector: `getTransferRate, getTransferRateLimit, setTransferRateLimit`. Environment Detector: `getBiome, getTime,
+  isRaining, isThunder, isSlimeChunk, getDimension, getMoonName, scanEntities(range), getRadiationRaw` and more. Block Reader:
+  `getBlockName, getBlockData, getBlockStates, isTileEntity`. Geo Scanner: `scan(radius), chunkAnalyze(), cost(radius), getMaxFuelLevel()`.
+  NBT Storage: `read, writeJson, writeTable`. Chat Box: `sendMessage(msg, prefix, brackets, color, range)`,
+  `sendMessageToPlayer(msg, user, ...)`, `sendToastToPlayer(msg, title, user, ...)`; event `chat` (user, message, uuid, hidden).
+- Redstone Integrator: `getInput/getOutput/getAnalogInput/getAnalogOutput(side), setOutput(side, bool), setAnalogOutput(side, level)`;
+  accepts relative (`top, front, ...`) and cardinal (`north, up, ...`) sides.
+
+**Mekanism** (native CC support; peripheral types are the machine names, camelCase): `energyCube, digitalMiner, fissionReactor,
+fissionReactorPort, fissionReactorLogicAdapter, fusionReactor, fusionReactorLogicAdapter, industrialTurbine, boilerValve,
+inductionMatrix, inductionPort, qioDashboard, qioDriveArray, thermalEvaporationMultiblock, radioactiveWasteBarrel, chemicalTank,
+fluidTank, dynamicTank` and the machine families. Methods: energy cube `getEnergy/getMaxEnergy/getEnergyFilledPercentage`;
+digital miner `start/stop/isRunning/getState/setRadius/getFilters`; fission reactor `activate/scram/getStatus/getTemperature/
+setBurnRate/getFuel` (port/logic adapter: `getLogicMode/setLogicMode`); fusion `getTemperature/isIgnited/setInjectionRate/
+getProductionRate`; turbine `getFlowRate/getMaxFlowRate/getProductionRate/getSteam`; induction port `getMode/setMode`.
+
+**CC:C Bridge** (Create): `create_source` (terminal-like: `getSize, clear, setCursorPos, write, getLine`; colours ignored; event
+`monitor_resize`) and `create_target` (`getSize, getLine(y), dump(), resize(w,h)`).
+
+**sanjuuni** output formats: 32vid (compressed video + audio), BIMG (blit image/animation, default for video), NFP (paint image),
+Lua script, raw mode; it can serve over HTTP or WebSocket. Players exist for 32vid and BIMG; YouCube builds on sanjuuni.

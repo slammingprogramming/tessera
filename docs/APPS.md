@@ -78,3 +78,42 @@ node tools/dev/new-app.mjs mytool --desc "What it does" --cmds mytool --module m
 creates `src/mytool/` with a `package.json` and a launcher. Put the logic in `root/usr/lib/tsrapps/mytool.lua` as
 `M.main(args, io)` (take an `io` table so it can be tested without a keyboard — see `tsrapps.cli`), add tests under
 `tests/apps/`, and the build, registry, `pkg` and the wizard pick it up.
+
+## System, server, interface and tools (added 2026-10-01)
+
+Same status as above: built and tested in CraftOS-PC, not yet run in real Minecraft. Details for each are in the in-game manual (`thelp`).
+
+| Package | Command(s) | What it does |
+|---|---|---|
+| `shell` | `tsh` | The default shell: pipes, redirects, variables, globs, `$(...)`, scripts (`if`/`for`/`while`), history, completion; runs stock CraftOS programs unchanged. |
+| `svc-manager` | `svc` | Supervised background services with dependencies, restart policies and back-off. |
+| `auth` | `useradd`, `passwd`, `su`, `sudo`, `lock`, `users`, ... | Accounts, login and lock screen, roles, soft file permissions (honest limits: see docs/SECURITY.md). |
+| `net` | `net` | Discovery, ping, time, one-time-code pairing, signed (optionally encrypted) remote calls. |
+| `rsh` | `rsh`, `rexec` | Remote shell on paired computers that you allowed. |
+| `netfs` | `netfs` | Share folders and mount other computers' shares. |
+| `rscreen` | `rview`, `rscreen` | Watch and control another computer's screen. |
+| `pkg-mirror` | `pkgmirror` | Package mirror for networks without internet access (`lan` package source). |
+| `ops` | `crontab`, `metrics`, `logship` | Cron, metrics (local and remote), central log collection. |
+| `roles` | `role` | One-command server roles (mirror, file server, shell host, monitor, log collector, ...). |
+| `webgw` | `webgw` | Outbound connection to `tools/gateway/gateway.mjs` so web pages and scripts can call exposed services. |
+| `chatbot` | `chatbot` | In-game `!commands` through an Advanced Peripherals chat box. |
+| `hal` | `hal` | One set of readings and actions for every machine and mod device, including redstone-only machines. |
+| `rules` | `rules` | Automation rules with hold times and hysteresis. |
+| `int-ap` | `me` | Advanced Peripherals: ME and RS bridges, detectors. |
+| `int-mekanism` | `scada` | Mekanism energy, reactors, turbines, miners; reactor safety supervision. |
+| `int-create` | `cdisplay` | Create display links through CC:C Bridge. |
+| `power-monitor` | `power`, `tanks` | Live power and fluid dashboards on terminal or monitor. |
+| `ui-gui` | `gui` | The desktop: windows, taskbar, Files, Terminal, Settings, App Store, Task Manager. |
+| `mobile` | — | Phone-style interface for pocket computers. |
+| `tv` | `tv`, `tvremote`, `signage`, `kiosk`, `mirror` | TV home screen, remote, signage slideshows, kiosk mode, screen mirroring. |
+| `media` | `play` | BIMG/NFP/DFPWM playback. |
+| `gfx` | `banner`, `imgview`, `palette` | Sub-pixel canvas, big fonts, image formats, colour palettes. |
+| `editor` | `ted` | Text editor. |
+| `utils` | `fm`, `repl` | Text-mode file manager and Lua prompt. |
+| `help` | `thelp`, `tsr-tour` | Manual and first-run tour. |
+| `safety` | `snap`, `trash` | Snapshots and a recycle bin. |
+| `sandbox` | `sandbox`, `vm` | Restricted program runner and virtual computers. |
+| `shop` | `shop` | Chest-based vending shop. |
+| `games` | `snake`, `2048`, `mines` | Small games with high scores. |
+| `fleet` | `fleet` | Turtle fleet control over the network. |
+| `calibrate` | `tsr-calibrate` | Measures this setup's real limits (paste length, file drops, yield timeout, Lua features). |
