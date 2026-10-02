@@ -1,0 +1,19 @@
+{
+  "name": "inet-dns",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "DNS over UDP/TCP (RFC 1035): a stub resolver with caching and search domains, an authoritative and recursive name server with zone files, delegation, zone transfers and secondaries, nslookup and dnsctl",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:inet-dns"
+  ],
+  "budget": 60000,
+  "tags": [
+    "network"
+  ]
+}

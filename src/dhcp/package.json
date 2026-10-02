@@ -1,0 +1,19 @@
+{
+  "name": "dhcp",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "DHCP (RFC 2131): a client that configures interfaces automatically and a server that hands out addresses, routers, DNS and time servers, with reservations and persistent leases",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:dhcp"
+  ],
+  "budget": 40000,
+  "tags": [
+    "network"
+  ]
+}
