@@ -51,7 +51,11 @@ export function isPrivate(path, paths = privatePaths()) {
 /** True when `path` may be published on GitHub now (never true for private paths). */
 export function isGithubAllowed(path, allow = githubAllow(), priv = privatePaths()) {
   if (matches(path, priv)) return false;
-  return allow === null ? true : matches(path, allow);
+  if (allow === null) return true;
+  // entries starting with "!" are exclusions that win over the plain entries (e.g. "docs/" with "!docs/api/")
+  const excluded = allow.filter((p) => p.startsWith('!')).map((p) => p.slice(1));
+  if (matches(path, excluded)) return false;
+  return matches(path, allow.filter((p) => !p.startsWith('!')));
 }
 
 /** The Co-Authored-By trailer every commit made by the AI assistant must carry. */

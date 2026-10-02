@@ -1,0 +1,17 @@
+When something goes wrong
+  The computer will not start properly
+    Hold R while it boots for the recovery menu. After repeated failed starts Tessera backs off to the plain CraftOS
+    shell by itself. To stay in plain CraftOS on purpose, create the file /etc/tsr/disabled (and delete it to return).
+
+  An install was interrupted (power loss, chunk unloaded)
+    The next boot finishes or rolls back the package transaction on its own. `pkg verify` checks the result.
+
+  A file I edited was overwritten by an update
+    Replaced files are copied into /etc/tsr/backup/<path> first.
+
+  The desktop or login screen misbehaves
+    Both fall back to the shell if they crash. `gui disable`, or in /etc/tsr/system.cfg set ui.default = "shell"; set
+    auth.login = false to skip the login screen until you have fixed it.
+
+  Logs: /var/log/tsr.log (latest lines: `svc log <name>`).
+  Is it the network? `net status`, `net ping <name>`. Is HTTP blocked? Use a LAN mirror (pkg-mirror) or an offline bundle.

@@ -378,12 +378,12 @@ end
 
 function Button:onMouse(kind, x, y)
   if kind == "down" then self.pressed = true self:invalidate() return true
-  elseif kind == "drag" then self.pressed = x >= 1 and x <= self.w and y == 1 self:invalidate() return true
+  elseif kind == "drag" then self.pressed = x >= 1 and x <= self.w and y >= 1 and y <= self.h self:invalidate() return true
   elseif kind == "up" then
     local was = self.pressed
     self.pressed = false
     self:invalidate()
-    if was and x >= 1 and x <= self.w and y == 1 then self:click() end
+    if was and x >= 1 and x <= self.w and y >= 1 and y <= self.h then self:click() end
     return true
   end
   return false

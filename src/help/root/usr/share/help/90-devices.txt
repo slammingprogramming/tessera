@@ -1,0 +1,18 @@
+Machines, mods and automation
+The hal package gives every device the same names for readings and actions, whatever mod it comes from.
+
+  hal list                    devices it understands;  hal show <name>  shows live readings and actions
+  hal get cube energy.percent       one reading
+  hal do smelter machine.stop       one action
+  hal virtual add switch smelter back       a machine with no computer interface, switched by redstone
+  hal virtual add sensor gauge left --scale 6.67 --unit %   a redstone input (e.g. a comparator) as a reading
+
+Rules (package rules) react to readings. Put a file in /etc/tsr/rules.d, for example:
+  return { name = "generator", when = { device = "cube", metric = "energy.percent", op = "<", value = 20 },
+           clear = { device = "cube", metric = "energy.percent", op = ">", value = 60 },
+           on = { { action = "redstone", port = "back", set = true } }, off = { { action = "redstone", port = "back", set = false } } }
+`rules check` shows what each rule sees right now.
+
+Mod packs: int-ap (Advanced Peripherals: me command for AE2 / Refined Storage), int-mekanism (energy, reactors, turbines and
+the scada safety service), int-create (Create display links: cdisplay). Dashboards: power, tanks.
+Mekanism reactor limits in scada are cautious guesses: check /etc/tsr/scada.cfg against your own setup.

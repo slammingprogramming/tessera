@@ -17,17 +17,24 @@ Each milestone must run on CraftOS-PC headless tests and be smoke-tested in-game
 | M9 | App parity wave | Editor, files, help, storage system, GPS, cron, audio/media, games (port/depend), turtle stock jobs | Parity matrix P1 rows all `done` |
 | M10 | TV + expansion | Smart-TV shell, media pipeline, mirroring, kiosk; next ideas | — |
 
-## Status (2026-09-29)
+## Status (2026-10-01)
 
 | M | Status | Notes |
 |---|---|---|
 | M0 | done | docs |
-| M1 | done | headless test runner works via a mounted results directory; in-game paste/file-drop limits **not yet measured** |
-| M2 | done | 12 kernel + VFS/config/log tests, boot e2e; crash-loop guard and recovery key exist but have no e2e scenario yet |
-| M3 | done | offline paths tested (directory mirror, bundle file, pasted chunks); **HTTP and Pastebin channels are untested against real servers** (no public repo yet); browser bundle-builder page still to do |
-| M4 | done | recommender + wizard tested with scripted UI and unattended e2e; mod signatures other than Advanced Peripherals are unverified guesses |
-| M9 (partly) | started early | App wave 1: turtle foundation + 12 turtle apps and 12 computer apps (docs/APPS.md); tested with a simulated turtle world and fake peripherals, not yet in real Minecraft |
-| M5–M8, M10 | not started | |
+| M1 | done | headless test runner, builders, size guard, API reference generator, browser bundle builder, Pastebin publisher; `tsr-calibrate` measures the in-game limits that are still unknown |
+| M2 | done | kernel, VFS, config, log, boot; stage-0 escape hatches (recovery key, disabled flag, crash-loop guard) have unit scenarios |
+| M3 | done | offline paths tested end to end; HTTP and Pastebin channels are untested against real servers (the fake-API tests pass) |
+| M4 | done | recommender + wizard; mod signatures for Advanced Peripherals, Mekanism and CC:C Bridge verified against their documentation |
+| M5 | built | tsh shell, auth, net (pairing, signed RPC), rsh, netfs, svc-manager, pkg-mirror (lan source), ops (cron, metrics, logs), roles, rscreen, web gateway, chat bot |
+| M6 | built | widgets, window manager, desktop, Files / Terminal / Settings / App Store / Task Manager; installable later, removable, falls back to the shell |
+| M7 | built | phone interface, notifications, A* pathfinding with obstacle memory, fleet control |
+| M8 | built | hal (generic + redstone-only devices), rules engine, Advanced Peripherals / Mekanism (+SCADA) / CC:C Bridge packs, power and tank dashboards |
+| M9 | built | editor, text file manager, Lua prompt, manual and tour, graphics + image formats + palettes, snapshots + recycle bin, sandbox and virtual computers, shop, games |
+| M10 | built | TV home screen, media player, signage, kiosk, mirroring, pocket remote |
+
+"built" = implemented and green in CraftOS-PC; nothing has run in real Minecraft yet. The next milestone for every row is an in-game
+smoke test (see AGENTS.md for the list of what to try first).
 
 Cross-cutting from M2 onward: docs per module, tests per module, size budget checks, security review of anything that
 executes downloaded code.

@@ -51,17 +51,21 @@ local function login()
   return nil
 end
 
---- Graphical front ends: the desktop (package `ui-gui`) and the phone interface (package `mobile`).
+--- Graphical front ends: the desktop (package `ui-gui`), the phone interface (`mobile`) and the TV interface (`tv`).
 local UIS = {
   gui = { module = "tsr.gui.desktop", file = "/sys/lib/tsr/gui/desktop.lua" },
   mobile = { module = "tsr.mobile.shell", file = "/sys/lib/tsr/mobile/shell.lua" },
+  tv = { module = "tsr.tv.shell", file = "/sys/lib/tsr/tv/shell.lua" },
 }
 
 --- Run the configured front end (config `ui.default`: "gui", "mobile" or "shell"; pocket computers with the phone interface
 --- installed default to it). Returns the way it was left: "shell", "logout", "reboot", "shutdown"; or nil when there is nothing
 --- to run (not installed, switched off, or it failed).
 local function runGui()
-  local mode = config.get("ui.default", (rawget(_G, "pocket") and fs.exists(UIS.mobile.file)) and "mobile" or "shell")
+  local default = "shell"
+  if rawget(_G, "pocket") and fs.exists(UIS.mobile.file) then default = "mobile"
+  elseif fs.exists(UIS.tv.file) and require("tsr.profile").get() == "tv" then default = "tv" end
+  local mode = config.get("ui.default", default)
   local ui = UIS[mode]
   if not ui or not fs.exists(ui.file) then return nil end
   local ok, action = pcall(function() return require(ui.module).start({}) end)
@@ -75,6 +79,7 @@ function M.startShellSession(parentShell)
   return kernel.spawn({
     name = "shell", session = true, focus = true,
     fn = function()
+      if fs.exists("/sys/lib/tsr/gfx/palette.lua") then pcall(function() require("tsr.gfx.palette").applySaved() end) end
       term.setBackgroundColor(colors.black)
       term.setTextColor(colors.white)
       term.clear()

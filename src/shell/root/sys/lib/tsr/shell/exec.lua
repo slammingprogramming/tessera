@@ -146,6 +146,7 @@ function Sh:programEnv(dir)
   local env = { shell = self.api, multishell = rawget(_G, "multishell") }
   local ok, req = pcall(require, "cc.require")
   if ok and type(req) == "table" and req.make then env.require, env.package = req.make(env, "/" .. dir) end
+  if self.opts.programOs then env.os = self.opts.programOs end       -- e.g. kiosk mode swallows terminate events
   local reader = self.stdin
   if reader then
     env.io = capture.ioFor(reader, io)

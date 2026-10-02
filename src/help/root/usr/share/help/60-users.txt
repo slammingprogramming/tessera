@@ -1,0 +1,18 @@
+Users and security (auth)
+The auth package adds accounts and a login screen for computers other people can reach.
+
+  useradd <name> [--admin]    the first account is always an administrator
+  passwd [name]               change a password
+  users                       list accounts
+  su <name>                   a shell as someone else (needs their password)
+  sudo <command>              run one command unrestricted (administrators)
+  lock                        hide the screen until your password is typed
+  usermod <name> --role user|admin|guest | --lock | --unlock
+  userdel <name>
+
+Without accounts the computer is open. Once one exists, the login screen appears at boot and after you leave the shell.
+Ordinary users can write only to their home folder and /tmp and cannot read other homes.
+
+IMPORTANT: this is a courtesy, not a vault. A ComputerCraft computer is one Lua program that anyone at the keyboard can
+rewrite, and anyone who can break the computer can read its disk. The checks keep honest players from accidents and casual
+snooping; they do not stop a determined one. Protect valuable computers physically (claims, locked areas).

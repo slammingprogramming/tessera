@@ -1,0 +1,17 @@
+Turtles
+Tessera remembers where a turtle is even when its chunk unloads in the middle of a move, and can resume jobs afterwards.
+
+Jobs (install the packages you need)
+  bore, carve, stripmine, quarry   digging jobs; each takes sizes as arguments and saves progress
+  build                            builds from a plan; treefarm, cropfarm, cobblegen, guard
+  tstatus                          position, fuel, current job;  tresume  continues an interrupted job
+  tlisten / tcontrol               control a turtle from another computer with a shared passphrase
+
+Getting around: the pathfinder (tsr.turtle.nav) plans routes around known obstacles, learns new ones by bumping into
+them, and can dig through when no way round exists.
+
+Fleets: with the fleet package, `fleet add <turtle>`, `fleet list` shows position, fuel and job of every turtle,
+`fleet run all quarry 16 16` starts a job on all of them, `fleet goto <turtle> x y z` sends one somewhere.
+Turtles only run jobs from a short whitelist and only for controllers they allow (`fleet allow <controller>` on the turtle).
+
+Tip: with a GPS network in range, a turtle can calibrate its coordinates to the world (see the gps package).

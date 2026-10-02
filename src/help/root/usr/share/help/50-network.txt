@@ -1,0 +1,20 @@
+Networking (net)
+Computers talk to each other over modems. Tessera adds names, discovery and secure messages (package net).
+
+  net status               your name, modems, paired computers, services you offer
+  net lookup [service]     who answers nearby
+  net ping <name>          round trip time
+
+Pairing makes two computers trust each other. On one: `net pair listen` shows a one-time code. On the other:
+`net pair <id> <code>`. Calls between paired computers are signed so they cannot be forged or replayed; sensitive ones
+are also encrypted.
+
+What you can do with a paired computer
+  rsh <name>               a shell on it (it must allow you: `rsh allow <your name>` on that computer)
+  rview <name>             watch and control its screen (`rscreen allow ...`)
+  netfs mount <name> <export> <dir>   use its shared folder like a local one (`netfs export ...` there)
+  fleet list               see and command turtles
+  pkgmirror add <name>     install packages through it
+
+Honest limits: a modem broadcast can be heard by anyone in range; pairing keys protect what is *said*, not that something
+was said. Anyone who can run programs on a computer can read its keys.

@@ -1,0 +1,15 @@
+{
+  "name": "utils",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Everyday tools: fm (keyboard/mouse file manager for any screen) and repl (a Lua prompt with history, completion, multi-line input and pretty printing)",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "ui-tui": ">=0.1.0"
+  },
+  "budget": 24000,
+  "tags": [
+    "tools"
+  ]
+}

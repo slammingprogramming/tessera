@@ -1,0 +1,15 @@
+Desktop and phone interface
+Both are optional packages and can be added or removed at any time.
+
+Desktop (ui-gui, colour computers with a mouse)
+  gui                     start the desktop;  gui enable  starts it at boot;  gui disable  goes back to the shell
+  Start menu (bottom left) opens Files, Terminal, App Store, Settings, Task Manager and your other apps.
+  Windows: drag by the title bar, double-click it to maximise, _ + x buttons at the right.
+  Themes: dark, light, contrast, mono (grey-scale screens always use mono). Change in Settings or `gui theme <name>`.
+  Remove completely: pkg remove ui-gui. The computer then boots into the shell as before.
+
+Phone interface (mobile, pocket computers)
+  Tiles for Alerts, Messages, Location, Remote, Terminal and Settings; < goes back, o goes home, = opens alerts.
+  It starts by default on a pocket computer when installed; Settings > "Phone mode at boot" changes that.
+
+Text-only tools that work on every screen: ted (editor), fm (file manager), repl (Lua prompt).

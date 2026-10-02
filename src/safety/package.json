@@ -1,0 +1,15 @@
+{
+  "name": "safety",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Safety nets: snapshots of folders (snap: create, compare, restore, export to a floppy) and a recycle bin (trash) that the file managers use",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 22000,
+  "tags": [
+    "tools",
+    "backup"
+  ]
+}

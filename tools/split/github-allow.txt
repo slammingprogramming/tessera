@@ -6,6 +6,7 @@
 README.md
 LICENSE
 docs/
+!docs/api/
 .gitignore
 .gitattributes
 .editorconfig

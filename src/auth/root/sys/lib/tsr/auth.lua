@@ -18,6 +18,10 @@ M.iterations = 200
 M.MIN_PASSWORD = 4
 M.ROOT = "root"      -- pseudo-user used by sudo / elevated sections: unrestricted
 
+--- Files and folders that hold secrets: ordinary users can neither read nor write them.
+M.SECRET_PATHS = { "/etc/tsr/net", "/etc/tsr/webgw.cfg", "/etc/tsr/rsh.allow", "/etc/tsr/fleet.allow", "/etc/tsr/rscreen.allow",
+                   "/etc/tsr/kiosk.cfg", "/var/lib/tsr/pkg/txn.json" }
+
 local db = nil
 local sessions = {}      -- pid -> user name
 local elevated = 0       -- >0 while this module does its own I/O (bypasses the guard)
@@ -262,6 +266,9 @@ function M.pathAllowed(name, path, mode)
   if not u then return false end
   if u.role == "admin" then return true end
   if path == M.dbPath or under(path, M.dbPath .. ".tsr-tmp") then return false end
+  for _, secret in ipairs(M.SECRET_PATHS) do
+    if under(path, secret) then return false end      -- pairing keys, gateway tokens... administrators only
+  end
   if under(path, "/home") and path ~= "/home" then
     if not under(path, u.home) then return false end
     return mode == "r" or u.role ~= "guest"

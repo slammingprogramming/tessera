@@ -1,0 +1,17 @@
+{
+  "name": "media",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Media player: BIMG animations and videos (for example from sanjuuni), NFP pictures and DFPWM audio on terminals, monitors and speakers; play command and a media library listing",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "gfx": ">=0.1.0"
+  },
+  "budget": 22000,
+  "tags": [
+    "media",
+    "audio",
+    "video"
+  ]
+}

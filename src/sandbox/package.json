@@ -1,0 +1,15 @@
+{
+  "name": "sandbox",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Run untrusted Lua programs safely (sandbox: restricted globals, jailed file system, time and memory limits) and keep virtual computers (vm) with their own disk",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 26000,
+  "tags": [
+    "security",
+    "tools"
+  ]
+}

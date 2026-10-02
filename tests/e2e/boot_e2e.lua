@@ -64,6 +64,16 @@ local ok, err = pcall(function()
   text = windowText(K.get(shellProc.pid).win)
   check("stock programs see the /tmp mount", text:find("e2e.txt", 1, true) ~= nil, text)
 
+  -- the service manager brought up the autostart services of the installed packages
+  local svc = require("tsr.svc")
+  local up = {}
+  for _, st in ipairs(svc.list()) do up[st.name] = st.state end
+  check("services start at boot (netd, crond, rulesd)", up.netd == "running" and up.crond == "running" and up.rulesd == "running",
+    textutils.serialize(up))
+  check("services that must be switched on deliberately stay off", up.pkgmirrord == "stopped" and up.kioskd == "stopped" and up.webgwd == "stopped"
+    and up.shopd == "stopped" and up.rscreend == "stopped" and up.fleetd == "stopped", textutils.serialize(up))
+  check("tsh is the session shell", rawget(_G, "tsr") ~= nil and fs.exists("/sys/lib/tsr/shell/repl.lua"))
+
   local src = tsr.sourceInfo()
   check("AGPL source info is available", src.license == "AGPL-3.0-or-later" and type(src.source) == "string")
 end)

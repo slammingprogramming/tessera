@@ -1,0 +1,25 @@
+{
+  "name": "tv",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Smart-TV setup for monitors: a remote-controllable home screen (media, signage, dashboard), digital signage slideshows, kiosk mode, screen mirroring to monitors and a pocket-computer remote",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "media": ">=0.1.0",
+    "ui-gui": ">=0.1.0",
+    "net": ">=0.1.0",
+    "gfx": ">=0.1.0"
+  },
+  "platforms": {
+    "profiles": [
+      "tv"
+    ]
+  },
+  "budget": 40000,
+  "tags": [
+    "interface",
+    "tv",
+    "media"
+  ]
+}

@@ -1,0 +1,19 @@
+Getting started
+Tessera is a small core with everything else delivered as packages, so your computer's disk stays free.
+
+Where things are
+  /sys        the system itself (programs in /sys/bin, libraries in /sys/lib)
+  /usr        installed packages (programs in /usr/bin)
+  /etc/tsr    settings: system.cfg, service definitions, user list
+  /var        logs, caches and state; /tmp is a RAM disk
+
+Your first minutes
+  tsr-setup     the setup wizard: it looks at what is attached and recommends packages
+  pkg search    see what is available;  pkg install <name>  to add something
+  thelp         this manual;  thelp <topic> opens one topic, thelp search <word> finds text
+  gui           start the desktop (needs the ui-gui package and a colour screen)
+
+Good to know
+  * Programs from stock CraftOS keep working: the shell (tsh) runs them unchanged.
+  * Nothing is ever deleted behind your back: files that a package replaces are backed up in /etc/tsr/backup.
+  * Hold R while the computer starts to get the recovery menu. Create the file /etc/tsr/disabled to boot plain CraftOS.

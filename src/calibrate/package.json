@@ -1,0 +1,15 @@
+{
+  "name": "calibrate",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "tsr-calibrate: measures what this particular ComputerCraft setup allows (paste length, dropped-file limits, yield timeout, Lua features, HTTP, disk space) and writes a report to help developers tune Tessera",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 14000,
+  "tags": [
+    "tools",
+    "diagnostics"
+  ]
+}

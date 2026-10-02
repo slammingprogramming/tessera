@@ -1,0 +1,19 @@
+Packages (pkg)
+Everything except the core is a package: apps, drivers, services, even the desktop.
+
+  pkg update               refresh the list of available packages
+  pkg search [text]        browse; tags such as turtle, server, integration help
+  pkg info <name>          description, size, dependencies
+  pkg install <name>...    install with everything it needs (a failed install rolls back)
+  pkg remove <name>        remove (files you changed are kept)
+  pkg upgrade              bring installed packages up to date
+  pkg list                 what is installed
+  pkg verify               check installed files against their checksums
+
+Where packages come from, in order: an offline import, your configured sources (web, LAN mirror) and the Pastebin backup.
+No internet on your server? Install the pkg-mirror package on one computer that has it, run
+`pkgmirror prefetch`, and add that computer as a source on the others with `pkgmirror add <name>`.
+No HTTP at all? Build an offline bundle on a PC (tools/build/bundle.mjs), copy it in as a file or paste it into the
+computer when asked, and `pkg` installs from it.
+
+Every file is checked against its SHA-256 before it is written.

@@ -1,0 +1,10 @@
+About Tessera
+Tessera is free software, licensed under the GNU Affero General Public License v3 or later. If you run a modified
+version for other people over a network you must offer them the matching source; `tsr.sourceInfo()` tells where the
+original source lives. No telemetry: nothing is ever sent anywhere unless you set it up.
+
+Design principles: a small core; everything else is a package that you choose; every install is checked and reversible;
+the stock CraftOS keeps working underneath; security claims are stated honestly (see the users topic).
+
+Made for CC: Tweaked. Mod integrations use the peripheral names documented by each mod; where those are unverified the
+manual says so.

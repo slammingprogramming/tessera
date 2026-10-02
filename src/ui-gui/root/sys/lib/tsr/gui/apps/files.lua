@@ -66,6 +66,8 @@ end
 
 function M.delete(path)
   if path == "/" or path == "/rom" or path:sub(1, 5) == "/rom/" then return nil, "this cannot be deleted" end
+  local okTrash, trash = pcall(require, "tsr.trash")      -- the safety package's recycle bin, when installed
+  if okTrash then return trash.discard(path) end
   local ok, err = pcall(fs.delete, path)
   if not ok then return nil, tostring(err) end
   return true

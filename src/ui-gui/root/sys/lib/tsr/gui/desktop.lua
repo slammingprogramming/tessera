@@ -207,7 +207,7 @@ function Desktop:event(name, a, b, c)
       end
       return true
     end
-  elseif name == "key" and a == keys.escape and self.menuOpen then
+  elseif name == "key" and require("tsr.util").isEscape(a) and self.menuOpen then
     self:setMenu(false)
     return true
   end

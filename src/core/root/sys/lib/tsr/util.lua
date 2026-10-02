@@ -72,6 +72,12 @@ function M.freeSpace(path)
   return type(f) == "number" and f or math.huge
 end
 
+--- Is this key code the Escape key? CC's `keys` table has no entry for it in older versions (the key code is 1 there, 256 in
+--- versions that use GLFW codes), so compare against the raw codes as well as a possible `keys.escape`.
+function M.isEscape(code)
+  return code == 1 or code == 256 or (keys.escape ~= nil and code == keys.escape)
+end
+
 --- Timestamp used in logs, e.g. "2026-09-29 12:34:56".
 function M.timestamp()
   local ok, s = pcall(os.date, "%Y-%m-%d %H:%M:%S")

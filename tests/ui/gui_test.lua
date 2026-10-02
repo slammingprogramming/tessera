@@ -413,7 +413,7 @@ test("the desktop launches apps from the start menu and shows a taskbar", functi
   ok(not win.minimized)
   -- the menu closes with escape or an outside click
   d:setMenu(true)
-  d:event("key", keys.escape)
+  d:event("key", 1)
   ok(not d.menuOpen)
   -- exit actions
   d:setMenu(true)

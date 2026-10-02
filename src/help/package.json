@@ -1,0 +1,15 @@
+{
+  "name": "help",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Built-in manuals (thelp) and a first-run tour (tsr-tour) for Tessera",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "ui-tui": ">=0.1.0"
+  },
+  "budget": 40000,
+  "tags": [
+    "documentation"
+  ]
+}

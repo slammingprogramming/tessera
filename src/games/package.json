@@ -1,0 +1,14 @@
+{
+  "name": "games",
+  "version": "0.1.0",
+  "type": "app",
+  "description": "Small games for any computer: snake, 2048 and minesweeper, with saved high scores",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 22000,
+  "tags": [
+    "games"
+  ]
+}

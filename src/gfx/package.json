@@ -1,0 +1,18 @@
+{
+  "name": "gfx",
+  "version": "0.1.0",
+  "type": "lib",
+  "description": "Graphics for terminals: a sub-pixel canvas (2x3 pixels per character) with lines, shapes, text and big fonts, image formats NFP and BIMG, colour palettes, and the banner, imgview and palette commands",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:gfx"
+  ],
+  "budget": 30000,
+  "tags": [
+    "library",
+    "graphics"
+  ]
+}

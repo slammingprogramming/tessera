@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tessera offline bundle builder</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --dim:#5b6470; --card:#f3f5f8; --accent:#2457c5; --line:#d5dbe3; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12151a; --fg:#e8ecf1; --dim:#9aa5b1; --card:#1b2028; --accent:#7fa6ff; --line:#2d3540; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:52rem; margin:0 auto; padding:1.5rem 16px 4rem; }
+  h1 { font-size:1.8rem; margin:.2rem 0; }
+  p.lead { color:var(--dim); margin-top:0; }
+  input[type=search] { width:100%; box-sizing:border-box; padding:.6rem .8rem; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font:inherit; }
+  ul { list-style:none; padding:0; margin:.8rem 0; max-height:22rem; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+  li { padding:.45rem .8rem; border-bottom:1px solid var(--line); display:flex; gap:.6rem; align-items:flex-start; }
+  li:last-child { border-bottom:0; }
+  li small { color:var(--dim); display:block; }
+  .row { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin:.8rem 0; }
+  button { padding:.55rem 1rem; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; font:inherit; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--accent); }
+  button:disabled { opacity:.5; cursor:default; }
+  textarea { width:100%; height:12rem; box-sizing:border-box; font:13px/1.3 ui-monospace, monospace; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:.6rem; }
+  .status { color:var(--dim); min-height:1.5em; }
+  .warn { color:#b44; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Offline bundle builder</h1>
+  <p class="lead">Pick packages; their dependencies are added automatically. The bundle is built in your browser and never leaves it.
+  Use the file for drag-and-drop into the game, or paste the numbered lines into the computer when the installer asks.</p>
+
+  <input id="filter" type="search" placeholder="Search packages..." autocomplete="off">
+  <ul id="list"><li>Loading the package list...</li></ul>
+
+  <div class="row">
+    <button id="build" disabled>Build bundle</button>
+    <button id="all" class="secondary">Select everything</button>
+    <button id="none" class="secondary">Clear</button>
+    <label>Chunk size <input id="chunk" type="number" value="400" min="100" max="2000" step="50" style="width:5.5rem"></label>
+  </div>
+  <div id="status" class="status"></div>
+
+  <div id="out" hidden>
+    <div class="row">
+      <a id="download" download="tessera.tsrbundle"><button type="button">Download .tsrbundle</button></a>
+      <button id="copy" class="secondary" type="button">Copy the lines</button>
+      <a id="downloadTxt" download="tessera.txt"><button type="button" class="secondary">Download the lines</button></a>
+    </div>
+    <textarea id="lines" readonly spellcheck="false"></textarea>
+    <p class="status">Paste the lines in any order, one at a time (Ctrl+V). A damaged line is rejected and can be pasted again.</p>
+  </div>
+</main>
+<script type="module">
+import { assemble, toFile, toChunks } from './bundler.js';
+
+const $ = (id) => document.getElementById(id);
+const fetchBytes = async (url) => {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  return new Uint8Array(await r.arrayBuffer());
+};
+let index = null, docs = {};
+const selected = new Set();
+
+function render() {
+  const q = $('filter').value.trim().toLowerCase();
+  const list = $('list');
+  list.textContent = '';
+  const names = Object.keys(index.packages).sort();
+  for (const n of names) {
+    const p = index.packages[n];
+    if (q && !(n.includes(q) || (p.description ?? '').toLowerCase().includes(q) || (p.tags ?? []).some((t) => t.includes(q)))) continue;
+    const li = document.createElement('li');
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.checked = selected.has(n);
+    box.addEventListener('change', () => { box.checked ? selected.add(n) : selected.delete(n); $('build').disabled = selected.size === 0; });
+    const text = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = `${n} ${p.version}`;
+    const desc = document.createElement('small');
+    desc.textContent = `${p.description ?? ''} (${Math.round((p.size ?? 0) / 1024 * 10) / 10} KB)`;
+    text.append(title, desc);
+    li.append(box, text);
+    list.append(li);
+  }
+}
+
+async function load() {
+  try {
+    index = await (await fetch('registry/index.json')).json();
+    render();
+  } catch (e) {
+    $('list').innerHTML = '';
+    const li = document.createElement('li');
+    li.className = 'warn';
+    li.textContent = `Could not load the registry: ${e.message}. Open this page from the Tessera site.`;
+    $('list').append(li);
+  }
+}
+
+$('filter').addEventListener('input', render);
+$('all').addEventListener('click', () => { Object.keys(index.packages).forEach((n) => selected.add(n)); $('build').disabled = false; render(); });
+$('none').addEventListener('click', () => { selected.clear(); $('build').disabled = true; render(); });
+
+$('build').addEventListener('click', async () => {
+  const status = $('status');
+  $('build').disabled = true;
+  $('out').hidden = true;
+  try {
+    status.textContent = 'Reading package descriptions...';
+    // the dependency closure needs every document along the way
+    const pending = [...selected];
+    while (pending.length) {
+      const n = pending.pop();
+      if (docs[n]) continue;
+      docs[n] = await (await fetch(`registry/packages/${n}.json`)).json();
+      for (const dep of Object.keys(docs[n].versions[docs[n].latest].requires ?? {})) if (index.packages[dep]) pending.push(dep);
+    }
+    const { container, names, size } = await assemble([...selected], { index, docs, fetchBytes, progress: (d, t) => { status.textContent = `Downloading files ${d}/${t}...`; } });
+    status.textContent = 'Compressing...';
+    const file = await toFile(container);
+    const chunkSize = Math.max(100, Math.min(2000, Number($('chunk').value) || 400));
+    const chunks = await toChunks(container, chunkSize);
+    const url = URL.createObjectURL(new Blob([file], { type: 'application/octet-stream' }));
+    $('download').href = url;
+    $('lines').value = chunks.lines.join('\n') + '\n';
+    $('downloadTxt').href = URL.createObjectURL(new Blob([$('lines').value], { type: 'text/plain' }));
+    $('out').hidden = false;
+    status.textContent = `${names.length} packages, ${Math.round(size / 1024)} KB, ${Math.round(file.length / 1024)} KB compressed, ${chunks.lines.length} paste lines.`;
+  } catch (e) {
+    status.textContent = `Failed: ${e.message}`;
+    status.classList.add('warn');
+  } finally {
+    $('build').disabled = selected.size === 0;
+  }
+});
+
+$('copy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('lines').value);
+  $('status').textContent = 'Copied.';
+});
+
+load();
+</script>
+</body>
+</html>

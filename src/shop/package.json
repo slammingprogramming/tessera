@@ -1,0 +1,16 @@
+{
+  "name": "shop",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "A vending shop: players drop currency into a chest and tap an item on a monitor (or press a key) to receive goods from your stock chests; sales are logged, refunds are one tap",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0"
+  },
+  "budget": 18000,
+  "tags": [
+    "shop",
+    "server",
+    "inventory"
+  ]
+}

@@ -1,0 +1,28 @@
+The shell (tsh)
+tsh is the default shell. It understands what the stock shell does, plus:
+
+  Pipes and redirects
+    list | grep lua          output of one program becomes the input of the next
+    echo hi > file           write;   echo more >> file   append;   sort < file   read input from a file
+
+  Combining commands
+    make && deploy           the second runs only if the first succeeded
+    try || fallback          the second runs only if the first failed
+    one; two                 one after the other
+
+  Variables, substitution, math
+    NAME=world; echo "hello $NAME"      ${NAME:-default}    $?   the last status
+    echo "today is $(date)"             run a command and use its output
+    echo $((2 + 3 * 4))                 integer arithmetic
+
+  Wildcards: ls *.lua   ~ is your home folder
+
+  Scripts: files ending in .tsh. Arguments are $1, $2, ... $@ and $#.
+    if test -f config; then ... elif ...; else ...; fi
+    for name in a b c; do echo $name; done
+    while read line; do echo "[$line]"; done < file
+
+  Built in: cd pwd alias unalias export unset set echo printf history source eval type which read shift sleep expr test [ ]
+
+Keys at the prompt: Up/Down history, Tab completion (programs, folders, many commands' arguments).
+Startup: /etc/tsr/profile.tsh and ~/.tshrc run when a session starts.

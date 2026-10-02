@@ -1,0 +1,18 @@
+Services (svc)
+A service is a program that runs in the background and is restarted if it crashes (package svc-manager).
+
+  svc                      list services: running, stopped, backoff (restarting) or failed
+  svc status <name>        details, last error
+  svc start|stop|restart <name>
+  svc enable|disable <name>   start at boot, or not
+  svc log <name>           recent log lines about it
+
+Packages install service definitions into /etc/tsr/services.d. A definition says what to run, whether to start at boot,
+what it needs first and how to restart it. A service that keeps dying is marked failed instead of looping forever.
+
+Roles bundle packages and services for a purpose:
+  role list                mirror, file-server, shell-host, monitor, log-collector, ...
+  role apply <name>        install what is missing and switch the services on
+  role remove <name>       switch them off again
+
+Scheduled jobs: crontab add every 10m <command> (package ops). Metrics: metrics [computer].
