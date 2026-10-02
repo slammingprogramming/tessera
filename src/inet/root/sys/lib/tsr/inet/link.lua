@@ -59,7 +59,7 @@ end
 function M.detach(name)
   for i, d in ipairs(M.drivers) do
     if d.iface.name == name then
-      pcall(d.modem.close, d.channel)
+      if d.modem then pcall(d.modem.close, d.channel) end
       table.remove(M.drivers, i)
       return true
     end
@@ -73,13 +73,28 @@ function M.deriveKey(secret)
   return kdf.hkdf(secret, "tessera-link", "frame-key", 32)
 end
 
+--- Register a handler for everything a modem receives (used by Wi-Fi, which listens on several channels and speaks its own frame format).
+--- fn(ev) gets every modem_message event of that peripheral. Returns the driver record; M.detach(name) removes it by the name field.
+function M.addHandler(stack, peripheralName, fn, name)
+  local d = { name = peripheralName, stack = stack, handler = fn, iface = { name = name or ("handler:" .. peripheralName) }, modem = nil }
+  M.drivers[#M.drivers + 1] = d
+  return d
+end
+
 --- Feed a modem_message event ({ "modem_message", side, channel, replyChannel, message, distance }) to the right interface.
-function M.dispatch(ev)
+--- With `stack`, only the drivers of that stack are considered (tests run several computers in one Lua state).
+function M.dispatch(ev, stack)
   local side, channel, message = ev[2], ev[3], ev[5]
-  if type(message) ~= "string" then return false end
   local handled = false
   for _, d in ipairs(M.drivers) do
-    if d.name == side and d.channel == channel then
+    if d.handler and d.name == side and (not stack or d.stack == stack) then
+      d.handler(ev)
+      handled = true
+    end
+  end
+  if type(message) ~= "string" then return handled end
+  for _, d in ipairs(M.drivers) do
+    if not d.handler and d.name == side and d.channel == channel and (not stack or d.stack == stack) then
       local frame = message
       if d.key then frame = M.unseal(d, message) end
       if frame then

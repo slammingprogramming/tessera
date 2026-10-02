@@ -51,6 +51,18 @@ function M.client()
   end
 end
 
+--- Relay service: /etc/tsr/inet/dhcprelay.lua = { interfaces = { "eth0" }, servers = { "10.0.0.1" } }.
+function M.relayMain()
+  local stack = waitForStack()
+  local text = vfs.readFile("/etc/tsr/inet/dhcprelay.lua")
+  if not text then log.warn("%s", "no /etc/tsr/inet/dhcprelay.lua") return end
+  local chunk, err = load(text, "=dhcprelay.lua", "t", {})
+  local cfg = chunk and select(2, pcall(chunk))
+  if type(cfg) ~= "table" then log.error("%s", "dhcprelay.lua: " .. tostring(err or cfg)) return end
+  M.relay = require("tsr.dhcp.relay").new(stack, cfg)
+  M.relay:run()
+end
+
 --- Server service.
 function M.serverMain()
   local stack = waitForStack()

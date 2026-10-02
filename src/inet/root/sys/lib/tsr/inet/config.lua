@@ -111,6 +111,13 @@ function M.apply(stack, cfg)
   for _, name in ipairs(names) do
     local spec = cfg.interfaces[name]
     if spec.vlan then vlans[#vlans + 1] = name
+    elseif spec.wifi then
+      local okWifi, wifi = pcall(require, "tsr.inet.wifi")
+      if not okWifi then problems[#problems + 1] = name .. ": the wifi package is not installed"
+      elseif not stack.ifaces[name] then
+        local sta, err = wifi.attachStation(stack, name, spec)
+        if not sta then problems[#problems + 1] = name .. ": " .. tostring(err) end
+      end
     elseif spec.modem then
       if not stack.ifaces[name] then
         local iface, err = link.attachModem(stack, { name = name, peripheral = spec.modem, channel = spec.channel, mtu = spec.mtu, key = spec.key, mac = spec.mac and B.mac(spec.mac) })

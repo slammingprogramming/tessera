@@ -1,0 +1,21 @@
+{
+  "name": "wifi",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Wi-Fi: access points and client interfaces over wireless modems, with scanning, WPA2-style encryption (passphrase, four-way handshake), MAC filtering, client isolation, VLANs per network name and roaming",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "inet-switch": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:wifi"
+  ],
+  "budget": 50000,
+  "tags": [
+    "network"
+  ]
+}

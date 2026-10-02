@@ -165,7 +165,7 @@ end)
 local function fakeModem(sim, seg, name, channels)
   local modem = { channelsOpen = {} }
   local port
-  port = sim:port(seg, function(msg) link.dispatch({ "modem_message", name, modem.lastChannel or 7101, 7101, msg, 0 }) end)
+  port = sim:port(seg, function(msg) link.dispatch({ "modem_message", name, modem.lastChannel or 7101, 7101, msg, 0 }, modem.stack) end)
   function modem.isWireless() return false end
   function modem.open(ch) modem.channelsOpen[ch] = true modem.lastChannel = ch end
   function modem.close(ch) modem.channelsOpen[ch] = nil end
@@ -179,6 +179,7 @@ test("modem link: frames over fake modems, with and without link encryption", fu
   local a, b = sim:host("a"), sim:host("b")
   local evil = sim:host("evil")
   local ma, mb, me = fakeModem(sim, air, "mA", 1), fakeModem(sim, air, "mB", 1), fakeModem(sim, air, "mE", 1)
+  ma.stack, mb.stack, me.stack = a, b, evil
   local ia = assert(link.attachModem(a, { name = "eth0", peripheral = "mA", modem = ma, channel = 7101, key = "secret passphrase" }))
   local ib = assert(link.attachModem(b, { name = "eth0", peripheral = "mB", modem = mb, channel = 7101, key = "secret passphrase" }))
   local ie = assert(link.attachModem(evil, { name = "eth0", peripheral = "mE", modem = me, channel = 7101, key = "wrong passphrase" }))

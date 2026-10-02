@@ -1,0 +1,19 @@
+{
+  "name": "inet-route",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Dynamic routing for routers: RIP version 2 (RFC 2453) with split horizon, poison reverse, triggered updates and authentication; routectl",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:inet-route"
+  ],
+  "budget": 50000,
+  "tags": [
+    "network"
+  ]
+}

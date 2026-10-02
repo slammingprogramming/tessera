@@ -50,7 +50,7 @@ function M.new(opts)
     protocols = {},
     hooks = { prerouting = {}, input = {}, forward = {}, output = {}, postrouting = {} },
     forwarding = opts.forwarding or false,
-    taps = {},
+    taps = {}, groups = {},
     deferred = {}, depth = 0,
     timers = {}, timerId = 0,
     etherHandlers = {},
@@ -229,6 +229,10 @@ function Stack:setUp(name, up)
   for _, vl in pairs(iface.vlans) do self:setUp(vl.name, up) end
 end
 
+--- Receive packets sent to the multicast group `ip` (e.g. 224.0.0.9 for RIP).
+function Stack:joinGroup(ip) self.groups[B.ip(ip)] = true end
+function Stack:leaveGroup(ip) self.groups[B.ip(ip)] = nil end
+
 --- Is `ip` one of our own addresses?
 function Stack:isLocal(ip)
   if B.isLoopback(ip) then return true end
@@ -360,6 +364,18 @@ function Stack:transmit(iface, dstMac, ethType, payload)
   if not out.send then return false, "no driver" end
   local ok, err = pcall(out.send, frame)
   if not ok then out.stats.txErrors = out.stats.txErrors + 1 return false, err end
+  return true
+end
+
+--- Send a complete frame out of an interface unchanged (bridges, switches and Wi-Fi use this; captures and counters still see it).
+function Stack:txRaw(iface, frame)
+  if not iface.up then return false end
+  tap(self, "tx", iface, frame)
+  iface.stats.txPackets = iface.stats.txPackets + 1
+  iface.stats.txBytes = iface.stats.txBytes + #frame
+  if not iface.send then return false end
+  local ok, err = pcall(iface.send, frame)
+  if not ok then iface.stats.txErrors = iface.stats.txErrors + 1 return false, err end
   return true
 end
 
@@ -564,7 +580,7 @@ function Stack:ipSend(args)
     if self:isLocal(dst) then
       pkt.src = pkt.src or dst
       local lo = self.ifaces.lo
-      if not runHooks(self, "output", pkt, { iface = lo }) then return nil, "filtered" end
+      if not runHooks(self, "output", pkt, { iface = lo, out = lo }) then return nil, "filtered" end
       local raw = pkt.raw or W.ipEncode(pkt)
       pkt.raw = nil
       count(self, "ip", "outPackets")
@@ -603,8 +619,8 @@ function Stack:ipSend(args)
     end
     if not pkt.src then return nil, "no source address" end
     if B.isMulticast(dst) then broadcast = true end
-    if not runHooks(self, "output", pkt, { iface = iface }) then return nil, "filtered" end
-    if not runHooks(self, "postrouting", pkt, { iface = iface }) then return nil, "filtered" end
+    if not runHooks(self, "output", pkt, { iface = iface, out = iface }) then return nil, "filtered" end
+    if not runHooks(self, "postrouting", pkt, { iface = iface, out = iface }) then return nil, "filtered" end
     local ok, err = emit(self, iface, nexthop, pkt, broadcast)
     if not ok then return nil, err end
     return true
@@ -725,7 +741,7 @@ function Stack:ipInput(iface, bytes)
   pkt.raw = nil
   if not runHooks(self, "prerouting", pkt, { iface = iface }) then return end
   local localDst = self:isLocal(pkt.dst) or self:isBroadcastFor(iface, pkt.dst) or pkt.dst == B.BROADCAST
-    or (B.isMulticast(pkt.dst) and pkt.dst == 3758096385)           -- 224.0.0.1, all hosts
+    or (B.isMulticast(pkt.dst) and (pkt.dst == 3758096385 or self.groups[pkt.dst]))           -- 224.0.0.1 (all hosts) and the groups joined
   -- a host that has no address yet (DHCP) still accepts broadcast and anything sent to its MAC
   if not localDst and #iface.addrs == 0 and iface.acceptAny then localDst = true end
   if not localDst then return forward(self, iface, pkt) end

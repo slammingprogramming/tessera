@@ -110,6 +110,41 @@ end
 -- Time and threads
 ---------------------------------------------------------------------------------------------------------------------
 
+---------------------------------------------------------------------------------------------------------------------
+-- Radio: modems that hear each other when they are in range and have the channel open (like CC wireless modems)
+---------------------------------------------------------------------------------------------------------------------
+
+--- opts: range (blocks, 64), latency (0.01), loss.
+function Sim:air(opts)
+  opts = opts or {}
+  local sim = self
+  local air = { modems = {}, range = opts.range or 64, latency = opts.latency or 0.01, loss = opts.loss or 0, sim = self, sent = 0 }
+  --- A wireless modem for `stack` at position pos = { x, y, z }; its peripheral name is `name`.
+  function air:modem(name, stack, pos)
+    local m = { name = name, stack = stack, opened = {}, pos = pos or { 0, 0, 0 }, wireless = true }
+    function m.isWireless() return true end
+    function m.open(ch) m.opened[ch] = true end
+    function m.close(ch) m.opened[ch] = nil end
+    function m.isOpen(ch) return m.opened[ch] == true end
+    function m.transmit(ch, reply, msg)
+      air.sent = air.sent + 1
+      for _, other in ipairs(air.modems) do
+        if other ~= m and other.opened[ch] and not other.off and not m.off then
+          local dx, dy, dz = m.pos[1] - other.pos[1], m.pos[2] - other.pos[2], m.pos[3] - other.pos[3]
+          local d = math.sqrt(dx * dx + dy * dy + dz * dz)
+          if d <= air.range and not (air.loss > 0 and sim:rand() < air.loss) then
+            local ev = { "modem_message", other.name, ch, reply, msg, d }
+            sim.queue[#sim.queue + 1] = { at = sim.now + air.latency, n = #sim.queue, fn = function() require("tsr.inet.link").dispatch(ev, other.stack) end }
+          end
+        end
+      end
+    end
+    air.modems[#air.modems + 1] = m
+    return m
+  end
+  return air
+end
+
 --- Run fn(...) as a cooperative thread: it may call blocking socket functions, which suspend it while the simulation advances.
 function Sim:spawn(fn, ...)
   local co = coroutine.create(fn)
@@ -141,7 +176,7 @@ function Sim:advance()
     table.sort(due, function(a, b) if a.at ~= b.at then return a.at < b.at end return a.n < b.n end)
     for _, f in ipairs(due) do
       self.delivered = self.delivered + 1
-      if not f.port.down then f.port.onFrame(f.frame) end
+      if f.fn then f.fn() elseif not f.port.down then f.port.onFrame(f.frame) end
     end
   end
   for _, s in ipairs(self.stacks) do s:tick() end
@@ -189,12 +224,12 @@ function Sim:finish(limit)
   local stop = self.now + (limit or 60)
   while self.now < stop do
     local pending = false
-    for _, t in ipairs(self.threadList or {}) do if not t.done then pending = true end end
+    for _, t in ipairs(self.threadList or {}) do if not t.done and not t.daemon then pending = true end end
     if not pending then break end
     self:advance()
   end
   if self.errors then error(self.errors[1], 0) end
-  for _, t in ipairs(self.threadList or {}) do if not t.done then error(t.name .. " did not finish in " .. (limit or 60) .. " simulated seconds", 0) end end
+  for _, t in ipairs(self.threadList or {}) do if not t.done and not t.daemon then error(t.name .. " did not finish in " .. (limit or 60) .. " simulated seconds", 0) end end
 end
 
 return Sim

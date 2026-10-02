@@ -1,0 +1,20 @@
+{
+  "name": "inet-fw",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Stateful packet filter, connection tracking and NAT in the manner of iptables: allow/drop/reject by address, port, interface and connection state, rate limits, masquerading, port forwarding",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:inet-fw"
+  ],
+  "budget": 60000,
+  "tags": [
+    "network",
+    "security"
+  ]
+}
