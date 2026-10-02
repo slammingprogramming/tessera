@@ -5,7 +5,7 @@
 --   ntp status                                how this computer's clock is doing (source, stratum, offset, zone)
 --   ntp sync [--force]                        synchronise now          ntp auto   leave manual mode
 --   ntp set <time>                            set the clock by hand    ntp tz [zone]   show / set the time zone
---   ntp servers | add peer <host> | add http [url [json|header]] | add local | remove <n> | up <n>
+--   ntp servers | add peer <host> | add udp <host> | add http [url [json|header]] | add local | remove <n> | up <n>
 --   ntp serve on|off [--closed]               make this computer a time server for others (--closed: paired computers only)
 --   ntpdate <server>                          ask a time server and show the offset without changing the clock
 local ntp = require("tsr.ntp")
@@ -35,6 +35,7 @@ local function fmtMs(ms) return ("%+.0f ms"):format(ms) end
 
 local function sourceText(src)
   if src.type == "peer" then return "peer " .. tostring(src.host) .. (src.auth == false and " (plain)" or "") end
+  if src.type == "udp" then return "ntp " .. tostring(src.host) .. " (UDP 123)" end
   if src.type == "http" then return ("http %s (%s)"):format(tostring(src.url), tostring(src.kind or "header")) end
   return "local clock"
 end
@@ -153,8 +154,9 @@ function M.ntp(args, io, node)
     elseif kind == "http" then
       if words[3] then c.servers[#c.servers + 1] = { type = "http", url = words[3], kind = words[4] or "header" }
       else for _, d in ipairs(web.DEFAULTS) do c.servers[#c.servers + 1] = { type = d.type, kind = d.kind, url = d.url } end end
+    elseif kind == "udp" and words[3] then c.servers[#c.servers + 1] = { type = "udp", host = words[3] }
     elseif kind == "local" then c.servers[#c.servers + 1] = { type = "local" }
-    else io.err("usage: ntp add peer <host> | add http [url [json|header]] | add local") return false end
+    else io.err("usage: ntp add peer <host> | add udp <host> | add http [url [json|header]] | add local") return false end
     ntp.saveConfig(c)
     return servers(io)
   elseif sub == "remove" or sub == "up" then

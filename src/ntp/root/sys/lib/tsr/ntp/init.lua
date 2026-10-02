@@ -4,6 +4,7 @@
 -- Where a computer gets its time (config /etc/tsr/ntp.cfg, tried in order, the first source that answers wins):
 --   { type = "local" }                          the host's own clock (the game server's UTC): offset 0, stratum 1     (the default)
 --   { type = "peer", host = "ntp1" }            an in-game time server (a computer running `ntp serve on`), see tsr.ntp.proto
+--   { type = "udp", host = "ntp.lan" }          an NTP server on the in-game IP network (UDP 123, package inet), see tsr.ntp.udp
 --   { type = "http", kind = "json"|"header", url = "https://..." }   real-world UTC from the web (opt-in, read-only, see tsr.ntp.web)
 -- or by hand: `ntp set <time>` makes this computer's clock whatever you say (a manual setting is also what in-game time servers can
 -- hand out, e.g. for a role-play calendar) until `ntp auto`.
@@ -56,6 +57,16 @@ function M.sampleSource(src, opts)
       node = net.default()
     end
     local s, err = proto.measure(node, src.host, { clock = opts.clock or time.clock, auth = src.auth, samples = src.samples or 4, timeout = opts.timeout })
+    if not s then return nil, err end
+    s.stratum = s.stratum + 1
+    return s
+  elseif src.type == "udp" then
+    -- real NTPv4 over UDP 123 on the in-game IP network (package inet)
+    local okI, socket = pcall(require, "tsr.inet.socket")
+    if not okI then return nil, "the inet package is not installed" end
+    local okS, stack = pcall(socket.default)
+    if not okS then return nil, "the network stack is not running" end
+    local s, err = require("tsr.ntp.udp").measure(stack, src.host, { clock = opts.clock or time.clock, samples = src.samples or 3, timeout = opts.timeout })
     if not s then return nil, err end
     s.stratum = s.stratum + 1
     return s
@@ -123,6 +134,22 @@ function M.daemon()
     local ok, net = pcall(require, "tsr.net")
     if ok then M.serve(net.default()) log.info("serving time to the network") end
   end
+  if c.serveUdp then
+    -- also answer NTP queries on the IP network (UDP 123)
+    local okI, socket = pcall(require, "tsr.inet.socket")
+    if okI then
+      local okS, stack = pcall(socket.default)
+      if okS then
+        local server = require("tsr.ntp.udp").server(stack, { clock = time.now, stratum = function() return (M.identity()) end, refid = function() return select(2, M.identity()) end, allow = c.allow })
+        log.info("serving time on UDP 123")
+        return parallel.waitForAny(server.run, function() M.pollLoop(c) end)
+      end
+    end
+  end
+  M.pollLoop(c)
+end
+
+function M.pollLoop(c)
   local interval = c.poll
   while true do
     c = M.config()

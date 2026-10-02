@@ -1,0 +1,19 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "The in-game web: an HTTP/1.1 server (files, virtual hosts, password areas, Lua handlers, rate limits), an HTTP client (fetch), and a text browser (www) that renders HTML; for information pages, kiosks, APIs",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:web"
+  ],
+  "budget": 70000,
+  "tags": [
+    "network"
+  ]
+}

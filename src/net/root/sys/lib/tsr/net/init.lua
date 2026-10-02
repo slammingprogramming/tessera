@@ -67,13 +67,26 @@ end
 -- Nodes
 ---------------------------------------------------------------------------------------------------------------------
 
+--- The transport nodes use unless told otherwise: rednet, or the IP network (package inet) when the setting net.transport is "ip" and the stack is running.
+function M.defaultTransport()
+  local okC, config = pcall(require, "tsr.config")
+  if okC and config.get and config.get("net.transport", "rednet") == "ip" then
+    local okB, bridge = pcall(require, "tsr.inet.nodebridge")
+    if okB then
+      local okT, t = pcall(bridge.transport)
+      if okT and t then return t end
+    end
+  end
+  return M.rednetTransport()
+end
+
 --- Create a node. opts: id, hostname, transport, peersPath (default /etc/tsr/net/peers.db).
 function M.node(opts)
   opts = opts or {}
   local self = setmetatable({
     id = opts.id or os.getComputerID(),
     hostname = opts.hostname,
-    transport = opts.transport or M.rednetTransport(),
+    transport = opts.transport or M.defaultTransport(),
     peersPath = opts.peersPath or "/etc/tsr/net/peers.db",
     services = {},
     handlers = {},

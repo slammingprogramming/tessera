@@ -1,0 +1,21 @@
+{
+  "name": "bgp",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "BGP-4 (RFC 4271) for interconnecting networks: autonomous systems, sessions over TCP, customer/peer/provider policy, prefix filters, limits, communities, origin validation (ROAs); the way players build and peer an internet of their own",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "inet-route": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:bgp"
+  ],
+  "budget": 50000,
+  "tags": [
+    "network"
+  ]
+}
