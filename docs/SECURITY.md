@@ -75,4 +75,14 @@ mode shows that radio is public: anyone with a modem in range can read plain mes
 
 ## Reporting problems
 
-Open an issue (or contact the maintainer privately for anything that could harm other players' servers).
+**Security and vulnerability reports: please do not open a public issue.** Contact the maintainer privately on
+[SimpleX Chat](https://smp14.simplex.im/a#3gZ-zeHs4QrFZKLAN0o3SC_XQJXhj1eYBVTO_c0FAtg), which is the preferred private channel
+(end-to-end encrypted, no account or phone number needed). Please include:
+
+- what is affected (package and version, or the command) and what an attacker could do with it,
+- steps to reproduce, ideally in CraftOS-PC or on a test world,
+- whether you have told anyone else, and whether you want to be credited.
+
+Anything that could harm other players' servers (remote code execution, bypassing `auth`, forging signed registries, leaking keys)
+should be reported this way and kept private until a fix is available. Ordinary bugs, questions and feature requests are welcome as
+public issues.
