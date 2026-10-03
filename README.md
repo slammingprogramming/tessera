@@ -28,4 +28,11 @@ been smoke-tested in real Minecraft yet.
 - [Real-world tools in the game](docs/REALWORLD.md) (time sync, ssh, pgp, torrent, firewall, DNS, encrypted folders, tar/diff) · [Security model](docs/SECURITY.md)
 - [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Research notes](docs/RESEARCH.md)
 
+## Contact
+
+- **Bugs, questions, ideas:** open an issue.
+- **Private contact, and all security or vulnerability reports:** [SimpleX Chat](https://smp14.simplex.im/a#3gZ-zeHs4QrFZKLAN0o3SC_XQJXhj1eYBVTO_c0FAtg)
+  — end-to-end encrypted, no account needed. Please do not report vulnerabilities in public issues; see the
+  [security model](docs/SECURITY.md#reporting-problems).
+
 Not affiliated with CC: Tweaked, Mojang or Microsoft.
