@@ -12,7 +12,7 @@
 --     recursion = true,                       -- answer recursive queries (for the networks below)
 --     allowRecursion = { "10.0.0.0/8" },      -- default: the networks this server is connected to
 --     roots = { "10.0.0.1" },                 -- root hints: where to start iterating
---     forwarders = {},                        -- or: ask these resolvers instead of iterating
+--     forwarders = {},                        -- or: ask these resolvers instead of iterating ("upstream" = the DNS servers learned by DHCP)
 --   }
 local B = require("tsr.inet.bytes")
 local socket = require("tsr.inet.socket")

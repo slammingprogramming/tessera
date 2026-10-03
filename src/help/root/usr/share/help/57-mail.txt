@@ -1,0 +1,22 @@
+Mail (mail, mail-spam, av, tls)
+Mail between players: SMTP and POP3 servers, a mail program, spam and virus protection. Inside the game only.
+
+Reading and writing
+  mail account set address=you@example.lan server=10.0.0.25 user=you     (once)
+  mail fetch                     download new mail                mail           interactive prompt (help, list, read 2, reply 2 ...)
+  mail list | read <n> | send <to> -s "subject" [-a file] | reply <n> | delete <n> | spam <n>
+
+Running a mail server (installer use case "Mail server", or by hand)
+  mailctl init mail.example.lan example.lan        write /etc/tsr/mail/mail.lua
+  mailctl user add alice                           mailctl alias add team alice bob     mailctl domain add other.lan
+  mailctl dns                                      the DNS records the domain needs (MX, SPF, DMARC, DKIM)
+  mailctl queue | mailctl queue flush              mail waiting to be delivered
+  svc start maild                                  SMTP (25, 587), POP3 (110); with a tlsctl certificate also 465 and 995
+
+Spam and viruses
+  mailctl spam test <file>      how a message would be judged         mailctl spam learn spam|ham <file>     teach the learning filter
+  mailctl spam allow add x.lan  mailctl spam deny add y.lan           mailctl dkim key mail1                 make a signing key
+  av scan <path> [--quarantine]    look for harmful scripts           av update <url|path>                   signed definition updates
+  Mail with malware is refused, doubtful mail goes to the Spam folder, and your users cannot send malware out.
+
+More: docs/MAIL.md in the project documentation.

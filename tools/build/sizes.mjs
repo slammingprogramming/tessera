@@ -13,7 +13,7 @@ const FLOPPY = 125_000;
 const LIMITS = {
   installer: 48_000,                 // install.lua alone (it carries the Ed25519 verifier)
   floppyKit: 100_000,                // install.lua + the offline bundle of core + pkg (compressed)
-  baseInstalled: 235_000,            // core + crypto + pkg + installer + ui-tui + shell, installed and minified
+  baseInstalled: 250_000,            // core + crypto + pkg + installer (with its use cases) + ui-tui + shell, installed and minified
   pasteLines: 175,                   // lines to paste for the base bundle (signed index included) at the default chunk size
 };
 

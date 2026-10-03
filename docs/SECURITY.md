@@ -69,9 +69,25 @@ agent only whitelisted jobs, the gateway only exposed services.
 
 ## Things that are in the game only
 
-`ssh`, `pgp`, `torrent`, `dns`, `fw`, `netmon` work between computers of one world. Nothing connects to the real Internet except
+`ssh`, `pgp`, `torrent`, `dns`, `fw`, `netmon`, the IP network, mail, MQTT and Modbus work between computers of one world. Nothing connects to the real Internet except
 what the *server administrator* has enabled for HTTP, and the one optional clock source (`ntp add http`). `netmon`'s promiscuous
 mode shows that radio is public: anyone with a modem in range can read plain messages, which is why the secure tools encrypt.
+
+## Networks, mail and devices (added 2026-10-03)
+
+The in-game internet ([NETWORKING.md](NETWORKING.md)) adds attack surface, and it is meant to be used by people who do not trust each other:
+
+* **Services are off until you enable them**, and the router, firewall and server use cases start with a default-deny packet filter.
+* **Radio is public.** Plain frames can be read (and forged) by anyone with a modem in range. Link encryption, Wi-Fi passphrases, TLS and `ssh` protect what is said; routing protocols
+  need their keys (RIP) and filters (BGP prefix lists, maximum prefixes) because a neighbour can lie.
+* **Configuration and mail stores are administrator-only** (`/etc/tsr/inet`, `/etc/tsr/mail`, `/var/mail`, `/var/spool/mail`) once `auth` is installed. Mail clients never touch the server's files: they use POP3 and SMTP.
+* **Mail:** no open relay, no sending as somebody else, no backscatter, lockout after repeated wrong passwords, size/recipient/error limits, SPF + DKIM + DMARC checks, anti-virus on attachments.
+  Passwords are only accepted over TLS unless you allow plain logins on a trusted network.
+* **Anti-virus** is heuristic. A definitions update is only accepted if it carries a signature from a publisher *you* trusted and its version is newer; nothing downloads definitions unless you configure a source.
+* **Modbus has no authentication at all.** The slave answers only clients in its allow list and can be read-only; MQTT has accounts and per-user access lists.
+* **Certificates** (`tlsctl`) come from a certificate authority you run or from pinning a server on first use. This is protection from other players, not from the real world.
+
+Everything here is verified in simulation only; treat it as a game, not as a defence of anything real.
 
 ## Reporting problems
 

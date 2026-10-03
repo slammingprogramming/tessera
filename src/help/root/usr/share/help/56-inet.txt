@@ -1,0 +1,27 @@
+The in-game internet (inet, dhcp, inet-dns, inet-switch, wifi, inet-fw, inet-route, bgp, web, tls)
+A complete network inside the game: Ethernet and Wi-Fi, IPv4, ICMP, UDP, TCP, DHCP, DNS, switches, routers, firewalls, BGP, a web. Nothing here
+reaches the real Internet. Install what you need: pkg install inet dhcp web
+
+Look and test
+  ip addr                  interfaces and addresses      ip route   routes      ip neigh   known neighbours
+  ping <host>              reachability                  traceroute <host>      the path
+  netstat                  open sockets                  tcpdump [filter]       decoded packets
+  nc <host> <port>         a plain TCP connection        arp                    the ARP table
+  nslookup <name>          ask the name server           fetch <url>            get a page      www <url>   browse
+
+Addresses
+  Without a configuration every modem asks for an address by DHCP. Fixed addresses: /etc/tsr/inet/network.lua (or `ip addr add ...` then `ip save`).
+
+Build a network (or let the installer do it: tsr-setup, "What should it do?")
+  Router     forwarding = true in network.lua, then
+               iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE ; iptables -P FORWARD DROP ; iptables-save
+  Switch     swctl show | swctl vlan add 20 | swctl port port2 trunk      (service switchd, file /etc/tsr/inet/switch.lua)
+  Wi-Fi      wifi scan | wifi join <ssid>      an access point is /etc/tsr/inet/wifi-ap.lua with service wifiap
+  Names      dnsctl zone create lan ns1.lan 10.0.0.2 ; dnsctl add lan www A 10.0.0.30
+  Routes     routectl show | routectl rip ... | routectl bgp ...       (services ripd, bgpd; peering policy: customer, peer, provider)
+
+Safety
+  Radio is public: anyone with a modem in range can read plain traffic. Use Wi-Fi passphrases, `key` on a link, tlsctl certificates and ssh.
+  Routers and servers should start with a default-deny firewall (the installer use cases do). Configuration is administrator-only once `auth` is installed.
+
+More: docs/NETWORKING.md in the project documentation.

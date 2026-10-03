@@ -24,6 +24,10 @@ hostname and service names). Nothing here can protect against someone who contro
 
 The default transport: rednet with every attached modem opened.
 
+## `M.defaultTransport()`
+
+The transport nodes use unless told otherwise: rednet, or the IP network (package inet) when the setting net.transport is "ip" and the stack is running.
+
 ## `M.node(opts)`
 
 Create a node. opts: id, hostname, transport, peersPath (default /etc/tsr/net/peers.db).

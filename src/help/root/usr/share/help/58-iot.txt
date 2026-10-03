@@ -1,0 +1,24 @@
+Devices and automation (mqtt, modbus, smarthome, hal, rules)
+Connect lamps, doors, machines and sensors to each other and to a control room. Inside the game only.
+
+MQTT: messages for things
+  mqttctl init ; mqttctl user add <name> ; svc start mqttd            the broker (port 1883)
+  mqtt pub <broker> home/hall/temp 21.5 -r -u <name> -P <pw>           publish (-r = keep the last value)
+  mqtt sub <broker> 'home/#' -u <name> -P <pw>                         watch messages
+
+Modbus: control-room access to machines
+  modbusctl init (edit /etc/tsr/modbus.lua: which address means what, and who may connect) ; svc start modbusd
+  modbus read <host> coils 0 8     modbus write <host> coil 1 on     modbus poll <host> registers 0 4 -n 20 -i 2
+  Modbus has no security of its own: keep the allow list in the settings and put the slave behind a firewall.
+
+Smart home
+  home init (name your devices, scenes and schedule in /etc/tsr/home.lua) ; svc start homed
+  home                              every device with room and state       home on|off|open|close|lock|toggle <device>
+  home scene night                  The schedule uses the Minecraft clock. With an MQTT broker configured, panels can control the house.
+
+Information boards
+  www --board http://info.lan/ --monitor monitor_0 --every 30        a monitor that shows a page for ever
+  kiosk set www --board http://info.lan/                             make it permanent (Ctrl+T does not stop it)
+
+The installer's use cases set all of this up: tsr-setup, "What should it do?" (Embedded / IoT device, Smart home hub, Industrial control, Kiosk).
+More: docs/IOT.md in the project documentation.

@@ -214,7 +214,9 @@ M.RULES = {
       -- a big, high-entropy string that goes into load()
       if c.has("[^%w_%.:]load%s*%(") or c.has("[^%w_%.:]loadstring%s*%(") then
         for _, s in ipairs(longStrings(c.code, 400)) do
-          if M.entropy(s) > 4.6 then return c.has("[^%w_%.:]load%s*%(") or c.has("[^%w_%.:]loadstring%s*%(") end
+          -- encoded data has almost no spaces; a long piece of text (a template, a help page) has plenty
+          local _, spaces = s:gsub("%s", "")
+          if M.entropy(s) > 4.6 and spaces / #s < 0.05 then return c.has("[^%w_%.:]load%s*%(") or c.has("[^%w_%.:]loadstring%s*%(") end
         end
       end
       return nil

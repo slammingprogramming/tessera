@@ -144,6 +144,33 @@ function M.packages(probe, profile)
     add("diff", "optional", "diff and patch: compare files and apply changes")
   end
 
+  -- the in-game internet (IPv4, DHCP, DNS, web, mail ...) ----------------------------------------------------------------------
+  if probe.hasModem and profile ~= "node" and kind ~= "turtle" then
+    local modems = c.wirelessModems + c.wiredModems
+    add("inet", serverish and "recommended" or "optional", "a real network between computers: IP addresses, ping, traceroute, sockets, a firewall hook (a modem is attached)")
+    add("dhcp", "optional", "gets the address by DHCP, and on a server hands addresses out")
+    add("web", "optional", "browse the in-game web, and serve pages from this computer")
+    if c.wirelessModems > 0 then add("wifi", "optional", "a wireless modem: join a Wi-Fi network, or run an access point") end
+    if modems >= 2 then
+      add("inet-switch", "optional", ("%d modems: join them into a managed switch with VLANs and Spanning Tree"):format(modems))
+      add("inet-fw", "optional", ("%d modems: firewall and NAT between the networks"):format(modems))
+      add("inet-route", "optional", "route between networks and learn routes from other routers (RIP)")
+    end
+    if serverish then
+      add("inet-dns", "optional", "a name server for your network (zones, recursion, secondaries)")
+      add("mail", "optional", "mail for your domain: SMTP and POP3 servers, mailboxes, and a mail program")
+      add("mail-spam", "optional", "anti-spam for the mail server: SPF, DKIM, DMARC, greylisting, a learning filter")
+      add("av", "optional", "anti-virus: finds harmful scripts in files, floppies, mail and packages")
+      add("mqtt", "optional", "a message broker for sensors, switches and displays")
+    else
+      add("mail", "optional", "a mail program: read and send mail through a mail server")
+    end
+    if c.redstoneRelays > 0 or profile == "server" then
+      add("modbus", "optional", "industrial protocol: let a control room read and switch redstone and machines over the network")
+      add("smarthome", "optional", "a smart-home hub: named lights and doors, scenes and a schedule")
+    end
+  end
+
   -- turtles / pockets ----------------------------------------------------------------------------------------------------
   if kind == "turtle" then
     add("craft", "optional", "if this turtle has a crafting table: `autocraft` makes items and what they are made of from a chest")

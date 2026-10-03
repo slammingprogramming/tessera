@@ -7,6 +7,7 @@ Time synchronisation for Tessera computers.
 Where a computer gets its time (config /etc/tsr/ntp.cfg, tried in order, the first source that answers wins):
   { type = "local" }                          the host's own clock (the game server's UTC): offset 0, stratum 1     (the default)
   { type = "peer", host = "ntp1" }            an in-game time server (a computer running `ntp serve on`), see tsr.ntp.proto
+  { type = "udp", host = "ntp.lan" }          an NTP server on the in-game IP network (UDP 123, package inet), see tsr.ntp.udp
   { type = "http", kind = "json"|"header", url = "https://..." }   real-world UTC from the web (opt-in, read-only, see tsr.ntp.web)
 or by hand: `ntp set <time>` makes this computer's clock whatever you say (a manual setting is also what in-game time servers can
 hand out, e.g. for a role-play calendar) until `ntp auto`.

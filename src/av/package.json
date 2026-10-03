@@ -11,7 +11,7 @@
   "provides": [
     "tsr:av"
   ],
-  "budget": 40000,
+  "budget": 50000,
   "tags": [
     "security"
   ]

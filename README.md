@@ -18,6 +18,8 @@ been smoke-tested in real Minecraft yet.
 - A tiny core; apps and drivers fetched on demand by a package manager (a stock computer has only about 1 MB of disk).
 - An optional GUI (built from scratch) that you can add later.
 - Control of modded machines through native CC integrations, with redstone as the fallback.
+- An optional, complete **in-game internet**: Ethernet and Wi-Fi, IPv4, TCP, DHCP, DNS, switches, routers, firewalls, BGP peering, a web, mail with spam and virus
+  protection, MQTT and Modbus — and installer use cases that turn a computer into a router, a switch, a server, a smart-home hub or an industrial controller.
 
 ## Documentation
 
@@ -26,6 +28,7 @@ been smoke-tested in real Minecraft yet.
   jukebox, storage sorting, file sync, a text adventure and more
 - [Package format](docs/PACKAGE-FORMAT.md) · [Integrations](docs/INTEGRATIONS.md) · [Feature parity matrix](docs/PARITY-MATRIX.md)
 - [Real-world tools in the game](docs/REALWORLD.md) (time sync, ssh, pgp, torrent, firewall, DNS, encrypted folders, tar/diff) · [Security model](docs/SECURITY.md)
+- [The in-game internet](docs/NETWORKING.md) · [Mail](docs/MAIL.md) · [Devices, smart homes and industrial control](docs/IOT.md)
 - [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Research notes](docs/RESEARCH.md)
 
 ## Contact

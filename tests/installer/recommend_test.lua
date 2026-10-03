@@ -157,3 +157,16 @@ test("security, time and system tools are suggested by what the computer can do"
   -- HTTP alone is enough for the clock
   eq(pkgs(recommend.packages(fake({}), "client")).ntp.tier, "optional")
 end)
+
+test("the in-game internet packages are suggested by modems and profile", function()
+  local server = pkgs(recommend.packages(fake({ peripherals = { { type = "modem", wireless = true }, { type = "modem" } } }), "server"))
+  eq(server.inet.tier, "recommended")
+  ok(server.dhcp and server.web and server.wifi and server["inet-switch"] and server["inet-fw"] and server["inet-route"] and server["inet-dns"] and server.mail and server["mail-spam"] and server.av and server.mqtt and server.modbus and server.smarthome)
+  ok(server["inet-switch"].reason:find("2 modems", 1, true))
+  local client = pkgs(recommend.packages(fake({ peripherals = { { type = "modem", wireless = true } } }), "client"))
+  eq(client.inet.tier, "optional")
+  ok(client.dhcp and client.web and client.wifi and client.mail and client["inet-switch"] == nil and client["inet-dns"] == nil and client.mqtt == nil and client["mail-spam"] == nil)
+  ok(pkgs(recommend.packages(fake({ peripherals = { { type = "modem" } } }), "node")).inet == nil, "a sensor node stays small")
+  ok(pkgs(recommend.packages(fake({}), "client")).inet == nil, "no modem, no network")
+  ok(pkgs(recommend.packages(fake({ kind = "turtle", peripherals = { { type = "modem", wireless = true } } }), "turtle")).inet == nil)
+end)

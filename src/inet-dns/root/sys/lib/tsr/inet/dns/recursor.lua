@@ -13,12 +13,14 @@ Recursor.__index = Recursor
 M.MAX_DEPTH = 8           -- nested lookups (CNAME targets, name server addresses)
 M.MAX_REFERRALS = 12
 
---- opts: roots (list of addresses), forwarders (list of addresses; when present nothing is resolved iteratively), timeout.
+--- opts: roots (list of addresses), forwarders (list of addresses; when present nothing is resolved iteratively, or "upstream": the DNS servers this computer itself
+--- learned by DHCP or has configured, other than itself: what a home router wants), timeout.
 function M.new(stack, opts)
   opts = opts or {}
   local self = setmetatable({ stack = stack, roots = {}, forwarders = {}, timeout = opts.timeout or 1.5, delegations = {}, queries = 0 }, Recursor)
   for _, r in ipairs(opts.roots or {}) do self.roots[#self.roots + 1] = B.ip(r) end
-  for _, f in ipairs(opts.forwarders or {}) do self.forwarders[#self.forwarders + 1] = B.ip(f) end
+  if opts.forwarders == "upstream" then self.upstream = true
+  else for _, f in ipairs(opts.forwarders or {}) do self.forwarders[#self.forwarders + 1] = B.ip(f) end end
   return self
 end
 
@@ -51,8 +53,17 @@ function Recursor:resolve(name, qtype, depth)
   local cached = client.cacheGet(stack, name, qt)
   if cached then return cached end
   if depth > M.MAX_DEPTH then return nil, "lookup too deep" end
-  if #self.forwarders > 0 then
-    local result, err = client.lookup(stack, name, qt, { servers = self.forwarders, timeout = self.timeout })
+  local forwarders = self.forwarders
+  if self.upstream then
+    forwarders = {}
+    for _, d in ipairs(stack.dnsServers or {}) do
+      local n = type(d) == "number" and d or B.ip(d)
+      if n and not stack:isLocal(n) then forwarders[#forwarders + 1] = n end
+    end
+    if #forwarders == 0 then return nil, "no upstream DNS server is known yet" end
+  end
+  if #forwarders > 0 then
+    local result, err = client.lookup(stack, name, qt, { servers = forwarders, timeout = self.timeout })
     return result, err
   end
   local servers = self:startServers(name)

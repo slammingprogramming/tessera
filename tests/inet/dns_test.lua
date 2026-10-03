@@ -238,6 +238,30 @@ test("forwarding resolver", function()
   ok(servers.resolver.stats.queries >= 1, "the forwarder asked the real resolver")
 end)
 
+test("forwarding to the upstream servers the computer learned (home router)", function()
+  local sim, hosts, servers = build()
+  local fwdHost = hosts.secondary
+  local fwd = serverMod.new(fwdHost, { recursion = true, forwarders = "upstream" })
+  ok(fwd.recursionOn)
+  for _, job in ipairs(assert(fwd:workers(1))) do sim:spawn(job) end
+  sim:run(0.1)
+  local c = hosts.client
+  -- no upstream server known yet: the answer is a failure, not a hang
+  fwdHost.dnsServers = {}
+  local r = assert(client.query(c, "10.0.0.6", "www.example.lan", "A"))
+  eq(r.rcode, W.RCODE.SERVFAIL)
+  -- the provider's server arrives (as DHCP would tell us) -- our own address is ignored
+  fwdHost.dnsServers = { B.ip("10.0.0.6"), B.ip("10.0.0.4") }
+  client.flush(c)
+  r = assert(client.query(c, "10.0.0.6", "www.example.lan", "A"))
+  eq(r.rcode, 0) eq(r.answers[1].data, B.ip("10.0.0.30"))
+  -- when the provider changes the answer follows
+  fwdHost.dnsServers = { B.ip("10.0.0.3") }
+  client.flush(c)
+  r = assert(client.query(c, "10.0.0.6", "info.example.lan", "TXT"))
+  eq(r.rcode, 0)
+end)
+
 test("zone transfer: a secondary copies the zone, strangers are refused, changes follow the serial", function()
   local sim, hosts, servers = build()
   local sec = serverMod.new(hosts.secondary, { zones = { { origin = "example.lan", type = "secondary", masters = { "10.0.0.3" } } } })

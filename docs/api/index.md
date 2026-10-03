@@ -28,6 +28,19 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.authcli](tsr.authcli.md) (2 functions)
 - [tsr.login](tsr.login.md) (2 functions)
 
+## Package `av`
+
+- [tsr.av.daemon](tsr.av.daemon.md) (1 functions)
+- [tsr.av.defs](tsr.av.defs.md) (8 functions)
+- [tsr.av](tsr.av.md) (9 functions)
+- [tsr.av.quarantine](tsr.av.quarantine.md) (3 functions)
+- [tsr.av.rules](tsr.av.rules.md) (4 functions)
+
+## Package `bgp`
+
+- [tsr.inet.bgp](tsr.inet.bgp.md) (12 functions)
+- [tsr.inet.bgp.wire](tsr.inet.bgp.wire.md) (4 functions)
+
 ## Package `bore`
 
 - [tsrapps.bore](tsrapps.bore.md) (1 functions)
@@ -96,6 +109,13 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.crypto.sha512](tsr.crypto.sha512.md) (2 functions)
 - [tsr.crypto.sign](tsr.crypto.sign.md) (2 functions)
 - [tsr.crypto.yield](tsr.crypto.yield.md) (1 functions)
+
+## Package `dhcp`
+
+- [tsr.dhcp.client](tsr.dhcp.client.md) (4 functions)
+- [tsr.dhcp.daemon](tsr.dhcp.daemon.md) (3 functions)
+- [tsr.dhcp.server](tsr.dhcp.server.md) (5 functions)
+- [tsr.dhcp.wire](tsr.dhcp.wire.md) (1 functions)
 
 ## Package `diff`
 
@@ -175,9 +195,49 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.help](tsr.help.md) (7 functions)
 
+## Package `inet`
+
+- [tsr.inet.bytes](tsr.inet.bytes.md) (11 functions)
+- [tsr.inet.config](tsr.inet.config.md) (4 functions)
+- [tsr.inet.daemon](tsr.inet.daemon.md) (2 functions)
+- [tsr.inet.dissect](tsr.inet.dissect.md) (3 functions)
+- [tsr.inet.icmp](tsr.inet.icmp.md) (1 functions)
+- [tsr.inet.link](tsr.inet.link.md) (5 functions)
+- [tsr.inet.nodebridge](tsr.inet.nodebridge.md) (1 functions)
+- [tsr.inet.socket](tsr.inet.socket.md) (3 functions)
+- [tsr.inet.stack](tsr.inet.stack.md) (25 functions)
+- [tsr.inet.tcp](tsr.inet.tcp.md) (10 functions)
+- [tsr.inet.udp](tsr.inet.udp.md) (4 functions)
+- [tsr.inet.wire](tsr.inet.wire.md) (6 functions)
+
+## Package `inet-dns`
+
+- [tsr.inet.dns.client](tsr.inet.dns.client.md) (5 functions)
+- [tsr.inet.dns.recursor](tsr.inet.dns.recursor.md) (3 functions)
+- [tsr.inet.dns.server](tsr.inet.dns.server.md) (7 functions)
+- [tsr.inet.dns.wire](tsr.inet.dns.wire.md) (4 functions)
+- [tsr.inet.dns.zone](tsr.inet.dns.zone.md) (5 functions)
+
+## Package `inet-fw`
+
+- [tsr.inet.fw.conntrack](tsr.inet.fw.conntrack.md) (8 functions)
+- [tsr.inet.fw](tsr.inet.fw.md) (3 functions)
+- [tsr.inet.fw.iptables](tsr.inet.fw.iptables.md) (6 functions)
+
+## Package `inet-route`
+
+- [tsr.inet.route.rip](tsr.inet.route.rip.md) (8 functions)
+
+## Package `inet-switch`
+
+- [tsr.inet.switch.cli](tsr.inet.switch.cli.md) (1 functions)
+- [tsr.inet.switch](tsr.inet.switch.md) (9 functions)
+- [tsr.inet.switch.stp](tsr.inet.switch.stp.md) (8 functions)
+
 ## Package `installer`
 
 - [tsr.setup.recommend](tsr.setup.recommend.md) (4 functions)
+- [tsr.setup.usecases](tsr.setup.usecases.md) (3 functions)
 - [tsr.setup.wizard](tsr.setup.wizard.md) (3 functions)
 
 ## Package `int-create`
@@ -187,6 +247,28 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 ## Package `int-mekanism`
 
 - [tsr.scada](tsr.scada.md) (5 functions)
+
+## Package `mail`
+
+- [tsr.mail.client](tsr.mail.client.md) (8 functions)
+- [tsr.mail.config](tsr.mail.config.md) (2 functions)
+- [tsr.mail](tsr.mail.md) (15 functions)
+- [tsr.mail.message](tsr.mail.message.md) (12 functions)
+- [tsr.mail.pop3](tsr.mail.pop3.md) (6 functions)
+- [tsr.mail.pop3d](tsr.mail.pop3d.md) (3 functions)
+- [tsr.mail.smtp](tsr.mail.smtp.md) (2 functions)
+- [tsr.mail.smtpd](tsr.mail.smtpd.md) (5 functions)
+- [tsr.mail.store](tsr.mail.store.md) (8 functions)
+
+## Package `mail-spam`
+
+- [tsr.mail.spam.bayes](tsr.mail.spam.bayes.md) (4 functions)
+- [tsr.mail.spam.dkim](tsr.mail.spam.dkim.md) (3 functions)
+- [tsr.mail.spam.dmarc](tsr.mail.spam.dmarc.md) (1 functions)
+- [tsr.mail.spam.dnsbl](tsr.mail.spam.dnsbl.md) (2 functions)
+- [tsr.mail.spam.greylist](tsr.mail.spam.greylist.md) (3 functions)
+- [tsr.mail.spam](tsr.mail.spam.md) (6 functions)
+- [tsr.mail.spam.spf](tsr.mail.spam.spf.md) (1 functions)
 
 ## Package `media`
 
@@ -199,11 +281,24 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.mobile.shell](tsr.mobile.shell.md) (5 functions)
 - [tsr.notify](tsr.notify.md) (2 functions)
 
+## Package `modbus`
+
+- [tsr.modbus](tsr.modbus.md) (4 functions)
+- [tsr.modbus.server](tsr.modbus.server.md) (4 functions)
+
+## Package `mqtt`
+
+- [tsr.mqtt.broker](tsr.mqtt.broker.md) (9 functions)
+- [tsr.mqtt.daemon](tsr.mqtt.daemon.md) (1 functions)
+- [tsr.mqtt](tsr.mqtt.md) (6 functions)
+- [tsr.mqtt.packet](tsr.mqtt.packet.md) (2 functions)
+- [tsr.mqtt.topic](tsr.mqtt.topic.md) (4 functions)
+
 ## Package `net`
 
 - [tsr.net.cli](tsr.net.cli.md) (2 functions)
 - [tsr.net.crypto](tsr.net.crypto.md) (6 functions)
-- [tsr.net](tsr.net.md) (18 functions)
+- [tsr.net](tsr.net.md) (19 functions)
 
 ## Package `netfs`
 
@@ -217,6 +312,7 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.ntp](tsr.ntp.md) (7 functions)
 - [tsr.ntp.proto](tsr.ntp.proto.md) (3 functions)
+- [tsr.ntp.udp](tsr.ntp.udp.md) (5 functions)
 - [tsr.ntp.web](tsr.ntp.web.md) (4 functions)
 - [tsr.time](tsr.time.md) (19 functions)
 
@@ -310,6 +406,11 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.shop](tsr.shop.md) (10 functions)
 
+## Package `smarthome`
+
+- [tsr.home.daemon](tsr.home.daemon.md) (1 functions)
+- [tsr.home](tsr.home.md) (9 functions)
+
 ## Package `ssh`
 
 - [tsr.ssh.chan](tsr.ssh.chan.md) (5 functions)
@@ -328,6 +429,11 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 ## Package `svc-storage`
 
 - [tsrapps.storage](tsrapps.storage.md) (7 functions)
+
+## Package `tls`
+
+- [tsr.inet.tls.cert](tsr.inet.tls.cert.md) (5 functions)
+- [tsr.inet.tls](tsr.inet.tls.md) (5 functions)
 
 ## Package `treefarm`
 
@@ -374,6 +480,21 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.vault](tsr.vault.md) (8 functions)
 
+## Package `web`
+
+- [tsr.inet.http.client](tsr.inet.http.client.md) (1 functions)
+- [tsr.inet.http.html](tsr.inet.http.html.md) (4 functions)
+- [tsr.inet.http.message](tsr.inet.http.message.md) (8 functions)
+- [tsr.inet.http.server](tsr.inet.http.server.md) (4 functions)
+- [tsr.inet.http.www](tsr.inet.http.www.md) (5 functions)
+
 ## Package `webgw`
 
 - [tsr.webgw](tsr.webgw.md) (4 functions)
+
+## Package `wifi`
+
+- [tsr.inet.wifi.frames](tsr.inet.wifi.frames.md) (2 functions)
+- [tsr.inet.wifi](tsr.inet.wifi.md) (1 functions)
+- [tsr.inet.wifi.keys](tsr.inet.wifi.keys.md) (3 functions)
+- [tsr.inet.wifi.sta](tsr.inet.wifi.sta.md) (4 functions)

@@ -34,6 +34,7 @@ Each milestone must run on CraftOS-PC headless tests and be smoke-tested in-game
 | M10 | built | TV home screen, media player, signage, kiosk, mirroring, pocket remote |
 
 | M11 | built | (2026-10-02) signed registries, crypto library, 32vid, crafting turtle, Tom's Peripherals driver, mod drivers verified against source, boot-recovery scenarios, and the real-world set: `ntp`, `ssh`, `pgp`, `torrent`, `fw`, `dns`, `vault`, `tar`/`gzip`, `diff`/`patch`, `netmon`, `doctor` (see REALWORLD.md) |
+| M12 | built | (2026-10-03) the in-game internet: Ethernet/Wi-Fi, IPv4, ICMP, UDP, TCP, DHCP, DNS, switches with VLANs and Spanning Tree, NAT and a firewall, RIP and BGP with peering policy, HTTP/HTTPS with a certificate authority, NTP over UDP (NETWORKING.md); mail with anti-spam and anti-virus (MAIL.md); MQTT, Modbus/TCP, a smart-home hub and information boards (IOT.md); installer use cases for routers, switches, servers, IoT, smart homes, industrial control and kiosks |
 
 "built" = implemented and green in CraftOS-PC; nothing has run in real Minecraft yet. The next milestone for every row is an in-game
 smoke test (see AGENTS.md for the list of what to try first).

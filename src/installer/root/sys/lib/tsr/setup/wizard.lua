@@ -1,8 +1,9 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
--- The setup wizard: welcome -> detect hardware -> profile -> modules -> interface -> name -> review -> install.
+-- The setup wizard: welcome -> detect hardware -> profile -> use case -> modules -> interface -> name -> review -> install.
 -- Everything it needs is injectable (env.ui / env.pkg / env.hw ...), which is how the tests drive it. It can be re-run
 -- at any time to add or remove modules: installed packages start ticked, unticking one removes it.
 local recommend = require("tsr.setup.recommend")
+local usecases = require("tsr.setup.usecases")
 local util = require("tsr.util")
 
 local M = {}
@@ -163,6 +164,49 @@ function M.run(env)
     if not sel then return "back" end
     S.profile = S.rec.profiles[sel].name
     S.items = recommend.packages(S.probe, S.profile)
+    return "next"
+  end
+
+  --- What the computer is for (router, switch, mail server, smart home ...): its packages join the selection, its settings are applied at the end.
+  steps.usecase = function()
+    -- packages of a previous choice go away again when another one is picked
+    local function forget()
+      for _, name in ipairs(S.usecasePackages or {}) do S.selected[name] = nil end
+      S.usecasePackages = {}
+    end
+    local function choose(id)
+      forget()
+      S.usecase = id
+      if not id then return end
+      local plan = usecases.plan(id, S.probe, { hostname = S.hostname })
+      S.usecasePackages = {}
+      local have = {}
+      for _, it in ipairs(S.items) do have[it.pkg] = it end
+      for _, name in ipairs(plan.packages) do
+        if have[name] then have[name].tier = "recommended"
+        else S.items[#S.items + 1] = { pkg = name, tier = "recommended", reason = "needed for: " .. plan.label } end
+        if not S.selected[name] then S.usecasePackages[#S.usecasePackages + 1] = name end
+        S.selected[name] = true
+      end
+    end
+    local list = usecases.available(S.probe, S.profile)
+    if env.usecase and not S.usecaseAsked then
+      S.usecaseAsked = true
+      local known
+      for _, u in ipairs(list) do if u.id == env.usecase then known = u end end
+      if not known then ui.message("Unknown use case", { tostring(env.usecase) }) elseif known.blocked then ui.message("Use case not possible here", { known.label .. ": " .. known.blocked })
+      else choose(env.usecase) end
+      return "next"
+    end
+    local items = { { label = "General purpose", desc = "No special role: you choose the modules yourself.", tag = "default" } }
+    local initial = 1
+    for i, u in ipairs(list) do
+      items[#items + 1] = { label = u.label, desc = u.blocked and ("Not available: " .. u.blocked) or u.summary, disabled = u.blocked ~= nil, tag = u.group }
+      if S.usecase == u.id then initial = i + 1 end
+    end
+    local sel = ui.menu("What should it do?", items, { initial = initial })
+    if not sel then return "back" end
+    choose(sel > 1 and list[sel - 1].id or nil)
     return "next"
   end
 
@@ -342,25 +386,40 @@ function M.run(env)
   end
 
   steps.finish = function()
+    local applied
+    if S.usecase then
+      applied = usecases.apply(S.usecase, S.probe, { hostname = S.hostname, vfs = vfs, config = config })
+    end
     config.set("system.profile", S.profile, "system")
     config.set("net.hostname", S.hostname, "system")
     config.set("ui.mode", S.uiMode, "system")
     config.save("system")
-    vfs.writeJSON("/etc/tsr/setup.done", { profile = S.profile, hostname = S.hostname, ui = S.uiMode,
+    vfs.writeJSON("/etc/tsr/setup.done", { profile = S.profile, hostname = S.hostname, ui = S.uiMode, usecase = S.usecase,
       packages = sortedNames(S.selected), time = os.epoch and os.epoch("utc") or 0 })
     if not os.getComputerLabel() and os.setComputerLabel then pcall(os.setComputerLabel, S.hostname) end
     source.clean()
-    if env.auto then return "done" end -- unattended runs never reboot by themselves (see tsr-setup --reboot)
-    local reboot = ui.confirm("Setup complete", {
-      "Tessera is configured as: " .. S.profile,
-      "",
-      "Reboot now to start using it?",
-    }, { default = true })
+    if env.auto then
+      if applied then S.result = applied end
+      return "done" -- unattended runs never reboot by themselves (see tsr-setup --reboot)
+    end
+    local lines = { "Tessera is configured as: " .. S.profile }
+    if applied then
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = "Use case: " .. (usecases.get(S.usecase).label)
+      for _, p in ipairs(applied.written) do lines[#lines + 1] = "  wrote " .. p end
+      for _, p in ipairs(applied.kept) do lines[#lines + 1] = "  kept " .. p .. " (already there)" end
+      if #applied.enabled > 0 then lines[#lines + 1] = "  services: " .. table.concat(applied.enabled, ", ") end
+      for _, n in ipairs(applied.notes) do lines[#lines + 1] = "  " .. n end
+      for _, n in ipairs(applied.problems) do lines[#lines + 1] = "  PROBLEM: " .. n end
+    end
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "Reboot now to start using it?"
+    local reboot = ui.confirm("Setup complete", lines, { default = true })
     return reboot and "reboot" or "done"
   end
 
   -- driver ----------------------------------------------------------------------------------------------------------------
-  local order = { "welcome", "detect", "registry", "profile", "modules", "interface", "name", "review", "install", "finish" }
+  local order = { "welcome", "detect", "registry", "profile", "usecase", "modules", "interface", "name", "review", "install", "finish" }
   local i = 1
   while i <= #order do
     local result = steps[order[i]]()

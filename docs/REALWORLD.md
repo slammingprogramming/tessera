@@ -32,8 +32,9 @@ HTTP, because the real time is a harmless, useful fact. Everything else stays in
 | Crafting-table macros, auto-crafters | `autocraft` | `craft` | A turtle with a crafting table makes an item and everything it is made of from a chest. |
 | Hardware drivers for mods (Tom's Peripherals) | `hal` drivers | `hal-toms` | Names checked against the mod's source. |
 
-Not built (on purpose): **mail**. A mail system between players is mostly a chat/storage problem and would need a policy about spam and
-storage on shared servers; it can come later if it is wanted.
+Also built, on the same principle (inside the world only): a complete **in-game internet** (Ethernet and Wi-Fi, IPv4, TCP, DHCP, DNS, switches, routers, NAT,
+BGP peering, a web) in [NETWORKING.md](NETWORKING.md); **mail** with SMTP, POP3, anti-spam and anti-virus in [MAIL.md](MAIL.md); and **MQTT, Modbus and a smart-home hub**
+in [IOT.md](IOT.md).
 
 ## Time: `ntp`
 
