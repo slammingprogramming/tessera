@@ -44,7 +44,8 @@ const env = { ...process.env, GIT_INDEX_FILE: indexFile };
 rmSync(indexFile, { force: true });
 git(['read-tree', SOURCE], { env });
 const drop = git(['ls-files'], { env }).split('\n').filter((p) => p && !isGithubAllowed(p, allow, priv));
-if (drop.length) git(['rm', '--cached', '-q', '-f', '--', ...drop], { env });
+// in batches: the list of private files is long and a Windows command line is limited
+for (let i = 0; i < drop.length; i += 100) git(['rm', '--cached', '-q', '-f', '--', ...drop.slice(i, i + 100)], { env });
 const tree = git(['write-tree'], { env });
 rmSync(indexFile, { force: true });
 
