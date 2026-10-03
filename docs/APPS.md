@@ -138,3 +138,25 @@ See [REALWORLD.md](REALWORLD.md) for how they work and what is the same as the r
 | `doctor` | `doctor` | Self-check and speed measurement; writes a report for bug reports. |
 | `craft` | `autocraft` | Crafting turtle: make items and what they are made of. |
 | `hal-toms` | (drivers) | Tom's Peripherals through `hal`. |
+
+## The in-game internet, mail and devices (added 2026-10-03)
+
+See [NETWORKING.md](NETWORKING.md), [MAIL.md](MAIL.md) and [IOT.md](IOT.md).
+
+| Package | Command(s) | What it does |
+|---|---|---|
+| `inet` | `ip`, `ifconfig`, `ping`, `traceroute`, `netstat`, `tcpdump`, `nc`, `arp` | Ethernet, ARP, IPv4, ICMP, UDP, TCP and the tools to look at them. |
+| `dhcp` | `dhcp` | DHCP client, server and relay. |
+| `inet-dns` | `nslookup`, `dnsctl` | Name server (zones, recursion, secondaries) and lookup tool. |
+| `inet-switch` | `swctl` | Managed switch: VLANs, Spanning Tree, port security, mirroring. |
+| `wifi` | `wifi` | Access point and station with a WPA2-style handshake. |
+| `inet-fw` | `iptables`, `iptables-save`, `iptables-restore`, `conntrack` | Packet filter, NAT, port forwards, connection tracking. |
+| `inet-route`, `bgp` | `routectl` | RIPv2 and BGP-4 with peering policy. |
+| `web` | `fetch`, `www` | HTTP server, client and text browser; `www --board` information display. |
+| `tls` | `tlsctl` | Certificate authority, certificates and trust for HTTPS, SMTPS and more. |
+| `mail` | `mail`, `mailctl` | SMTP/POP3 server, queue, mailboxes, mail program, administration. |
+| `mail-spam` | (via `mailctl spam`, `mailctl dkim`) | SPF, DKIM, DMARC, greylisting, DNSBL, scoring, learning filter. |
+| `av` | `av` | Anti-virus: scan, quarantine, signed definition updates, floppy scanning. |
+| `mqtt` | `mqtt`, `mqttctl` | MQTT broker and client. |
+| `modbus` | `modbus`, `modbusctl` | Modbus/TCP slave and client. |
+| `smarthome` | `home` | Smart-home hub with scenes, schedule and MQTT bridge. |

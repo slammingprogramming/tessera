@@ -93,6 +93,9 @@ separate codebases; the profile picks the appropriate UI/theme package.
 
 ## 7. Networking (`src/net`)
 
+> The small rednet-based layer described here is the default. An optional, much larger stack — Ethernet, IPv4, TCP, DHCP, DNS, routing, mail, MQTT — is in [NETWORKING.md](NETWORKING.md);
+> `tsr.net` can run over it (`net.transport = "ip"`).
+
 - Transport: modem (wired/wireless/ender), wired-modem *remote peripherals*, WebSocket/HTTP to external gateways.
 - Layered protocols over rednet channels: **discovery** (services announce; DNS-like names `host.svc`), **RPC**,
   **remote FS mount**, **remote shell** (ssh-like, encrypted), **file sync**, **package mirror**, **time sync**.

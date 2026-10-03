@@ -68,14 +68,28 @@ Exemplar details come from docs/RESEARCH.md (sources there); keep this file upda
 | 59 | Archives, diff and patch | tar, gzip, diff, patch | `archive`, `diff` | P3 | wip |
 | 60 | Network analysis | tcpdump, Wireshark | `netmon` | P3 | wip |
 | 61 | Self-diagnosis | sfc, Reliability Monitor | `doctor` | P2 | wip |
+| 62 | IPv4 network stack (Ethernet, ARP, IP, ICMP, UDP, TCP) | Linux/BSD stacks, lwIP | `inet` | P1 | wip |
+| 63 | DHCP, DNS | dhcpd, BIND/unbound | `dhcp`, `inet-dns` | P1 | wip |
+| 64 | Switching, VLANs, Spanning Tree, Wi-Fi | managed switches, hostapd | `inet-switch`, `wifi` | P2 | wip |
+| 65 | Firewall, NAT, connection tracking | iptables, pf, Windows Firewall | `inet-fw` | P1 | wip |
+| 66 | Routing protocols, peering policy | FRR/Quagga (RIP, BGP) | `inet-route`, `bgp` | P2 | wip |
+| 67 | Web server, client, browser; HTTPS; certificate authority | nginx, curl, lynx, OpenSSL | `web`, `tls` | P2 | wip |
+| 68 | Mail: SMTP, POP3, queue, aliases, quotas, mail client | Postfix, Dovecot, mutt | `mail` | P2 | wip |
+| 69 | Anti-spam: SPF, DKIM, DMARC, greylisting, DNSBL, Bayes | SpamAssassin, rspamd | `mail-spam` | P2 | wip |
+| 70 | Anti-virus: behaviour rules, signatures, signed updates, quarantine | ClamAV, Defender | `av` | P2 | wip |
+| 71 | IoT messaging | MQTT (Mosquitto) | `mqtt` | P2 | wip |
+| 72 | Industrial control | Modbus/TCP, PLC/SCADA | `modbus` (+ `rules`, `scada`) | P3 | wip |
+| 73 | Smart-home hub, scenes, schedule | Home Assistant | `smarthome` | P3 | wip |
+| 74 | Role-based installer (router, switch, server, IoT, kiosk ...) | OPNsense/OpenWrt images | `installer` use cases | P1 | wip |
 
 Status notes (2026-10-01): every area above now has a first version that is built and tested in CraftOS-PC (unit tests on a simulated
 turtle world, fake peripherals and an in-memory network, plus boot and installer end-to-end runs). They stay `wip` until each has been run in
 real Minecraft; `done` means that has happened (only the dev tooling row qualifies). Known gaps: 32vid is decoded (checked against the reference decoder) but multi-monitor frames are skipped and playback speed on real
 computers is unknown; the mod drivers were corrected against the mods' source code but never run with the mods; SSH and PGP are Tessera's
-own protocols (not interoperable with the real ones); mail is not built; speed of public-key cryptography in the real game is unmeasured
+own protocols (not interoperable with the real ones); speed of public-key cryptography in the real game is unmeasured
 (`doctor` measures it).
 Update 2026-10-02: rows 51-61 were added with the real-world tools (docs/REALWORLD.md).
+Update 2026-10-03: rows 62-74 were added with the in-game internet, mail and IoT (NETWORKING.md, MAIL.md, IOT.md); they are tested on a simulated network only.
 
 Rule: an area is only "done" when a user can accomplish the task end-to-end on a stock CC:T server without extra mods
 (except where the area is mod-specific).
