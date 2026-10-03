@@ -1,0 +1,19 @@
+{
+  "name": "mail-spam",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Anti-spam for the mail server: SPF, DKIM signing and checking (Ed25519), DMARC, greylisting, blocklists in DNS, scoring rules and a learning filter",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0",
+    "mail": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:mail-spam"
+  ],
+  "budget": 80000,
+  "tags": [
+    "network"
+  ]
+}

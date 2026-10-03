@@ -20,7 +20,7 @@ M.ROOT = "root"      -- pseudo-user used by sudo / elevated sections: unrestrict
 
 --- Files and folders that hold secrets: ordinary users can neither read nor write them.
 M.SECRET_PATHS = { "/etc/tsr/net", "/etc/tsr/ssh", "/etc/tsr/sshd.cfg", "/var/lib/tsr/random.seed", "/etc/tsr/webgw.cfg", "/etc/tsr/rsh.allow", "/etc/tsr/fleet.allow", "/etc/tsr/rscreen.allow",
-                   "/etc/tsr/kiosk.cfg", "/var/lib/tsr/pkg/txn.json" }
+                   "/etc/tsr/kiosk.cfg", "/var/lib/tsr/pkg/txn.json", "/etc/tsr/inet", "/etc/tsr/mail", "/var/mail", "/var/spool/mail" }
 
 local db = nil
 local sessions = {}      -- pid -> user name

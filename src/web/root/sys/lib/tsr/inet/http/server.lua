@@ -326,6 +326,14 @@ end
 
 --- Worker functions to run side by side (parallel.waitForAny, or sim:spawn each): `n` acceptors.
 function Server:workers(n)
+  if self.cfg.tls then
+    -- https: the name of the certificate in /etc/tsr/inet/tls (see tlsctl), or { name = ..., dir = ... }
+    local tls = require("tsr.inet.tls")
+    local spec = type(self.cfg.tls) == "table" and self.cfg.tls or { name = self.cfg.tls }
+    local creds, why = tls.loadCredentials(spec.name, spec.dir)
+    if not creds then return nil, why end
+    self.tlsCreds = creds
+  end
   local l = socket.tcp(self.stack)
   l:bind(self.cfg.address, self.port)
   local ok, err = l:listen(16)
@@ -337,6 +345,10 @@ function Server:workers(n)
     jobs[#jobs + 1] = function()
       while self.running do
         local c = l:accept(1)
+        if c and self.tlsCreds then
+          local secure = require("tsr.inet.tls").server(c, self.tlsCreds)
+          c = secure
+        end
         if c then
           local okc, e = pcall(self.connection, self, c)
           if not okc then self.stats.errors = self.stats.errors + 1 pcall(function() c:close() end) end

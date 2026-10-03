@@ -72,12 +72,19 @@ function M.request(opts)
   while true do
     local u, why = msg.parseUrl(url)
     if not u then return nil, why end
-    if u.scheme ~= "http" then return nil, u.scheme .. ":// is not available here (only http:// inside the game; https needs a real HTTP gateway)" end
+    if u.scheme ~= "http" and u.scheme ~= "https" then return nil, u.scheme .. ":// is not available here (http:// and https:// of the in-game web)" end
     local c = socket.tcp(opts.stack)
     local timeout = opts.timeout or 10
     local ok, err = c:connect(u.host, u.port, timeout)
     if not ok then return nil, "cannot connect to " .. u.host .. ":" .. u.port .. ": " .. tostring(err) end
-    local headers = { host = u.host .. ((u.port ~= 80) and (":" .. u.port) or ""), connection = "close", ["user-agent"] = M.USER_AGENT, accept = "*/*" }
+    if u.scheme == "https" then
+      local okT, tls = pcall(require, "tsr.inet.tls")
+      if not okT then c:close() return nil, "https needs the tls package" end
+      local secure, terr, detail = tls.client(c, u.host, { store = opts.tlsStore, timeout = timeout })
+      if not secure then return nil, "secure connection to " .. u.host .. " failed: " .. tostring(terr) .. (detail and (" (" .. detail .. ")") or "") end
+      c = secure
+    end
+    local headers = { host = u.host .. ((u.port ~= (u.scheme == "https" and 443 or 80)) and (":" .. u.port) or ""), connection = "close", ["user-agent"] = M.USER_AGENT, accept = "*/*" }
     for k, v in pairs(opts.headers or {}) do headers[k:lower()] = v end
     local user, pw = opts.user or u.user, opts.password or u.password
     if user and not headers.authorization then headers.authorization = msg.basicAuth(user, pw) end
