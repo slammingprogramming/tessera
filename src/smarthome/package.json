@@ -1,0 +1,19 @@
+{
+  "name": "smarthome",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "A smart-home hub: named lights, doors, locks and sensors in rooms, scenes, a schedule on the in-game clock, the home command, and an MQTT bridge for panels and other computers",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "hal": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:smarthome"
+  ],
+  "budget": 20000,
+  "tags": [
+    "iot"
+  ]
+}

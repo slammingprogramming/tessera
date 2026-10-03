@@ -103,6 +103,47 @@ end
 -- The browser
 ---------------------------------------------------------------------------------------------------------------------
 
+--- A display board for information pages: shows a page on a monitor (or this screen), loads it again every `interval` seconds and turns the pages of a long one
+--- every `flip` seconds. Runs until Ctrl+T. opts: term, stack, interval (30), flip (8), sleep, clock, maxRounds (tests). Returns the number of rounds it ran.
+function M.board(url, opts)
+  opts = opts or {}
+  local t = opts.term or term.current()
+  local interval, flip = opts.interval or 30, opts.flip or 8
+  local sleepFn = opts.sleep or sleep
+  local clock = opts.clock or os.clock
+  local page, loadedAt
+  local state = { scroll = 0 }
+  local rounds = 0
+  while true do
+    local w, h = t.getSize()
+    if not page or clock() - loadedAt >= interval then
+      local p, err = M.load(url, w, opts)
+      if p then
+        page, loadedAt = p, clock()
+        state.message = nil
+      else
+        state.message = "offline: " .. tostring(err)
+        loadedAt = clock() - interval + math.min(interval, 5)   -- try again soon
+      end
+    end
+    if page then
+      local body = math.max(1, h - 2)
+      local maxScroll = math.max(0, #page.lines - body)
+      state.selected = nil
+      if not state.message then state.message = page.url end
+      M.draw(t, page, state)
+      if state.message == page.url then state.message = nil end
+      if maxScroll > 0 then state.scroll = state.scroll >= maxScroll and 0 or math.min(maxScroll, state.scroll + body) end
+    else
+      t.setBackgroundColor(colors.black) t.clear() t.setCursorPos(1, 1) t.setTextColor(colors.white)
+      t.write((state.message or "loading"):sub(1, w))
+    end
+    rounds = rounds + 1
+    if opts.maxRounds and rounds >= opts.maxRounds then return rounds end
+    sleepFn(flip)
+  end
+end
+
 --- opts: term (default the current terminal), stack, events (function() -> event table, default os.pullEvent), prompt (function(text) -> string, default read()).
 function M.browse(url, opts)
   opts = opts or {}

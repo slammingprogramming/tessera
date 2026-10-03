@@ -302,3 +302,25 @@ test("conflicts and missing dependencies produce readable errors", function()
   local ok2, err = pkg.installPackages({ "app" })
   ok(ok2 == nil and err:find("ghost"), tostring(err))
 end)
+
+test("the anti-virus can stop a package that carries malware", function()
+  reset()
+  local av = require("tsr.av")
+  local savedConfig = av.CONFIG
+  av.CONFIG = "/tmp-state/av.json"
+  vfs.writeFile(av.CONFIG, textutils.serializeJSON({ scan_packages = true }))
+  publish({
+    clean = { version = "1.0.0", files = { [ROOT .. "/bin/clean.lua"] = "print('hello')" } },
+    evil = { version = "1.0.0", files = { [ROOT .. "/bin/evil.lua"] = 'fs.delete("/")' } },
+  })
+  local done, plan = pkg.installPackages({ "clean" })
+  ok(done, tostring(plan))
+  local blocked, why = pkg.installPackages({ "evil" })
+  ok(not blocked and tostring(why):find("blocked by the anti-virus", 1, true) and tostring(why):find("WIPE_DISK", 1, true), tostring(why))
+  ok(not fs.exists(ROOT .. "/bin/evil.lua") and db.get("evil") == nil, "nothing of the package was installed")
+  -- switched off: installs normally
+  vfs.writeFile(av.CONFIG, textutils.serializeJSON({ scan_packages = false }))
+  local allowed = pkg.installPackages({ "evil" })
+  ok(allowed)
+  av.CONFIG = savedConfig
+end)

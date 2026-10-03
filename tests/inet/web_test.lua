@@ -418,3 +418,25 @@ test("https: the web server and client over the secure channel", function()
   ok(plain == nil or plain.status ~= 200)
   vfs.fs.delete(dir)
 end)
+
+test("information board: shows a page on a screen, pages through long text, reloads, survives an unreachable page", function()
+  local www = require("tsr.inet.http.www")
+  local win = window.create(term.current(), 1, 1, 30, 6, false)
+  local path = "/tmp/board-page.html"
+  local lines = {}
+  for i = 1, 12 do lines[#lines + 1] = "<p>Line number " .. i .. "</p>" end
+  vfs.writeFile(path, "<html><head><title>Notice board</title></head><body>" .. table.concat(lines, "\n") .. "</body></html>")
+  local function row(n) return (win.getLine(n)) end
+  local now = 0
+  local shots = {}
+  local n = www.board("file://" .. path, { term = win, maxRounds = 4, interval = 20, flip = 8, clock = function() return now end,
+    sleep = function(s) now = now + s shots[#shots + 1] = row(1) .. "|" .. row(2) .. "|" .. row(4) end })
+  eq(n, 4)
+  ok(shots[1]:find("Notice board", 1, true) and shots[1]:find("Line number 1", 1, true), shots[1])
+  ok(shots[2]:find("Line number 5", 1, true) or shots[2]:find("Line number 4", 1, true), "the second screen shows later lines: " .. shots[2])
+  ok(not shots[2]:find("Line number 1 ", 1, true))
+  -- a page that cannot be loaded is reported on the screen and does not stop the board
+  local rounds = www.board("file:///tmp/no-such-board.html", { term = win, maxRounds = 2, sleep = function() end, clock = function() return 0 end })
+  eq(rounds, 2)
+  ok(row(1):find("offline", 1, true), row(1))
+end)

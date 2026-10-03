@@ -1,4 +1,5 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
+-- www --board <url> [--monitor name] [--every seconds] [--flip seconds]   show a page on a monitor as an information board (kiosk set "www --board ..." makes it permanent)
 -- fetch [-o file] [-I] [-X METHOD] [-d data] [-H "Name: value"] [-u user:password] [-L|--no-follow] [-v] <url>
 -- Gets a page from the in-game web: prints the body (or saves it with -o). -I shows only the response headers, -v shows them with the body.
 local client = require("tsr.inet.http.client")
@@ -55,6 +56,27 @@ end
 
 function M.www(args)
   local www = require("tsr.inet.http.www")
+  if args[1] == "--board" then
+    -- www --board <url> [--monitor name] [--every seconds] [--flip seconds]
+    local url, mon, opts = nil, nil, {}
+    local i = 2
+    while i <= #args do
+      local a = args[i]
+      if a == "--monitor" then i = i + 1 mon = args[i]
+      elseif a == "--every" then i = i + 1 opts.interval = tonumber(args[i])
+      elseif a == "--flip" then i = i + 1 opts.flip = tonumber(args[i])
+      else url = a end
+      i = i + 1
+    end
+    if not url then print("usage: www --board <url> [--monitor name] [--every seconds] [--flip seconds]") return false end
+    if mon then
+      local m = peripheral.wrap(mon)
+      if not m then print("no monitor named " .. mon) return false end
+      opts.term = m
+    end
+    www.board(url, opts)
+    return true
+  end
   local ok, err = www.browse(args[1])
   if not ok and err then print(err) return false end
   return true

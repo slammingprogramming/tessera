@@ -1,0 +1,18 @@
+{
+  "name": "av",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Anti-virus for computers and servers: behaviour rules for harmful scripts (disk wipers, downloaders, worms, backdoors, password thieves), signature lists with signed updates, quarantine, floppy scanning, mail attachment scanning, and a hook for the package manager",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "crypto": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:av"
+  ],
+  "budget": 40000,
+  "tags": [
+    "security"
+  ]
+}

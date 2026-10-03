@@ -229,6 +229,13 @@ function M.apply(plan, opts)
         local data, err = source.getBlob(f.sha256, item.entry.source)
         if not data then return fail(("%s: cannot fetch %s: %s"):format(item.entry.name, f.path, tostring(err))) end
         if #data ~= f.size then return fail(item.entry.name .. ": size mismatch for " .. f.path) end
+        -- the anti-virus (if installed and switched on with `av config set scan_packages=true`) looks at what is about to be installed
+        local okAv, av = pcall(require, "tsr.av")
+        if okAv and av.settings().scan_packages then
+          local r = av.scanData(data, { path = f.path })
+          if r.verdict == "malicious" then return fail(("%s: %s was blocked by the anti-virus (%s)"):format(item.entry.name, f.path, av.describe(r))) end
+          if r.verdict == "suspicious" then log.warn("%s", ("%s: %s looks suspicious (%s)"):format(item.entry.name, f.path, av.describe(r))) end
+        end
         local wok, werr = rawWrite(M.stageDir .. "/" .. f.sha256, data)
         if not wok then return fail("cannot stage " .. f.path .. ": " .. tostring(werr)) end
         staged[f.sha256] = true

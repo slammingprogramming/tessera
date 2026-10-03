@@ -1,0 +1,19 @@
+{
+  "name": "modbus",
+  "version": "0.1.0",
+  "type": "service",
+  "description": "Modbus/TCP for in-game industrial control: a slave that exposes redstone ports and machines by address (with network allow list and read-only mode), a client library, and the modbus / modbusctl commands",
+  "license": "AGPL-3.0-or-later",
+  "requires": {
+    "core": ">=0.1.0",
+    "inet": ">=0.1.0",
+    "svc-manager": ">=0.1.0"
+  },
+  "provides": [
+    "tsr:modbus"
+  ],
+  "budget": 30000,
+  "tags": [
+    "network"
+  ]
+}
