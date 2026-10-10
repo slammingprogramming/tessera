@@ -12,6 +12,10 @@ Mail from trusted networks (relayNetworks) and from users who logged in is never
   local S = spam.install(mail, { greylist = { delay = 300 }, dnsbl = { "bl.example.lan" }, spamAt = 5, rejectAt = 12, bayes = "/var/lib/tsr/mail/bayes.lua",
                                  dkim = { ["example.lan"] = { selector = "mail1", seed = <32 bytes> } }, allow = { "friend@x.lan" }, deny = { "spammer.lan" } })
 
+## `Spam:listVerdict(ctx)`
+
+The administrator's lists: "allow" or "deny" (and which entry) for a message, or nil. Cheap, so it is asked first, before any DNS or signature work.
+
 ## `Spam:authFilter(ctx)`
 
 The filter for incoming mail from other servers.

@@ -35,7 +35,7 @@ function M.encodeBeacon(b)
 end
 
 function M.decodeBeacon(body)
-  if #body < 5 then return nil end
+  if #body < 6 then return nil end
   local ssidLen = body:byte(6)
   if #body < 6 + ssidLen + 5 then return nil end
   return { interval = B.rd16(body, 1), channel = body:byte(3), security = body:byte(4), hidden = body:byte(5) == 1, ssid = body:sub(7, 6 + ssidLen),

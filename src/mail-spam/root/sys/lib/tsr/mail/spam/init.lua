@@ -116,11 +116,32 @@ local function level(score)
   return string.rep("*", n)
 end
 
+--- The administrator's lists: "allow" or "deny" (and which entry) for a message, or nil. Cheap, so it is asked first, before any DNS or signature work.
+function Spam:listVerdict(ctx)
+  local cfg = self.cfg
+  local from = ctx.message:from()
+  local addr, dom = from and from.addr or "", domainOf(from)
+  local senderAddr = (ctx.sender or ""):lower()
+  local senderDom = senderAddr:match("@([^@]+)$") or ""
+  local ipStr = tostring(ctx.ip)
+  if listed(cfg.allow, addr, dom, ipStr) or listed(cfg.allow, senderAddr, senderDom, ipStr) then return "allow" end
+  local denied = listed(cfg.deny, addr, dom, ipStr) or listed(cfg.deny, senderAddr, senderDom, ipStr)
+  if denied then return "deny", denied end
+end
+
 --- The filter for incoming mail from other servers.
 function Spam:authFilter(ctx)
   local mail = self.mail
   if ctx.authUser or mail:mayRelay(ctx.ip) then ctx.results.trusted = true return nil end
   local cfg = self.cfg
+  local which, entry = self:listVerdict(ctx)
+  if which == "deny" then
+    mail.stats.rejected = mail.stats.rejected + 1
+    return { "reject", 550, "5.7.1 Mail from " .. entry .. " is not accepted here" }
+  elseif which == "allow" then
+    ctx.results.listed = "allow"
+    return nil                                       -- no SPF/DKIM/DMARC work for senders the administrator vouches for
+  end
   local res = ctx.results
   local senderDomain = (ctx.sender or ""):match("@([^@]+)$")
   local from = ctx.message:from()
@@ -159,19 +180,11 @@ function Spam:scoreFilter(ctx)
   local cfg = self.cfg
   local m = ctx.message
   local from = m:from()
-  local addr = from and from.addr or ""
-  local dom = domainOf(from)
-  local senderAddr = (ctx.sender or ""):lower()
-  local senderDom = senderAddr:match("@([^@]+)$") or ""
   local ipStr = tostring(ctx.ip)
-  if listed(cfg.allow, addr, dom, ipStr) or listed(cfg.allow, senderAddr, senderDom, ipStr) then
+  local senderAddr = (ctx.sender or ""):lower()
+  if ctx.results.listed == "allow" or self:listVerdict(ctx) == "allow" then
     ctx.add[#ctx.add + 1] = "X-Spam-Status: No, allowed by the administrator"
     return nil
-  end
-  local denied = listed(cfg.deny, addr, dom, ipStr) or listed(cfg.deny, senderAddr, senderDom, ipStr)
-  if denied then
-    mail.stats.rejected = mail.stats.rejected + 1
-    return { "reject", 550, "5.7.1 Mail from " .. denied .. " is not accepted here" }
   end
   local parts = m:parts()
   local c = { m = m, subject = m:subject(), text = m:text(), from = from, raw = ctx.raw, results = ctx.results, attachments = m:attachments(), htmlOnly = false }

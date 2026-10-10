@@ -3,7 +3,7 @@
 // several pastes, a binary file in base64 and a snapshot that is itself in several pastes, so the Lua clients are checked against the real producer.
 //   node tools/test/gen-paste-fixtures.mjs
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root } from '../lib/craftos.mjs';
@@ -59,5 +59,12 @@ for (const [id, text] of Object.entries(pastes)) out.push(`    [${q(id)}] = ${q(
 out.push('  },', `  snapshot = ${q(snapIds.join('+'))},`, `  longSha = ${q(expected.blobs['/sys/long.lua'])},`, `  dataSha = ${q(expected.blobs['/sys/data.bin'])},`, `  bootSha = ${q(expected.blobs['/sys/boot.lua'])},`);
 out.push(`  longRef = ${q(snapshot.blobs[expected.blobs['/sys/long.lua']])},`, `  dataRef = ${q(snapshot.blobs[expected.blobs['/sys/data.bin']])},`);
 out.push(`  indexText = ${q(JSON.stringify(index))},`, '}');
-writeFileSync(join(root, 'tests', 'fixtures', 'paste_fixtures.lua'), out.join('\n') + '\n');
+const target = join(root, 'tests', 'fixtures', 'paste_fixtures.lua');
+if (process.argv.includes('--check')) {
+  const current = existsSync(target) ? readFileSync(target, 'utf8') : '';
+  if (current !== out.join('\n') + '\n') { console.error('tests/fixtures/paste_fixtures.lua is out of date: run node tools/test/gen-paste-fixtures.mjs'); process.exit(1); }
+  console.log('paste fixtures are current');
+  process.exit(0);
+}
+writeFileSync(target, out.join('\n') + '\n');
 console.log(`wrote tests/fixtures/paste_fixtures.lua (${Object.keys(pastes).length + snapIds.length} pastes, snapshot in ${snapIds.length} parts)`);

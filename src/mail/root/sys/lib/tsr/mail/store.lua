@@ -30,11 +30,22 @@ local function hashPassword(password, salt, iterations)
   return salt .. "$" .. iterations .. "$" .. crypto.toHex(crypto.kdf.pbkdf2(password, salt, iterations, 32))
 end
 
-function Store:users() return vfs.readTable(self.usersPath) or {} end
+--- The accounts. The table is cached until the file changes (another process may change it), so callers must save what they change (saveUsers) and not keep a table they did not save.
+function Store:users()
+  local okA, a = pcall(vfs.fs.attributes, self.usersPath)
+  local stamp = okA and type(a) == "table" and (tostring(a.modified) .. ":" .. tostring(a.size)) or nil
+  if stamp and self.usersCache and self.usersStamp == stamp then return self.usersCache end
+  local t = vfs.readTable(self.usersPath) or {}
+  if stamp then self.usersCache, self.usersStamp = t, stamp else self.usersCache = nil end
+  return t
+end
 
-function Store:saveUsers(t) return vfs.writeTable(self.usersPath, t) end
+function Store:saveUsers(t)
+  self.usersCache = nil
+  return vfs.writeTable(self.usersPath, t)
+end
 
-local function validName(name) return type(name) == "string" and name:match("^[%w][%w._%-]*$") and #name <= 32 end
+local function validName(name) return type(name) == "string" and name:match("^[%w][%w._%-]*$") and #name <= 32 and not name:find("..", 1, true) end
 
 function Store:addUser(name, password, opts)
   opts = opts or {}
@@ -102,7 +113,14 @@ end
 -- Folders and messages
 ---------------------------------------------------------------------------------------------------------------------
 
-function Store:dir(mailbox, folder) return self.root .. "/" .. mailbox .. "/" .. folder end
+--- The folder of a mailbox on disk. Names are checked here, in one place, because they reach every file operation: letters, digits, space, dot, dash, underscore; no "..".
+function Store:dir(mailbox, folder)
+  if type(mailbox) ~= "string" or type(folder) ~= "string" or #mailbox > 64 or #folder > 64 or not mailbox:match("^[%w][%w._%-]*$") or not folder:match("^[%w][%w ._%-]*$")
+    or mailbox:find("..", 1, true) or folder:find("..", 1, true) then
+    error("bad mailbox or folder name", 0)
+  end
+  return self.root .. "/" .. mailbox .. "/" .. folder
+end
 
 function Store:ensure(mailbox)
   for _, f in ipairs(M.FOLDERS) do

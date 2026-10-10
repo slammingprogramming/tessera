@@ -99,7 +99,11 @@ function M.decodeWords(s)
   end))
 end
 
+M.MAX_DEPTH = 8
+M.MAX_PARTS = 200
+
 function M.encodeWord(s)
+  s = (tostring(s):gsub("[\r\n]+", " "))             -- a header value is one line: line breaks would start new headers
   if not s:find("[\128-\255]") then return s end
   return "=?UTF-8?B?" .. hash.base64Encode(s) .. "?="
 end
@@ -178,8 +182,10 @@ function Message:parts()
   if self._parts then return self._parts end
   local ctype, params = parseContentType(self:header("content-type"))
   local out = {}
-  local function walk(ct, pr, headers, body)
-    if ct:match("^multipart/") and pr.boundary then
+  -- limits against messages built to exhaust the computer: nesting depth and number of parts
+  local function walk(ct, pr, headers, body, depth)
+    if #out >= M.MAX_PARTS then return end
+    if ct:match("^multipart/") and pr.boundary and depth < M.MAX_DEPTH then
       local b = pr.boundary
       local pieces = {}
       local pos = 1
@@ -199,7 +205,7 @@ function Message:parts()
         local h, pb = M.parseHeaders(piece)
         local sub = setmetatable({ headers = h }, Message)
         local ct2, pr2 = parseContentType(sub:header("content-type"))
-        walk(ct2, pr2, sub, pb)
+        walk(ct2, pr2, sub, pb, depth + 1)
       end
     else
       local disp = headers.header and headers:header("content-disposition") or nil
@@ -209,7 +215,7 @@ function Message:parts()
       out[#out + 1] = { type = ct, name = name and M.decodeWords(name), data = decodeTransfer(body, enc), disposition = disp and disp:match("^%s*([%w%-]+)") or nil, charset = pr.charset }
     end
   end
-  walk(ctype, params, self, self.body)
+  walk(ctype, params, self, self.body, 1)
   self._parts = out
   return out
 end
@@ -252,7 +258,8 @@ end
 --- Build a message. m: from (address text), to / cc (list of address texts or one string), subject, body (text), attachments = { { name, data, type } },
 --- headers = { Name = value }, date (ms), messageId, host (for the Message-ID).
 function M.build(m)
-  local function list(v) if type(v) == "table" then return table.concat(v, ", ") end return v end
+  local function oneLine(v) return (tostring(v):gsub("[\r\n]+", " ")) end
+  local function list(v) if type(v) == "table" then v = table.concat(v, ", ") end return oneLine(v) end
   local h = {}
   h[#h + 1] = "From: " .. M.encodeWord(m.from)
   if m.to then h[#h + 1] = "To: " .. list(m.to) end
@@ -261,7 +268,7 @@ function M.build(m)
   h[#h + 1] = "Date: " .. rfcDate(m.date)
   h[#h + 1] = "Message-ID: " .. (m.messageId or M.newId(m.host))
   h[#h + 1] = "MIME-Version: 1.0"
-  for k, v in pairs(m.headers or {}) do h[#h + 1] = k .. ": " .. v end
+  for k, v in pairs(m.headers or {}) do h[#h + 1] = oneLine(k) .. ": " .. oneLine(v) end
   local body = crlf(m.body or "")
   if body ~= "" and body:sub(-2) ~= "\r\n" then body = body .. "\r\n" end
   local text

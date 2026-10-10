@@ -53,9 +53,7 @@ end
 
 function Session:login(user, pass)
   local mail = self.mail
-  mail.authFailures = mail.authFailures or {}
-  local rec = mail.authFailures[self.ip or "?"] or { n = 0, until_ = 0 }
-  mail.authFailures[self.ip or "?"] = rec
+  local rec = mail:failureRecord(self.ip)
   local now = mail.stack.clock()
   if now < rec.until_ then return "-ERR [SYS/TEMP] Too many failed logins; try again later", "close" end
   local name = mail.store:authenticate(user, pass)

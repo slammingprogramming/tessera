@@ -357,3 +357,47 @@ test("failures: unknown users bounce, a server that is down is retried, giving u
   local big = smtp.deliver(w.pc, "10.0.0.2", { from = "alice@example.lan", rcpts = { "carol@other.lan" }, helo = "pc.lan", port = 25, data = "Subject: big\r\n\r\n" .. string.rep("x", 1200000) })
   ok(not big.ok and not big.tempfail and big.error:find("larger than the server accepts", 1, true), tostring(big.error))
 end)
+
+test("a list is delivered member by member: a full or failing mailbox does not stop the others and nothing is delivered twice", function()
+  local sim, w = world()
+  w.m1.cfg.deliverNow = false
+  local raw = msg.build({ from = "alice@example.lan", to = "team@example.lan", subject = "List", body = "x", host = "example.lan" })
+  -- team = alice, bob, carol@other.lan; bob's mailbox is full
+  w.m1.store:setQuota("bob", 10)
+  w.m1:enqueue("alice@example.lan", { "team@example.lan" }, raw)
+  w.m1:processQueue(true)
+  sim:run(1)
+  w.m1:processQueue(true)
+  local function subjects(store, user)
+    local out = {}
+    for _, m in ipairs(store:list(user)) do out[#out + 1] = m.subject end
+    return out
+  end
+  eq(subjects(w.m1.store, "alice"), { "List", "Undelivered Mail Returned to Sender" }, "alice got the list mail once and the notice about bob")
+  eq(subjects(w.m1.store, "bob"), {})
+  eq(subjects(w.m2.store, "carol"), { "List" }, "the remote member was not forgotten")
+  ok(w.m1.store:get("alice", "INBOX", 2):find("bob (team@example.lan)", 1, true))
+  -- a temporary failure: only the failed member is tried again
+  w.m1.store:setQuota("bob", 100000)
+  local real = w.m1.deliverLocal
+  local failBob = true
+  w.m1.deliverLocal = function(self, mailbox, ...)
+    if mailbox == "bob" and failBob then failBob = false return nil, "disk error" end
+    return real(self, mailbox, ...)
+  end
+  local raw2 = msg.build({ from = "alice@example.lan", to = "team@example.lan", subject = "Second", body = "y", host = "example.lan" })
+  w.m1:enqueue("alice@example.lan", { "team@example.lan" }, raw2)
+  w.m1:processQueue(true)
+  eq(#w.m1:queueList(), 1)
+  sim:run(1)
+  w.m1:processQueue(true)
+  w.m1:processQueue(true)
+  sim:run(1)
+  eq(#w.m1:queueList(), 0)
+  eq(subjects(w.m1.store, "bob"), { "Second" })
+  local aliceSecond = 0
+  for _, s in ipairs(subjects(w.m1.store, "alice")) do if s == "Second" then aliceSecond = aliceSecond + 1 end end
+  eq(aliceSecond, 1, "alice got it once, not once per retry")
+  eq(subjects(w.m2.store, "carol"), { "List", "Second" }, "and carol too")
+  w.m1.deliverLocal = real
+end)

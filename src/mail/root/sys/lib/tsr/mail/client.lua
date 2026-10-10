@@ -104,7 +104,8 @@ end
 function Client:folders() return self.store:folders(MAILBOX) end
 
 function Client:list(folder)
-  local items = self.store:list(MAILBOX, folder or "INBOX")
+  local okL, items = pcall(self.store.list, self.store, MAILBOX, folder or "INBOX")
+  if not okL then return {} end         -- not a valid folder name
   for i, m in ipairs(items) do m.n = i end
   return items
 end
@@ -127,7 +128,9 @@ end
 function Client:move(folder, n, target)
   local e = entry(self, folder, n)
   if not e then return nil, "no such message" end
-  return self.store:move(MAILBOX, folder, e.uid, target)
+  local okM, uid, err = pcall(self.store.move, self.store, MAILBOX, folder, e.uid, target)
+  if not okM then return nil, "bad folder name" end
+  return uid, err
 end
 
 --- Move to Trash; from Trash the message is deleted for good.

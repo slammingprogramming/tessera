@@ -17,6 +17,7 @@ const steps = [
   ['gateway tests', ['tools/gateway/gateway.test.mjs']],
   ['bundle builder tests', ['tools/build/bundler.test.mjs']],
   ['paste manager tests', ['tools/build/pastes.test.mjs']],
+  ['paste fixtures are current', ['tools/test/gen-paste-fixtures.mjs', '--check']],
 ];
 if (!process.argv.includes('--no-emulator')) {
   if (!findCraftOS()) {

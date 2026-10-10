@@ -155,7 +155,7 @@ function Server:permits(ip)
   return false
 end
 
-local function exception(fn, code) return string.char(fn + 128, code) end
+local function exception(fn, code) return string.char((fn or 0) % 128 + 128, code) end
 
 local function readPoint(pt)
   local ok, v = pcall(pt.read)

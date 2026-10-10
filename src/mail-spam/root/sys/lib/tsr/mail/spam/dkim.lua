@@ -175,7 +175,7 @@ function M.verify(mail, raw)
       local r, d, w = verifyOne(mail, fields, body, f)
       all[#all + 1] = { result = r, domain = d, why = w }
       if r == "pass" then return "pass", d, w, all end
-      if #all >= 5 then break end
+      if #all >= 2 then break end            -- each check is an Ed25519 verification and a DNS lookup: do not let one message ask for dozens
     end
   end
   if #all == 0 then return "none", nil, "no DKIM signature", all end

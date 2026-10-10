@@ -10,9 +10,17 @@ Also here: the accounts (name, password hash, quota) in /etc/tsr/mail/users.lua.
 
 root: where mailboxes live (default M.ROOT), users: path of the accounts file (default M.USERS), iterations: password hashing work.
 
+## `Store:users()`
+
+The accounts. The table is cached until the file changes (another process may change it), so callers must save what they change (saveUsers) and not keep a table they did not save.
+
 ## `Store:authenticate(name, password)`
 
 Check a password. Returns the account name or nil.
+
+## `Store:dir(mailbox, folder)`
+
+The folder of a mailbox on disk. Names are checked here, in one place, because they reach every file operation: letters, digits, space, dot, dash, underscore; no "..".
 
 ## `Store:usage(mailbox)`
 

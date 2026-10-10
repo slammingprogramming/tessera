@@ -162,7 +162,7 @@ function Broker:close(c, graceful)
       -- keep the subscriptions and the unacknowledged messages for the next time
       local queue = {}
       for _, m in pairs(c.inflight) do queue[#queue + 1] = m end
-      self.sessions[c.id] = { connected = false, subs = c.subs, queue = queue, inflight = {}, nextId = c.nextId, state = "offline" }
+      self.sessions[c.id] = { connected = false, subs = c.subs, queue = queue, inflight = {}, nextId = c.nextId, state = "offline", user = c.user }
     else
       self.sessions[c.id] = nil
     end
@@ -192,6 +192,15 @@ local function connect(self, c, p)
     send(c, { type = "connack", code = 5 })
     return self:close(c, true)
   end
+  -- a will message is a publish made later: it needs a valid topic and the right to publish there, checked now
+  if p.will then
+    if not topicMod.validTopic(p.will.topic) or not allowed(self, { user = user }, "pub", p.will.topic) then
+      send(c, { type = "connack", code = 5 })
+      self.log(("%s may not set a will on %s"):format(tostring(user or id), tostring(p.will.topic)))
+      return self:close(c, true)
+    end
+    p.will.qos = math.min(p.will.qos or 0, 1)
+  end
   local old = self.clients[id]
   if not old and self.stats.connected >= self.maxClients then send(c, { type = "connack", code = 3 }) return self:close(c, true) end
   if old then self:close(old, false) end
@@ -199,9 +208,14 @@ local function connect(self, c, p)
   c.state = "connected"
   local present = false
   local session = self.sessions[id]
+  -- a stored session belongs to the user who made it; somebody else with the same client id starts from nothing
+  if session and session.user ~= user then session = nil end
   if session and not p.clean then
     present = true
-    c.subs, c.nextId = session.subs, session.nextId
+    c.subs, c.nextId = {}, session.nextId
+    for filter, q in pairs(session.subs) do
+      if allowed(self, c, "sub", filter) then c.subs[filter] = q end      -- the access list may have changed since
+    end
   end
   self.clients[id] = c
   self.stats.connected = self.stats.connected + 1

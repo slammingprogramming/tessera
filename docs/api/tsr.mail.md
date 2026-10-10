@@ -21,6 +21,11 @@ when the administrator changes them).
 
 The time that queue ages and retries are counted in (seconds; wall-clock when the game offers it). cfg.now replaces it in tests.
 
+## `Mail:failureRecord(ip)`
+
+The record of failed logins for a client address (shared by SMTP and POP3). Records with nothing to remember are dropped now and then, so that addresses which
+tried once do not accumulate for ever.
+
 ## `Mail:mayRelay(ip)`
 
 May this client address send mail to any domain without authenticating?

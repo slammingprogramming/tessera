@@ -57,6 +57,28 @@ function Mail:now()
   return os.epoch and os.epoch("utc") / 1000 or self.stack.clock()
 end
 
+--- The record of failed logins for a client address (shared by SMTP and POP3). Records with nothing to remember are dropped now and then, so that addresses which
+--- tried once do not accumulate for ever.
+function Mail:failureRecord(ip)
+  local t = self.authFailures
+  if not t then t = {} self.authFailures = t self.authFailureCount = 0 end
+  local key = ip or "?"
+  local rec = t[key]
+  if rec then return rec end
+  self.authFailureCount = self.authFailureCount + 1
+  if self.authFailureCount > 256 then
+    local now = self.stack.clock()
+    local n = 0
+    for k, r in pairs(t) do
+      if r.n == 0 and now >= r.until_ then t[k] = nil else n = n + 1 end
+    end
+    self.authFailureCount = n
+  end
+  rec = { n = 0, until_ = 0 }
+  t[key] = rec
+  return rec
+end
+
 function Mail:isLocalDomain(d) return self.domains[tostring(d):lower()] == true end
 
 --- May this client address send mail to any domain without authenticating?
@@ -252,21 +274,29 @@ function Mail:processEntry(meta)
       local dest, why = self:expand(r.addr)
       if not dest then failures[#failures + 1] = { addr = r.addr, reason = tostring(why) }
       else
-        local okAll = true
+        -- Every member of an alias or list is delivered on its own: one that fails does not stop the others, and what already arrived is remembered (r.delivered)
+        -- so that a retry does not deliver it a second time.
+        local delivered = r.delivered or {}
+        local tempFail
         for _, d in ipairs(dest) do
           if d.mailbox then
-            local ok, err = self:deliverLocal(d.mailbox, raw, nil, meta.sender, r.addr)
-            if not ok then
-              okAll = false
-              if err == "quota" then failures[#failures + 1] = { addr = r.addr, reason = "mailbox full" } else pending[#pending + 1] = { addr = r.addr, tries = (r.tries or 0) + 1, last = tostring(err) } end
-              break
+            if not delivered[d.mailbox] then
+              local ok, err = self:deliverLocal(d.mailbox, raw, nil, meta.sender, r.addr)
+              if ok then delivered[d.mailbox] = true
+              elseif err == "quota" then
+                failures[#failures + 1] = { addr = #dest > 1 and (d.mailbox .. " (" .. r.addr .. ")") or r.addr, reason = "mailbox full" }
+                delivered[d.mailbox] = true            -- a permanent failure: do not try this member again
+              else tempFail = tempFail or tostring(err) end
             end
-          else
+          elseif not r.remoteDone then
             -- an alias pointing to a remote address: relay it
             local ra = msg.parseAddress(d.remote)
             byDomain[ra.domain] = byDomain[ra.domain] or {}
             table.insert(byDomain[ra.domain], d.remote)
           end
+        end
+        if tempFail then
+          pending[#pending + 1] = { addr = r.addr, tries = (r.tries or 0) + 1, last = tempFail, delivered = delivered, remoteDone = true }
         end
       end
     else

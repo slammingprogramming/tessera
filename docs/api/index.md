@@ -252,13 +252,13 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 
 - [tsr.mail.client](tsr.mail.client.md) (8 functions)
 - [tsr.mail.config](tsr.mail.config.md) (2 functions)
-- [tsr.mail](tsr.mail.md) (15 functions)
+- [tsr.mail](tsr.mail.md) (16 functions)
 - [tsr.mail.message](tsr.mail.message.md) (12 functions)
 - [tsr.mail.pop3](tsr.mail.pop3.md) (6 functions)
 - [tsr.mail.pop3d](tsr.mail.pop3d.md) (3 functions)
 - [tsr.mail.smtp](tsr.mail.smtp.md) (2 functions)
 - [tsr.mail.smtpd](tsr.mail.smtpd.md) (5 functions)
-- [tsr.mail.store](tsr.mail.store.md) (8 functions)
+- [tsr.mail.store](tsr.mail.store.md) (10 functions)
 
 ## Package `mail-spam`
 
@@ -267,7 +267,7 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.mail.spam.dmarc](tsr.mail.spam.dmarc.md) (1 functions)
 - [tsr.mail.spam.dnsbl](tsr.mail.spam.dnsbl.md) (2 functions)
 - [tsr.mail.spam.greylist](tsr.mail.spam.greylist.md) (3 functions)
-- [tsr.mail.spam](tsr.mail.spam.md) (6 functions)
+- [tsr.mail.spam](tsr.mail.spam.md) (7 functions)
 - [tsr.mail.spam.spf](tsr.mail.spam.spf.md) (1 functions)
 
 ## Package `media`

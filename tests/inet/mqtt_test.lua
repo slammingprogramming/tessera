@@ -226,7 +226,7 @@ end)
 
 test("the broker: will messages, persistent sessions, keepalive, access lists, limits", function()
   local b, clock, client = newBroker({ allowAnonymous = true, acl = {
-    sensor = { pub = { "home/+/+/state" }, sub = {} }, ["*"] = { pub = { "chat/#" }, sub = { "home/#", "chat/#" } } }, maxSubscriptions = 2, authenticate = nil })
+    sensor = { pub = { "home/+/+/state" }, sub = {} }, ["*"] = { pub = { "chat/#", "home/+/online" }, sub = { "home/#", "chat/#" } } }, maxSubscriptions = 2, authenticate = nil })
   local watcher = client()
   watcher:connect("watcher")
   watcher:send({ type = "subscribe", id = 1, topics = { { filter = "home/+/online", qos = 0 } } })
@@ -395,4 +395,46 @@ test("the mqtt commands and the user database", function()
   ok(st.lines[1]:find("port 1883, anonymous devices refused, 1 user(s)", 1, true), st.lines[1])
   eq(daemon.loadConfig().port, 1883)
   daemon.USERS, daemon.CONFIG = savedUsers, savedConfig
+end)
+
+test("the broker: a will needs the right to publish, and a stored session belongs to its user", function()
+  local users = { alice = "a", bob = "b" }
+  local b, clock, client = newBroker({ authenticate = function(name, pw) if users[name] and users[name] == pw then return name end end,
+    acl = { alice = { pub = { "chat/#" }, sub = { "secret/#", "chat/#" } }, bob = { pub = { "chat/#" }, sub = { "chat/#" } } } })
+  -- a will on a topic the user may not publish to is refused at CONNECT
+  local mallory = client()
+  local ack = mallory:connect("m1", { username = "bob", password = "b", will = { topic = "home/door/set", payload = "open", qos = 0, retain = true } })
+  eq(ack.code, 5) ok(mallory.closed)
+  eq(b.retained["home/door/set"], nil)
+  -- topics with wildcards or in $SYS are no wills either
+  local m2 = client()
+  eq(m2:connect("m2", { username = "bob", password = "b", will = { topic = "chat/#", payload = "x", qos = 0 } }).code, 5)
+  -- an allowed will still works
+  local watcher = client()
+  watcher:connect("w", { username = "alice", password = "a" })
+  watcher:send({ type = "subscribe", id = 1, topics = { { filter = "chat/#", qos = 0 } } })
+  watcher:take()
+  local good = client()
+  eq(good:connect("g", { username = "bob", password = "b", will = { topic = "chat/bob", payload = "gone", qos = 2 } }).code, 0)
+  b:close(good.rec, false)
+  eq(watcher:take()[1].payload, "gone")
+  -- alice's persistent session cannot be taken over by bob with the same client id
+  local a1 = client()
+  a1:connect("panel", { username = "alice", password = "a", clean = false })
+  a1:send({ type = "subscribe", id = 1, topics = { { filter = "secret/#", qos = 1 } } })
+  a1:take()
+  a1:send({ type = "disconnect" })
+  local talker = client()
+  talker:connect("t", { username = "alice", password = "a" })
+  b.acl.alice.pub = { "chat/#", "secret/#" }
+  talker:send({ type = "publish", topic = "secret/plan", payload = "the plan", qos = 1, id = 1 })
+  local bobPanel = client()
+  local bobAck = bobPanel:connect("panel", { username = "bob", password = "b", clean = false })
+  eq(bobAck.sessionPresent, false)
+  eq(#bobPanel:take(), 0, "none of alice's queued messages")
+  bobPanel:send({ type = "publish", topic = "chat/x", payload = "hi", qos = 0 })
+  -- alice gets her own session back, with her queued message
+  bobPanel:send({ type = "disconnect" })
+  local a2 = client()
+  eq(a2:connect("panel", { username = "alice", password = "a", clean = false }).sessionPresent, false, "bob's connection replaced the stored session")
 end)
