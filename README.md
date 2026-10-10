@@ -29,6 +29,7 @@ been smoke-tested in real Minecraft yet.
 - [Package format](docs/PACKAGE-FORMAT.md) · [Integrations](docs/INTEGRATIONS.md) · [Feature parity matrix](docs/PARITY-MATRIX.md)
 - [Real-world tools in the game](docs/REALWORLD.md) (time sync, ssh, pgp, torrent, firewall, DNS, encrypted folders, tar/diff) · [Security model](docs/SECURITY.md)
 - [The in-game internet](docs/NETWORKING.md) · [Mail](docs/MAIL.md) · [Devices, smart homes and industrial control](docs/IOT.md)
+- [The Pastebin mirror](docs/PASTEBIN.md) — installing without the web site
 - [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Research notes](docs/RESEARCH.md)
 
 ## Contact

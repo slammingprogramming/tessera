@@ -16,7 +16,7 @@ const steps = [
   ['size limits', ['tools/build/sizes.mjs']],
   ['gateway tests', ['tools/gateway/gateway.test.mjs']],
   ['bundle builder tests', ['tools/build/bundler.test.mjs']],
-  ['pastebin tool tests', ['tools/build/pastebin.test.mjs']],
+  ['paste manager tests', ['tools/build/pastes.test.mjs']],
 ];
 if (!process.argv.includes('--no-emulator')) {
   if (!findCraftOS()) {

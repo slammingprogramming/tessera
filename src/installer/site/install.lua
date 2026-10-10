@@ -11,7 +11,7 @@
 --
 -- Options:  <path>        mirror directory      --bundle <file>   offline bundle file
 --           --yes         no questions          --no-reboot       do not offer a reboot
---@inline tsr.hash tsr.inflate tsr.bundle tsr.pkg.importer tsr.crypto.yield tsr.crypto.fe tsr.crypto.sha512 tsr.crypto.ed25519 tsr.crypto.kdf tsr.crypto.sign tsr.pkg.sig
+--@inline tsr.hash tsr.inflate tsr.bundle tsr.pkg.importer tsr.crypto.yield tsr.crypto.fe tsr.crypto.sha512 tsr.crypto.ed25519 tsr.crypto.kdf tsr.crypto.sign tsr.pkg.sig tsr.pkg.pasteref
 
 local BASES = { "https://OWNER.github.io/REPO" }
 local SNAPSHOT = "@PASTEBIN_SNAPSHOT@"
@@ -92,21 +92,14 @@ local function trySources()
         return function(rel) return httpGet(url .. "/" .. rel) end, "http"
       end
     end
-    -- pastebin snapshot
+    -- pastebin snapshot (every file is a paste of its own; long files span several)
     if SNAPSHOT ~= "" and not SNAPSHOT:find("@", 1, true) then
-      local body = httpGet("https://pastebin.com/raw/" .. SNAPSHOT)
-      local snap = body and textutils.unserializeJSON(body)
+      local pasteref = require("tsr.pkg.pasteref")
+      local function rawPaste(id) return httpGet("https://pastebin.com/raw/" .. id) end
+      local snap = pasteref.loadSnapshot(SNAPSHOT, rawPaste)
       if snap then
         say(colors.lightGray, "channel: pastebin")
-        return function(rel)
-          if rel == "registry/index.json" then return snap.indexJson or textutils.serializeJSON(snap.index or {}) end
-          if rel == "registry/index.json.sig" then return snap.indexSig end
-          local key = rel:match("^registry/packages/(.+)%.json$")
-          key = key and ("packages/" .. key) or rel:match("^blobs/(%x+)$")
-          local id = key and snap.pastes and snap.pastes[key]
-          if not id then return nil, "not in snapshot" end
-          return httpGet("https://pastebin.com/raw/" .. id)
-        end, "pastebin"
+        return function(rel) return pasteref.read(snap, rel, rawPaste) end, "pastebin"
       end
     end
   end

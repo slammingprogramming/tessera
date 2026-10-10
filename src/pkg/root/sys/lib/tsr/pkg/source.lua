@@ -6,7 +6,7 @@
 -- Source types:
 --   http      one or more mirror base URLs (GitHub Pages, ...)        { type="http", bases={...} }
 --   dir       a directory with the layout above (disk, mount, offline import store)   { type="dir", path="..." }
---   pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }
+--   pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }  (see tsr.pkg.pasteref; long files span several pastes: "id1+id2")
 -- Registries may be signed (see tsr.pkg.trust): registry/index.json.sig vouches for the index, and the index records the
 -- SHA-256 of every package description ("docSha256"); registry/trust.json(.sig) carries signed key updates.
 --   lan       a paired computer running the pkg-mirror service         { type="lan", peer="<name>" }  (package pkg-mirror)
@@ -72,12 +72,13 @@ fetchers.dir = {
   end,
 }
 
+--- One raw paste (replaced in tests).
+function M.pasteGet(id) return httpGet("https://pastebin.com/raw/" .. id) end
+
 local function snapshot(src)
   if src._snap then return src._snap end
-  local body, err = httpGet("https://pastebin.com/raw/" .. src.snapshot)
-  if not body then return nil, err end
-  local snap = textutils.unserializeJSON(body)
-  if type(snap) ~= "table" then return nil, "bad pastebin snapshot" end
+  local snap, err = require("tsr.pkg.pasteref").loadSnapshot(src.snapshot, function(id) return M.pasteGet(id) end)
+  if not snap then return nil, err end
   src._snap = snap
   return snap
 end
@@ -86,15 +87,7 @@ fetchers.pastebin = {
   read = function(src, rel)
     local snap, err = snapshot(src)
     if not snap then return nil, err end
-    if rel == "registry/index.json" then return snap.indexJson or textutils.serializeJSON(snap.index or {}) end
-    if rel == "registry/index.json.sig" then return snap.indexSig end
-    if rel == "registry/trust.json" then return snap.trustJson end
-    if rel == "registry/trust.json.sig" then return snap.trustSig end
-    local key = rel:match("^registry/packages/(.+)%.json$")
-    key = key and ("packages/" .. key) or rel:match("^blobs/(%x+)$")
-    local id = key and snap.pastes and snap.pastes[key]
-    if not id then return nil, "not in pastebin snapshot: " .. rel end
-    return httpGet("https://pastebin.com/raw/" .. id)
+    return require("tsr.pkg.pasteref").read(snap, rel, function(id) return M.pasteGet(id) end)
   end,
 }
 

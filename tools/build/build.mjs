@@ -93,6 +93,12 @@ function inlineModules(src) {
   });
 }
 
+// The previous index: when nothing changed, the new one keeps its time stamps, so that the same bytes (and the same signature) come out and mirrors
+// (Pastebin) do not have to be updated for a rebuild.
+const previousIndexFile = join(dist, 'site', 'registry', 'index.json');
+let previousIndex = null;
+try { previousIndex = existsSync(previousIndexFile) ? JSON.parse(readFileSync(previousIndexFile, 'utf8')) : null; } catch { previousIndex = null; }
+
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(join(dist, 'site', 'blobs'), { recursive: true });
 mkdirSync(join(dist, 'site', 'registry', 'packages'), { recursive: true });
@@ -149,7 +155,7 @@ for (const name of packageNames()) {
     conflicts: meta.conflicts ?? [],
     platforms: meta.platforms ?? {},
     license: meta.license,
-    source: { repo: config.repo, commit, path: `src/${name}` },
+    source: { repo: config.repo, commit: tryGit(['log', '-1', '--format=%H', 'refs/heads/main', '--', `src/${name}`]) || commit, path: `src/${name}` },
     size: { installed, download },
     files,
     ...(meta.hooks ? { hooks: meta.hooks } : {}),
@@ -215,6 +221,11 @@ for (const name of packageNames()) {
   }
 }
 
+if (previousIndex && JSON.stringify(previousIndex.packages) === JSON.stringify(index.packages) && previousIndex.expires - Math.floor(now / 1000) > 60 * 86400) {
+  index.generated = previousIndex.generated;
+  index.serial = previousIndex.serial;
+  index.expires = previousIndex.expires;
+}
 const indexText = JSON.stringify(index);
 writeFileSync(join(dist, 'site', 'registry', 'index.json'), indexText);
 if (signingKey) {

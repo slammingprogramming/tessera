@@ -345,10 +345,11 @@ Generated from the documentation comments in the sources (`node tools/docs/apido
 - [tsr.pkg.importer](tsr.pkg.importer.md) (1 functions)
 - [tsr.pkg](tsr.pkg.md) (12 functions)
 - [tsr.pkg.install](tsr.pkg.install.md) (4 functions)
+- [tsr.pkg.pasteref](tsr.pkg.pasteref.md) (4 functions)
 - [tsr.pkg.resolve](tsr.pkg.resolve.md) (2 functions)
 - [tsr.pkg.semver](tsr.pkg.semver.md) (2 functions)
 - [tsr.pkg.sig](tsr.pkg.sig.md) (6 functions)
-- [tsr.pkg.source](tsr.pkg.source.md) (8 functions)
+- [tsr.pkg.source](tsr.pkg.source.md) (9 functions)
 - [tsr.pkg.trust](tsr.pkg.trust.md) (9 functions)
 
 ## Package `pkg-mirror`

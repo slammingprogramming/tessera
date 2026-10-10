@@ -9,12 +9,16 @@ Package sources ("channels"). Every source exposes the same static layout:
 Source types:
   http      one or more mirror base URLs (GitHub Pages, ...)        { type="http", bases={...} }
   dir       a directory with the layout above (disk, mount, offline import store)   { type="dir", path="..." }
-  pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }
+  pastebin  a "snapshot" paste mapping registry files to pastes     { type="pastebin", snapshot="<id>" }  (see tsr.pkg.pasteref; long files span several pastes: "id1+id2")
 Registries may be signed (see tsr.pkg.trust): registry/index.json.sig vouches for the index, and the index records the
 SHA-256 of every package description ("docSha256"); registry/trust.json(.sig) carries signed key updates.
   lan       a paired computer running the pkg-mirror service         { type="lan", peer="<name>" }  (package pkg-mirror)
 The built-in `offline` source is a `dir` at /var/cache/tsr/offline, filled by importing a bundle. It is always
 consulted first, so pasting a bundle makes an HTTP-less install possible.
+
+## `M.pasteGet(id)`
+
+One raw paste (replaced in tests).
 
 ## `M.list()`
 
