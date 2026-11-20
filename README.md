@@ -37,6 +37,12 @@ been smoke-tested in real Minecraft yet.
 - **Bugs, questions, ideas:** open an issue.
 - **Private contact, and all security or vulnerability reports:** [SimpleX Chat](https://smp14.simplex.im/a#3gZ-zeHs4QrFZKLAN0o3SC_XQJXhj1eYBVTO_c0FAtg)
   — end-to-end encrypted, no account needed. Please do not report vulnerabilities in public issues; see the
-  [security model](docs/SECURITY.md#reporting-problems).
+  [security model](docs/SECURITY.md#reporting-problems). More in [Contact and supporting the project](docs/SUPPORT.md).
+
+## Support the project
+
+Tessera is free and stays free. If you want to help, donations are welcome and entirely optional:
+[Ko-fi](https://ko-fi.com/scenprogramming), or Bitcoin (Silent Payment address), Ethereum and Monero. All addresses, with notes on checking
+them, are in [docs/SUPPORT.md](docs/SUPPORT.md). The program never asks for money.
 
 Not affiliated with CC: Tweaked, Mojang or Microsoft.

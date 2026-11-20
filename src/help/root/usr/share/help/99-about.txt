@@ -8,3 +8,16 @@ the stock CraftOS keeps working underneath; security claims are stated honestly 
 
 Made for CC: Tweaked. Mod integrations use the peripheral names documented by each mod; where those are unverified the
 manual says so.
+
+Contact and support
+Bugs, questions and ideas: open an issue in the repository. Private contact, and ALL security or vulnerability reports (never a public
+issue): SimpleX Chat, https://smp14.simplex.im/a#3gZ-zeHs4QrFZKLAN0o3SC_XQJXhj1eYBVTO_c0FAtg
+
+Tessera is free and the program never asks for money. If you want to donate (optional):
+  Ko-fi     https://ko-fi.com/scenprogramming
+  Bitcoin   sp1qq2637t6ve9zp4wh0e4ly2u7h7jwfn0k6c4535lxpp3wrqvmkua6xjqkwevyz0wwqx5ly2f0q29qh48wgf9gl0zt049za9kr9m8xgkey4cyggxa0x
+            (a Silent Payment address: only wallets that support BIP 352 can pay it)
+  Ethereum  0x8F238db898102125Fd968ed7CaD959Cb594a7e93
+  Monero    8AYK93mQEzsFFEFkuPN7wC9rPcXCyEXa1Ye5bH9U2GR3PpaZiYc84SxjMcdSdVMaaQUGmCXYkuxdDSG5bM3EVyqR25nbumV
+Check the first and last characters after copying; crypto payments cannot be reversed. Nobody will ever ask you for payment in the game.
+The same list, kept up to date, is docs/SUPPORT.md in the repository.

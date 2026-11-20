@@ -95,6 +95,7 @@ local function page(root, name, desktop, ctx)
       text = "A modular operating system for ComputerCraft computers.\nFree software under the " .. tostring(v.license) .. "." }))
     local okSrc, src = pcall(function() return tsr.sourceInfo().source end)
     if okSrc and src then area:add(W.label({ x = 1, y = 8, w = area.w - 2, h = 2, wrap = true, text = "Source: " .. tostring(src), role = "textDim" })) end
+    area:add(W.label({ x = 1, y = 10, w = area.w - 2, h = 2, wrap = true, text = "Contact and support: run `thelp about`.", role = "textDim" }))
   end
 end
 

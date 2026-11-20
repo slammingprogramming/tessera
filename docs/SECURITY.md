@@ -102,3 +102,5 @@ Everything here is verified in simulation only; treat it as a game, not as a def
 Anything that could harm other players' servers (remote code execution, bypassing `auth`, forging signed registries, leaking keys)
 should be reported this way and kept private until a fix is available. Ordinary bugs, questions and feature requests are welcome as
 public issues.
+
+Contact details and ways to support the project are collected in [SUPPORT.md](SUPPORT.md).

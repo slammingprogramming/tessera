@@ -27,6 +27,7 @@ Format: ID — decision — status (**decided** = user; **delegated** = user han
 | D-20 | Mail is protocol-based | Mail clients use POP3/SMTP only (they never read the server's files), anti-spam and anti-virus are separate optional packages, nothing relays for strangers, and bounces are never sent for mail that was refused while the sender waited. | decided (2026-10-03) |
 | D-21 | Use cases in the installer | After the profile, the wizard asks what the computer is for. A use case is data (packages, services, settings, starting files) applied after the install; existing files are never overwritten and generated secrets are shown once. | decided (2026-10-03) |
 | D-22 | Anti-virus trust | Behaviour rules ship in the package; signature lists are only updated from publishers the administrator trusts (Ed25519, versions must increase). No telemetry, no automatic sources. | decided (2026-10-03) |
+| D-23 | Donations are optional and passive | Contact and donation details live in the README, docs/SUPPORT.md, the in-game manual (`thelp about`) and `.github/FUNDING.yml`. The program never prompts for money, never shows it outside the manual and About page, and sends nothing anywhere. Security reports go only to the private SimpleX channel. | decided (2026-11-19) |
 
 ## Distribution tiers (D-04, D-14)
 
