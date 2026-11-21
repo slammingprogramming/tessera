@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability (private, do NOT open an issue)
+    url: https://smp14.simplex.im/a#3gZ-zeHs4QrFZKLAN0o3SC_XQJXhj1eYBVTO_c0FAtg
+    about: Report vulnerabilities privately on SimpleX Chat. Public issues for security problems will be removed.
+  - name: Support the project
+    url: https://github.com/slammingprogramming/tessera/blob/main/docs/SUPPORT.md
+    about: Contact details and optional donations.

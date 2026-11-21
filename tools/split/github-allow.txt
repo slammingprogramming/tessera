@@ -8,6 +8,9 @@ LICENSE
 docs/
 !docs/api/
 .github/FUNDING.yml
+.github/ISSUE_TEMPLATE/
+SECURITY.md
+CHANGELOG.md
 .gitignore
 .gitattributes
 .editorconfig

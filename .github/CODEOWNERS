@@ -1,0 +1,6 @@
+# Everything is reviewed by the maintainer.
+*                       @slammingprogramming
+# Release, signing and publication tooling: always the maintainer.
+/.github/               @slammingprogramming
+/tools/split/           @slammingprogramming
+/tools/build/           @slammingprogramming

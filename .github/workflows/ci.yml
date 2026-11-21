@@ -1,0 +1,51 @@
+name: CI
+
+# The Lua unit and end-to-end tests need the CraftOS-PC emulator and are run locally (`node tools/ci.mjs`).
+# This workflow runs everything that needs only Node.js, and guards against private files in the tree.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      # full history: the registry build records the last commit that touched each package
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Build the registry and installer (size budgets)
+        run: node tools/build/build.mjs
+      - name: API reference is current
+        run: node tools/docs/apidoc.mjs --check
+      - name: Size limits
+        run: node tools/build/sizes.mjs
+      - name: Gateway tests
+        run: node tools/gateway/gateway.test.mjs
+      - name: Bundle builder tests
+        run: node tools/build/bundler.test.mjs
+      - name: Paste manager tests
+        run: node tools/build/pastes.test.mjs
+      - name: Paste fixtures are current
+        run: node tools/test/gen-paste-fixtures.mjs --check
+
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: No private files in the repository
+        run: |
+          bad=$(git ls-files | grep -E '^(AGENTS\.md|\.private/)' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::private files must never be published:"
+            echo "$bad"
+            exit 1
+          fi
+          echo "ok: no private files"

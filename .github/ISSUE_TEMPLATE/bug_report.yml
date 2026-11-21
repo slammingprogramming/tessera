@@ -1,0 +1,48 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security problems: do not use this form.** Report them privately, see [SECURITY.md](https://github.com/slammingprogramming/tessera/blob/main/SECURITY.md).
+        Please do not paste passwords, private keys or other secrets into an issue.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The commands you typed, in order.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Tessera version and packages
+      description: Output of `pkg list` (or `tsr.version`) is enough.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you see it?
+      options:
+        - Real Minecraft world
+        - CraftOS-PC emulator
+        - Other emulator
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Minecraft, CC:Tweaked and mod versions
+      description: Add any other mods involved (Advanced Peripherals, Mekanism, ...).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log or error text
+      description: The end of `/var/log/tsr.log` or `doctor` output, if relevant.
+      render: text
