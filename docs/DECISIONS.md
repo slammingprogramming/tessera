@@ -5,7 +5,7 @@ Format: ID — decision — status (**decided** = user; **delegated** = user han
 | ID | Topic | Decision / question | Status |
 |---|---|---|---|
 | D-00 | Target platform | CC: Tweaked is the only supported platform (confirmed dominant; RESEARCH §1). Original ComputerCraft / legacy MC not supported. | decided |
-| D-01 | Product name | **Tessera** (short prefix `tsr`). A *tessera* is one tile of a mosaic — small modules that compose the whole OS; fits the "core + packages" model and Minecraft's blocky look. A quick web search found no existing CC OS/project with this name, but this is **not** a trademark/GitHub-name clearance: check the name on GitHub/Modrinth/forums before the first public release. Repo folder stays `computercraft-os` until the public repo is created. | delegated (2026-09-29) |
+| D-01 | Product name | **Tessera** (short prefix `tsr`). A *tessera* is one tile of a mosaic — small modules that compose the whole OS; fits the "core + packages" model and Minecraft's blocky look. The maintainer approved the name on 2026-11-21; the repository is `slammingprogramming/tessera`. | delegated (2026-09-29), approved (2026-11-21) |
 | D-02 | Layering strategy | Layer on CraftOS via `/startup.lua` (v1) with an always-available recovery path; UnBIOS-style takeover only later/optionally. | default |
 | D-03 | Multitasking | Cooperative kernel; investigate preemption later. | default |
 | D-04 | Distribution & install channels | See "Distribution tiers" below. GitHub Pages primary → mirrors → Pastebin → LAN server mirror → fully offline paste/file-drop. | decided (2026-09-29); exact URLs pending public repo |
@@ -68,9 +68,8 @@ Installer/registry client tries, in order (each probed with `http.checkURL`/a re
 
 ## Publication (D-09)
 
-The project is published in stages. At the moment only documentation and the license are public; the source code
-will be published at the first release. The mechanics of how the stages are produced are an internal matter.
+The project was published in stages: documentation and the license first, then (2026-11-21) the source code. Private maintainer notes are
+never published; the mechanics of how that is kept apart are an internal matter.
 
 ## Still open
-- Basic name clearance for "Tessera".
 - Which mods/MC versions get first-class priority beyond the defaults.

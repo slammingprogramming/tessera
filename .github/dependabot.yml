@@ -1,0 +1,10 @@
+# Keeps the SHA-pinned GitHub Actions in .github/workflows up to date (opens a pull request when a new release appears).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci"
+    open-pull-requests-limit: 5
