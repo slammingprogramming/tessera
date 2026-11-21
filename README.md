@@ -3,10 +3,9 @@
 A modern, modular operating system family for [CC: Tweaked](https://modrinth.com/mod/cc-tweaked) computers in Minecraft.
 (*A tessera is one tile of a mosaic — small modules that compose the whole.*)
 
-**Status:** early development, **not released yet — the source code is not public**. This repository currently holds the
-project's documentation and license. The core (boot, kernel, filesystem layer), package manager, offline bundles,
-installer, hardware detection, setup wizard and a first set of optional apps work in the CraftOS-PC emulator; nothing has
-been smoke-tested in real Minecraft yet.
+**Status:** early development (version 0.1.0, not yet released). The source is public. The core (boot, kernel, filesystem layer), package manager,
+offline bundles, installer, hardware detection, setup wizard and the optional packages all work and are tested in the CraftOS-PC emulator; **nothing has been
+smoke-tested in real Minecraft yet**, so expect rough edges. Bug reports from real worlds are very welcome.
 
 **License:** [AGPL-3.0-or-later](LICENSE).
 
@@ -30,6 +29,7 @@ been smoke-tested in real Minecraft yet.
 - [Real-world tools in the game](docs/REALWORLD.md) (time sync, ssh, pgp, torrent, firewall, DNS, encrypted folders, tar/diff) · [Security model](docs/SECURITY.md)
 - [The in-game internet](docs/NETWORKING.md) · [Mail](docs/MAIL.md) · [Devices, smart homes and industrial control](docs/IOT.md)
 - [The Pastebin mirror](docs/PASTEBIN.md) — installing without the web site
+- [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Third-party notices](THIRD-PARTY.md)
 - [Roadmap](docs/ROADMAP.md) · [Decisions](docs/DECISIONS.md) · [Research notes](docs/RESEARCH.md)
 
 ## Contact
